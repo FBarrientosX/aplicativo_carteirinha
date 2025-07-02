@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-file-alt me-2"></i>
+                Logs do Sistema
+            </h1>
+            <div>
+                <button onclick="location.reload()" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Atualizar
+                </button>
+                <a href="{{ url_for('configuracoes_geral') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Sistema -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Sistema:</dt>
+                            <dd class="col-sm-8">{{ logs_info.sistema.nome }}</dd>
+                            
+                            <dt class="col-sm-4">Versão:</dt>
+                            <dd class="col-sm-8">{{ logs_info.sistema.versao }}</dd>
+                            
+                            <dt class="col-sm-4">Data Atual:</dt>
+                            <dd class="col-sm-8">{{ logs_info.sistema.data_atual }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-success">{{ logs_info.sistema.uptime }}</span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Python:</dt>
+                            <dd class="col-sm-8">{{ logs_info.sistema.python_version.split()[0] }}</dd>
+                            
+                            <dt class="col-sm-4">Usuários:</dt>
+                            <dd class="col-sm-8">{{ logs_info.estatisticas.total_usuarios }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h3 class="mb-1">{{ logs_info.estatisticas.total_usuarios }}</h3>
+                <p class="text-muted mb-0">Total de Usuários</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-envelope fa-2x text-success mb-2"></i>
+                <h3 class="mb-1">{{ logs_info.estatisticas.emails_enviados_hoje }}</h3>
+                <p class="text-muted mb-0">Emails Hoje</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                <h3 class="mb-1">{{ logs_info.estatisticas.ultima_atividade }}</h3>
+                <p class="text-muted mb-0">Última Atividade</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Arquivos de Log -->
+{% if logs_info.arquivos_log %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-folder-open me-2"></i>
+                    Arquivos de Log Encontrados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Arquivo</th>
+                                <th>Tamanho</th>
+                                <th>Última Modificação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for arquivo in logs_info.arquivos_log %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-alt text-muted me-2"></i>
+                                    {{ arquivo.nome }}
+                                </td>
+                                <td>{{ arquivo.tamanho }}</td>
+                                <td>{{ arquivo.modificado }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="alert('Funcionalidade de download em desenvolvimento')">
+                                        <i class="fas fa-download me-1"></i>
+                                        Download
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Logs Recentes -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Logs Recentes do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if logs_info.logs_recentes %}
+                <div style="background-color: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">
+                    {% for linha in logs_info.logs_recentes %}
+                        {% if linha.strip() %}
+                            <div class="mb-1">
+                                {% if 'ERROR' in linha %}
+                                    <span style="color: #f44747;">{{ linha }}</span>
+                                {% elif 'WARNING' in linha %}
+                                    <span style="color: #ffcc02;">{{ linha }}</span>
+                                {% elif 'INFO' in linha %}
+                                    <span style="color: #4ec9b0;">{{ linha }}</span>
+                                {% else %}
+                                    {{ linha }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nenhum log recente encontrado.</strong> O sistema está funcionando normalmente.
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Os logs são atualizados automaticamente. Use o botão "Atualizar" para ver as últimas entradas.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs de Atividade do Flask -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-terminal me-2"></i>
+                    Atividade do Servidor (Console)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Nota:</strong> Para ver logs detalhados do servidor Flask, consulte o terminal onde o servidor está sendo executado.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Logs típicos incluem:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Requisições HTTP</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Erros de aplicação</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Informações de debug</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Status do servidor</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Para acessar logs completos:</h6>
+                        <ol>
+                            <li>Acesse o terminal do servidor</li>
+                            <li>Verifique a saída do comando <code>python run.py</code></li>
+                            <li>Configure logging para arquivo se necessário</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh a cada 30 segundos
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Highlight de linhas de log ao passar o mouse
+document.addEventListener('DOMContentLoaded', function() {
+    const logLines = document.querySelectorAll('[style*="Courier New"] div');
+    logLines.forEach(line => {
+        line.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        });
+        line.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carteirinha da Piscina - VENCIDA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .alert {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .button {
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 CARTEIRINHA VENCIDA</h1>
+        <p>Sistema de Carteirinhas da Piscina</p>
+    </div>
+    
+    <div class="content">
+        <div class="alert">
+            <strong>⚠️ ATENÇÃO:</strong> Sua carteirinha da piscina VENCEU e foi automaticamente desativada.
+        </div>
+        
+        <p>Olá <strong>{{ morador.nome_completo }}</strong>,</p>
+        
+        <p>Informamos que sua carteirinha da piscina <strong>VENCEU</strong> e foi automaticamente desativada do sistema.</p>
+        
+        <div class="info-box">
+            <h3>📋 Informações da Carteirinha:</h3>
+            <ul>
+                <li><strong>Nome:</strong> {{ morador.nome_completo }}</li>
+                <li><strong>Bloco/Apartamento:</strong> {{ morador.bloco }}/{{ morador.apartamento }}</li>
+                                    <li><strong>Data de Vencimento:</strong> {{ morador.data_vencimento|dateformat }}</li>
+                <li><strong>Status:</strong> <span style="color: #dc3545;">❌ VENCIDA</span></li>
+            </ul>
+        </div>
+        
+        <h3>🔄 O que fazer agora?</h3>
+        <ol>
+            <li>Entre em contato com a administração do condomínio</li>
+            <li>Solicite a renovação da sua carteirinha</li>
+            <li>Apresente os documentos necessários</li>
+            <li>Aguarde a reativação</li>
+        </ol>
+        
+        <div class="alert">
+            <strong>📱 Importante:</strong> Sua carteirinha foi desativada e não funcionará para acesso à piscina até ser renovada.
+        </div>
+        
+        <h3>📞 Contato</h3>
+        <p>Para renovar sua carteirinha, entre em contato com a administração:</p>
+        <ul>
+            <li>📧 Email: administracao@condominio.com</li>
+            <li>📱 WhatsApp: (11) 99999-9999</li>
+            <li>🕒 Horário: Segunda a Sexta, 8h às 18h</li>
+        </ul>
+    </div>
+    
+    <div class="footer">
+        <p>Este é um email automático do Sistema de Carteirinhas da Piscina.</p>
+        <p>Por favor, não responda este email.</p>
+        <hr>
+        <small>
+            {% if not morador.eh_titular and morador.email_titular %}
+                Email enviado para o titular: {{ morador.email_titular }}
+            {% endif %}
+        </small>
+    </div>
+</body>
+</html> 

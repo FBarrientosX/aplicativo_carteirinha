@@ -1,0 +1,38 @@
+BEM-VINDO AO SISTEMA DE CARTEIRINHAS DA PISCINA!
+
+Olá, {{ morador.nome_completo }}!
+
+Seu cadastro foi realizado com sucesso no nosso sistema de carteirinhas da piscina.
+
+SEUS DADOS:
+- Nome: {{ morador.nome_completo }}
+- Bloco/Apartamento: {{ morador.bloco }}/{{ morador.apartamento }}
+- Email: {{ morador.email }}
+- Cadastrado em: {{ morador.data_cadastro|dateformat('%d/%m/%Y às %H:%M') }}
+
+{% if morador.data_vencimento %}
+STATUS DA CARTEIRINHA:
+- Vencimento: {{ morador.data_vencimento|dateformat }}
+- Status: {% if morador.carteirinha_ativa %}ATIVA{% else %}INATIVA{% endif %}
+{% else %}
+STATUS DA CARTEIRINHA:
+- Sua carteirinha ainda não foi validada
+- Procure a administração para validação
+{% endif %}
+
+PRÓXIMOS PASSOS:
+{% if not morador.data_vencimento %}
+1. Apresente-se na administração com os documentos necessários
+2. Efetue o pagamento das taxas
+3. Aguarde a validação da carteirinha
+{% else %}
+1. Sua carteirinha já está ativa e pronta para uso
+2. Aproveite a piscina do condomínio!
+{% endif %}
+
+DÚVIDAS?
+Em caso de dúvidas, entre em contato com a administração do condomínio.
+
+---
+Este é um email automático do Sistema de Carteirinhas da Piscina.
+Bem-vindo ao nosso condomínio! 

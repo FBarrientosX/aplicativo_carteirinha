@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-sliders-h me-2"></i>
+                Configurações Gerais
+            </h1>
+            <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <!-- Configurações Básicas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.nome_sistema.label(class="form-label") }}
+                            {{ form.nome_sistema(class="form-control") }}
+                            {% if form.nome_sistema.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.nome_sistema.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.versao.label(class="form-label") }}
+                            {{ form.versao(class="form-control") }}
+                            {% if form.versao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.versao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Versão do sistema (somente leitura)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações de Segurança -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Segurança
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.sessao_timeout.label(class="form-label") }}
+                            {{ form.sessao_timeout(class="form-control") }}
+                            {% if form.sessao_timeout.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.sessao_timeout.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Tempo em minutos para logout automático</div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.max_tentativas_login.label(class="form-label") }}
+                            {{ form.max_tentativas_login(class="form-control") }}
+                            {% if form.max_tentativas_login.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.max_tentativas_login.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Tentativas antes de bloquear usuário</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações de Backup -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        Backup e Recuperação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.backup_automatico(class="form-check-input") }}
+                                    {{ form.backup_automatico.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.dias_backup.label(class="form-label") }}
+                            {{ form.dias_backup(class="form-control") }}
+                            {% if form.dias_backup.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.dias_backup.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Frequência do backup automático</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Os backups são salvos automaticamente no diretório de dados do sistema.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações de Notificações -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        Notificações Automáticas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.notificacoes_automaticas(class="form-check-input") }}
+                                    {{ form.notificacoes_automaticas.label(class="form-check-label") }}
+                                </div>
+                                <div class="form-text">Ativar envio automático de notificações</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.horario_notificacoes.label(class="form-label") }}
+                            {{ form.horario_notificacoes(class="form-control") }}
+                            {% if form.horario_notificacoes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.horario_notificacoes.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Horário diário para verificar e enviar</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lembre-se:</strong> Configure o email SMTP antes de ativar as notificações automáticas.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                {{ form.submit(class="btn btn-success") }}
+                <div>
+                    <a href="{{ url_for('configuracoes_email') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-envelope me-1"></i>
+                        Configurar Email
+                    </a>
+                    <a href="{{ url_for('configuracoes') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Status das Configurações -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Status das Configurações
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-shield-alt text-success me-2"></i>Segurança</span>
+                        <span class="badge bg-success">Ativo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-database text-info me-2"></i>Backup</span>
+                        <span class="badge bg-info">Configurado</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-bell text-warning me-2"></i>Notificações</span>
+                        <span class="badge bg-warning">Pendente Email</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-cogs text-primary me-2"></i>Sistema</span>
+                        <span class="badge bg-primary">Operacional</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações Úteis -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Dicas de Configuração
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mantenha o timeout de sessão entre 60-240 minutos
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Configure backup para executar durante a madrugada
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Teste as notificações após configurar
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Monitore os logs regularmente
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Ações Rápidas -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="alert('Funcionalidade em desenvolvimento')">
+                        <i class="fas fa-database me-1"></i>
+                        Fazer Backup Agora
+                    </button>
+                    <a href="{{ url_for('ver_logs') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-file-alt me-1"></i>
+                        Ver Logs do Sistema
+                    </a>
+                    <a href="{{ url_for('teste_email_configurado') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Testar Notificações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

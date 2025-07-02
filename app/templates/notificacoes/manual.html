@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h3">
+                <i class="fas fa-paper-plane me-2"></i>
+                Notificações Manuais
+            </h1>
+            <a href="{{ url_for('relatorios') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-envelope me-2"></i>
+                    Enviar Notificações
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="notificacaoForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.tipo_notificacao.label(class="form-label") }}
+                        {{ form.tipo_notificacao(class="form-select", id="tipoNotificacao") }}
+                        {% if form.tipo_notificacao.errors %}
+                            <div class="text-danger">
+                                {% for error in form.tipo_notificacao.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Campos para mensagem personalizada -->
+                    <div id="camposPersonalizados" style="display: none;">
+                        <div class="mb-3">
+                            {{ form.assunto_personalizado.label(class="form-label") }}
+                            {{ form.assunto_personalizado(class="form-control", placeholder="Digite o assunto da mensagem") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.mensagem_personalizada.label(class="form-label") }}
+                            {{ form.mensagem_personalizada(class="form-control", rows="4", placeholder="Digite sua mensagem personalizada...") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Destinatários</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="destinatarios" id="todosDestinatarios" value="todos" checked>
+                            <label class="form-check-label" for="todosDestinatarios">
+                                Todos os moradores (baseado no tipo de notificação)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="destinatarios" id="selecionadosDestinatarios" value="selecionados">
+                            <label class="form-check-label" for="selecionadosDestinatarios">
+                                Moradores específicos
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="selecaoMoradores" style="display: none;">
+                        {{ form.moradores_selecionados.label(class="form-label") }}
+                        {{ form.moradores_selecionados(class="form-control", placeholder="IDs dos moradores separados por vírgula (ex: 1,2,3)") }}
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <strong>Moradores disponíveis:</strong><br>
+                                {% for morador in moradores %}
+                                    <span class="badge bg-secondary me-1 mb-1" style="cursor: pointer;" onclick="adicionarMorador({{ morador.id }})">
+                                        ID {{ morador.id }}: {{ morador.nome_completo }}
+                                    </span>
+                                {% endfor %}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Painel de Informações -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="infoTipoNotificacao">
+                    <p><strong>Aviso de Vencimento (30 dias):</strong></p>
+                    <ul>
+                        <li>Enviado para carteirinhas que vencem em até 45 dias</li>
+                        <li>Lembra o morador de renovar</li>
+                        <li>Inclui data de vencimento</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <h6 class="card-title">Total de Moradores</h6>
+                <h2 class="text-primary">{{ moradores|length }}</h2>
+                <small class="text-muted">moradores cadastrados</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('tipoNotificacao');
+    const camposPersonalizados = document.getElementById('camposPersonalizados');
+    const infoDiv = document.getElementById('infoTipoNotificacao');
+    
+    const radioTodos = document.getElementById('todosDestinatarios');
+    const radioSelecionados = document.getElementById('selecionadosDestinatarios');
+    const selecaoMoradores = document.getElementById('selecaoMoradores');
+    
+    // Mostrar/ocultar campos personalizados
+    tipoSelect.addEventListener('change', function() {
+        if (this.value === 'personalizada') {
+            camposPersonalizados.style.display = 'block';
+            infoDiv.innerHTML = `
+                <p><strong>Mensagem Personalizada:</strong></p>
+                <ul>
+                    <li>Defina seu próprio assunto</li>
+                    <li>Escreva uma mensagem customizada</li>
+                    <li>Será enviada para os destinatários selecionados</li>
+                </ul>
+            `;
+        } else {
+            camposPersonalizados.style.display = 'none';
+            
+            if (this.value === '30_dias') {
+                infoDiv.innerHTML = `
+                    <p><strong>Aviso de Vencimento (30 dias):</strong></p>
+                    <ul>
+                        <li>Enviado para carteirinhas que vencem em até 45 dias</li>
+                        <li>Lembra o morador de renovar</li>
+                        <li>Inclui data de vencimento</li>
+                    </ul>
+                `;
+            } else if (this.value === 'vencimento') {
+                infoDiv.innerHTML = `
+                    <p><strong>Carteirinha Vencida:</strong></p>
+                    <ul>
+                        <li>Enviado para carteirinhas já vencidas</li>
+                        <li>Notifica sobre vencimento</li>
+                        <li>Solicita renovação urgente</li>
+                    </ul>
+                `;
+            }
+        }
+    });
+    
+    // Mostrar/ocultar seleção de moradores
+    radioTodos.addEventListener('change', function() {
+        if (this.checked) {
+            selecaoMoradores.style.display = 'none';
+        }
+    });
+    
+    radioSelecionados.addEventListener('change', function() {
+        if (this.checked) {
+            selecaoMoradores.style.display = 'block';
+        }
+    });
+});
+
+function adicionarMorador(id) {
+    const campo = document.getElementById('moradores_selecionados');
+    const valores = campo.value.split(',').filter(v => v.trim() !== '');
+    
+    if (!valores.includes(id.toString())) {
+        valores.push(id.toString());
+        campo.value = valores.join(',');
+    }
+}
+</script>
+{% endblock %} 

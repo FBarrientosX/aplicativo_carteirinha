@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h3">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Ajustar Vencimento
+            </h1>
+            <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">        
+        <!-- Informações do Morador -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Informações do Morador
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nome:</strong> {{ morador.nome_completo }}</p>
+                        <p><strong>Apartamento:</strong> {{ morador.bloco }} - {{ morador.apartamento }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Vencimento Atual:</strong> 
+                            {% if morador.data_vencimento %}
+                                <span class="badge bg-{{ 'danger' if morador.dias_para_vencer <= 0 else ('warning' if morador.dias_para_vencer <= 30 else 'success') }}">
+                                    {{ morador.data_vencimento|dateformat }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Sem vencimento</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if morador.carteirinha_ativa else 'danger' }}">
+                                {{ 'Ativa' if morador.carteirinha_ativa else 'Inativa' }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulário de Ajuste -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Ajustar Data de Vencimento
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.nova_data_vencimento.label(class="form-label") }}
+                        {{ form.nova_data_vencimento(class="form-control", id="novaDataVencimento") }}
+                        {% if form.nova_data_vencimento.errors %}
+                            <div class="text-danger">
+                                {% for error in form.nova_data_vencimento.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Selecione a nova data de vencimento da carteirinha.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Atalhos Rápidos</label>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="definirData(30)">
+                                +30 dias
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="definirData(90)">
+                                +3 meses
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="definirData(180)">
+                                +6 meses
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="definirData(365)">
+                                +1 ano
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.motivo_ajuste.label(class="form-label") }}
+                        {{ form.motivo_ajuste(class="form-control", rows="3", placeholder="Descreva o motivo do ajuste (opcional)") }}
+                        {% if form.motivo_ajuste.errors %}
+                            <div class="text-danger">
+                                {% for error in form.motivo_ajuste.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        {{ form.submit(class="btn btn-success btn-lg") }}
+                        <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Previsão -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-calculator me-2"></i>
+                    Previsão
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="previsaoVencimento">
+                    <p class="mb-2"><strong>Nova Data:</strong> <span id="novaDataTexto">-</span></p>
+                    <p class="mb-2"><strong>Dias até Vencer:</strong> <span id="diasRestantes">-</span></p>
+                    <p class="mb-0"><strong>Status:</strong> <span id="novoStatus">-</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Histórico -->
+        {% if morador.observacoes %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Últimas Observações
+                </h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    {{ morador.observacoes|truncate(200) }}
+                </small>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const campoData = document.getElementById('novaDataVencimento');
+    
+    // Atualizar previsão quando a data muda
+    campoData.addEventListener('change', atualizarPrevisao);
+    
+    // Atualizar previsão inicial
+    atualizarPrevisao();
+});
+
+function definirData(dias) {
+    const hoje = new Date();
+    hoje.setDate(hoje.getDate() + dias);
+    
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    
+    document.getElementById('novaDataVencimento').value = `${ano}-${mes}-${dia}`;
+    atualizarPrevisao();
+}
+
+function atualizarPrevisao() {
+    const campoData = document.getElementById('novaDataVencimento');
+    const dataTexto = document.getElementById('novaDataTexto');
+    const diasRestantes = document.getElementById('diasRestantes');
+    const novoStatus = document.getElementById('novoStatus');
+    
+    if (campoData.value) {
+        const novaData = new Date(campoData.value);
+        const hoje = new Date();
+        
+        // Formatear data para exibição
+        const dataFormatada = novaData.toLocaleDateString('pt-BR');
+        dataTexto.textContent = dataFormatada;
+        
+        // Calcular dias restantes
+        const diffTime = novaData - hoje;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) {
+            diasRestantes.textContent = `${Math.abs(diffDays)} dias vencida`;
+            diasRestantes.className = 'text-danger';
+            novoStatus.innerHTML = '<span class="badge bg-danger">Vencida</span>';
+        } else if (diffDays <= 30) {
+            diasRestantes.textContent = `${diffDays} dias`;
+            diasRestantes.className = 'text-warning';
+            novoStatus.innerHTML = '<span class="badge bg-warning">A Vencer</span>';
+        } else {
+            diasRestantes.textContent = `${diffDays} dias`;
+            diasRestantes.className = 'text-success';
+            novoStatus.innerHTML = '<span class="badge bg-success">Regular</span>';
+        }
+    } else {
+        dataTexto.textContent = '-';
+        diasRestantes.textContent = '-';
+        novoStatus.textContent = '-';
+    }
+}
+</script>
+{% endblock %} 

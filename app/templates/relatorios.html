@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-chart-line me-2"></i>
+                Relatórios e Analytics
+            </h1>
+            <div>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo Geral -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Resumo Executivo
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-1">
+                    <i class="fas fa-calendar me-2"></i>
+                    <strong>Relatório gerado em:</strong> {{ data_atual }}
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    <strong>Dados atualizados até:</strong> Tempo real
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas Detalhadas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Estatísticas Detalhadas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                            <h3 class="mb-1">{{ stats.total_moradores if stats else '0' }}</h3>
+                            <p class="text-muted mb-0">Total de Moradores</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h3 class="mb-1">{{ stats.regulares if stats else '0' }}</h3>
+                            <p class="text-muted mb-0">Carteirinhas Regulares</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                            <h3 class="mb-1">{{ stats.a_vencer if stats else '0' }}</h3>
+                            <p class="text-muted mb-0">A Vencer (30 dias)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                            <h3 class="mb-1">{{ stats.vencidas if stats else '0' }}</h3>
+                            <p class="text-muted mb-0">Carteirinhas Vencidas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo dos Status -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribuição de Status das Carteirinhas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-circle text-success me-2"></i>Regular</span>
+                                <span class="badge bg-success rounded-pill">{{ stats.regulares if stats else '0' }}</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-circle text-warning me-2"></i>A Vencer</span>
+                                <span class="badge bg-warning rounded-pill">{{ stats.a_vencer if stats else '0' }}</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-circle text-danger me-2"></i>Vencida</span>
+                                <span class="badge bg-danger rounded-pill">{{ stats.vencidas if stats else '0' }}</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-circle text-secondary me-2"></i>Sem Carteirinha</span>
+                                <span class="badge bg-secondary rounded-pill">{{ stats.sem_carteirinha if stats else '0' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Recomendadas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Ações Recomendadas
+                </h5>
+            </div>
+            <div class="card-body">
+                            <div class="list-group list-group-flush">
+                <!-- Testar Configurações de Email -->
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-envelope-open-text text-primary me-2"></i>
+                        <strong>Testar configurações de email</strong>
+                        <br><small class="text-muted">Verificar se o SMTP está configurado corretamente</small>
+                    </div>
+                    <a href="{{ url_for('teste_email') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Testar Email
+                    </a>
+                </div>
+                
+                {% if stats and stats.a_vencer > 0 %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-bell text-warning me-2"></i>
+                            <strong>Notificar moradores com carteirinhas a vencer</strong>
+                            <br><small class="text-muted">{{ stats.a_vencer }} carteirinhas vencem nos próximos 30 dias</small>
+                        </div>
+                        <a href="{{ url_for('executar_notificacoes') }}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Enviar Notificações
+                        </a>
+                    </div>
+                {% endif %}
+                    
+                    {% if stats and stats.vencidas > 0 %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-redo text-danger me-2"></i>
+                                <strong>Renovar carteirinhas vencidas</strong>
+                                <br><small class="text-muted">{{ stats.vencidas }} carteirinhas precisam ser renovadas</small>
+                            </div>
+                            <a href="{{ url_for('listar_moradores') }}?status=vencida" class="btn btn-sm btn-danger">
+                                <i class="fas fa-list me-1"></i>
+                                Ver Lista
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if stats and stats.sem_carteirinha > 0 %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-plus text-info me-2"></i>
+                                <strong>Validar novos moradores</strong>
+                                <br><small class="text-muted">{{ stats.sem_carteirinha }} moradores ainda não têm carteirinha</small>
+                            </div>
+                            <a href="{{ url_for('listar_moradores') }}?status=sem_carteirinha" class="btn btn-sm btn-info">
+                                <i class="fas fa-list me-1"></i>
+                                Ver Lista
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not stats or (stats.a_vencer == 0 and stats.vencidas == 0 and stats.sem_carteirinha == 0) %}
+                        <div class="list-group-item text-center text-success">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <h5>Tudo em ordem!</h5>
+                            <p class="mb-0">Não há ações pendentes no momento.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

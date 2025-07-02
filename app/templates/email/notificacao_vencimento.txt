@@ -1,0 +1,35 @@
+🚨 CARTEIRINHA VENCIDA - Sistema de Carteirinhas da Piscina
+
+⚠️ ATENÇÃO: Sua carteirinha da piscina VENCEU e foi automaticamente desativada.
+
+Olá {{ morador.nome_completo }},
+
+Informamos que sua carteirinha da piscina VENCEU e foi automaticamente desativada do sistema.
+
+📋 INFORMAÇÕES DA CARTEIRINHA:
+- Nome: {{ morador.nome_completo }}
+- Bloco/Apartamento: {{ morador.bloco }}/{{ morador.apartamento }}
+- Data de Vencimento: {{ morador.data_vencimento|dateformat }}
+- Status: ❌ VENCIDA
+
+🔄 O QUE FAZER AGORA?
+1. Entre em contato com a administração do condomínio
+2. Solicite a renovação da sua carteirinha
+3. Apresente os documentos necessários
+4. Aguarde a reativação
+
+📱 IMPORTANTE: Sua carteirinha foi desativada e não funcionará para acesso à piscina até ser renovada.
+
+📞 CONTATO
+Para renovar sua carteirinha, entre em contato com a administração:
+- Email: administracao@condominio.com
+- WhatsApp: (11) 99999-9999
+- Horário: Segunda a Sexta, 8h às 18h
+
+---
+Este é um email automático do Sistema de Carteirinhas da Piscina.
+Por favor, não responda este email.
+
+{% if not morador.eh_titular and morador.email_titular %}
+Email enviado para o titular: {{ morador.email_titular }}
+{% endif %} 

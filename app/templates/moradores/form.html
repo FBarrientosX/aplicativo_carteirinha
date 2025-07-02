@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-plus me-2"></i>
+                {{ title }}
+            </h1>
+            <a href="{{ url_for('listar_moradores') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Dados do Morador
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.nome_completo.label(class="form-label") }}
+                            {{ form.nome_completo(class="form-control") }}
+                            {% if form.nome_completo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.nome_completo.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.bloco.label(class="form-label") }}
+                            {{ form.bloco(class="form-control") }}
+                            {% if form.bloco.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.bloco.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.apartamento.label(class="form-label") }}
+                            {{ form.apartamento(class="form-control") }}
+                            {% if form.apartamento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.apartamento.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.celular.label(class="form-label") }}
+                            {{ form.celular(class="form-control") }}
+                            {% if form.celular.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.celular.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.eh_titular(class="form-check-input", id="eh_titular") }}
+                                {{ form.eh_titular.label(class="form-check-label", for="eh_titular") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3" id="email_titular_div">
+                            {{ form.email_titular.label(class="form-label") }}
+                            {{ form.email_titular(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Preencha apenas se não for titular
+                            </small>
+                            {% if form.email_titular.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email_titular.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.data_ultima_validacao.label(class="form-label") }}
+                            {{ form.data_ultima_validacao(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Preencha se já possui carteirinha válida
+                            </small>
+                            {% if form.data_ultima_validacao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_ultima_validacao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.data_vencimento.label(class="form-label") }}
+                            {{ form.data_vencimento(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Data de vencimento da carteirinha (editável)
+                            </small>
+                            {% if form.data_vencimento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_vencimento.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            {{ form.anexo.label(class="form-label") }}
+                            {{ form.anexo(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Documentos, fotos, etc. (opcional)
+                            </small>
+                            {% if form.anexo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.anexo.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            {{ form.observacoes.label(class="form-label") }}
+                            {{ form.observacoes(class="form-control", rows="4") }}
+                            {% if form.observacoes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.observacoes.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('listar_moradores') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </a>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Campos obrigatórios:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-1"></i> Nome completo</li>
+                    <li><i class="fas fa-check text-success me-1"></i> Bloco e apartamento</li>
+                    <li><i class="fas fa-check text-success me-1"></i> Email</li>
+                    <li><i class="fas fa-check text-success me-1"></i> Celular</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Sobre titular:</h6>
+                <p class="small text-muted">
+                    Marque "É Titular" se o morador é o responsável pelo apartamento. 
+                    Para dependentes, desmarque e informe o email do titular.
+                </p>
+                
+                <hr>
+                
+                <h6>Validação:</h6>
+                <p class="small text-muted">
+                    A data de última validação é usada para calcular automaticamente 
+                    o vencimento da carteirinha (6 meses após a validação).
+                </p>
+            </div>
+        </div>
+        
+        {% if morador and morador.anexos.count() > 0 %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-paperclip me-2"></i>
+                        Anexos Existentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for anexo in morador.anexos %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">{{ anexo.nome_original }}</span>
+                            <a href="{{ url_for('baixar_anexo', id=anexo.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Controlar visibilidade do campo email do titular
+    document.getElementById('eh_titular').addEventListener('change', function() {
+        const emailTitularDiv = document.getElementById('email_titular_div');
+        const emailTitularField = document.getElementById('email_titular');
+        
+        if (this.checked) {
+            emailTitularDiv.style.display = 'none';
+            emailTitularField.value = '';
+        } else {
+            emailTitularDiv.style.display = 'block';
+        }
+    });
+    
+    // Configurar estado inicial
+    document.addEventListener('DOMContentLoaded', function() {
+        const ehTitular = document.getElementById('eh_titular');
+        const emailTitularDiv = document.getElementById('email_titular_div');
+        
+        if (ehTitular.checked) {
+            emailTitularDiv.style.display = 'none';
+        } else {
+            emailTitularDiv.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard - Sistema de Carteirinhas
+        </h1>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title">Total de Moradores</h5>
+                        <h2 class="mb-0">{{ stats.total_moradores }}</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title">Regulares</h5>
+                        <h2 class="mb-0">{{ stats.regulares }}</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title">A Vencer (30 dias)</h5>
+                        <h2 class="mb-0">{{ stats.a_vencer }}</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title">Vencidas</h5>
+                        <h2 class="mb-0">{{ stats.vencidas }}</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de Status -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribuição de Status das Carteirinhas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="grafico-status" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Gerais
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Sistema de Controle de Carteirinhas</strong>
+                    <p class="text-muted mb-0">Gerencie a validade das carteirinhas da piscina do condomínio</p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Sem Carteirinha:</small>
+                    <strong class="float-end">{{ stats.sem_carteirinha }}</strong>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Percentual Regular:</small>
+                    <strong class="float-end">
+                        {% if stats.total_moradores > 0 %}
+                            {{ "%.1f"|format((stats.regulares / stats.total_moradores) * 100) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </strong>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Percentual Vencidas:</small>
+                    <strong class="float-end text-danger">
+                        {% if stats.total_moradores > 0 %}
+                            {{ "%.1f"|format((stats.vencidas / stats.total_moradores) * 100) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('novo_morador') }}" class="btn btn-primary btn-lg w-100 mb-2">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Novo Morador
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('listar_moradores') }}" class="btn btn-info btn-lg w-100 mb-2">
+                            <i class="fas fa-list me-2"></i>
+                            Listar Moradores
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('listar_moradores') }}?status=a_vencer" class="btn btn-warning btn-lg w-100 mb-2">
+                            <i class="fas fa-clock me-2"></i>
+                            A Vencer
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('executar_notificacoes') }}" class="btn btn-secondary btn-lg w-100 mb-2" onclick="executarNotificacoes(this)">
+                            <i class="fas fa-envelope me-2"></i>
+                            Enviar Notificações
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Renderizar gráfico de status
+    var graphData = {{ graph_json|safe }};
+    Plotly.newPlot('grafico-status', graphData.data, graphData.layout, {
+        responsive: true,
+        displayModeBar: false
+    });
+    
+    // Função para executar notificações
+    function executarNotificacoes(btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+        btn.disabled = true;
+        
+        fetch('{{ url_for("executar_notificacoes") }}')
+            .then(response => response.json())
+            .then(data => {
+                alert(`Notificações enviadas:\n- 30 dias: ${data.notificacoes_30_dias}\n- Vencimento: ${data.notificacoes_vencimento}\n- Erros: ${data.erros.length}`);
+            })
+            .catch(error => {
+                alert('Erro ao enviar notificações: ' + error);
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+SISTEMA CARTEIRINHA PISCINA - AVISO DE VENCIMENTO
+
+Olá, {{ morador.nome_completo }}!
+
+ATENÇÃO: Sua carteirinha da piscina vence em {{ morador.dias_para_vencer }} dias!
+
+Data de Vencimento: {{ morador.data_vencimento|dateformat }}
+
+SEUS DADOS:
+- Nome: {{ morador.nome_completo }}
+- Bloco/Apartamento: {{ morador.bloco }}/{{ morador.apartamento }}
+- Data de Vencimento: {{ morador.data_vencimento|dateformat }}
+{% if not morador.eh_titular %}
+- Titular: {{ morador.email_titular }}
+{% endif %}
+
+COMO RENOVAR:
+1. Entre em contato com a administração do condomínio
+2. Apresente os documentos necessários
+3. Efetue o pagamento das taxas
+4. Aguarde a validação
+
+IMPORTANTE: Após o vencimento, o acesso à piscina será bloqueado até a renovação da carteirinha.
+
+Se você já renovou sua carteirinha ou tem alguma dúvida, entre em contato conosco.
+
+---
+Este é um e-mail automático. Por favor, não responda.
+Sistema de Controle de Carteirinhas da Piscina
+© {{ ""|now }} Seu Condomínio 

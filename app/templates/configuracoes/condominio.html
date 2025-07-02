@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-building me-2"></i>
+                Configurações do Condomínio
+            </h1>
+            <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <!-- Informações Básicas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações Básicas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        {{ form.nome.label(class="form-label") }}
+                        {{ form.nome(class="form-control") }}
+                        {% if form.nome.errors %}
+                            <div class="text-danger">
+                                {% for error in form.nome.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.cnpj.label(class="form-label") }}
+                            {{ form.cnpj(class="form-control") }}
+                            {% if form.cnpj.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cnpj.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.telefone.label(class="form-label") }}
+                            {{ form.telefone(class="form-control") }}
+                            {% if form.telefone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.telefone.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.endereco.label(class="form-label") }}
+                        {{ form.endereco(class="form-control", rows="3") }}
+                        {% if form.endereco.errors %}
+                            <div class="text-danger">
+                                {% for error in form.endereco.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contatos -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-address-book me-2"></i>
+                        Contatos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.email_administracao.label(class="form-label") }}
+                            {{ form.email_administracao(class="form-control") }}
+                            {% if form.email_administracao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email_administracao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.whatsapp.label(class="form-label") }}
+                            {{ form.whatsapp(class="form-control") }}
+                            {% if form.whatsapp.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.whatsapp.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.horario_funcionamento.label(class="form-label") }}
+                        {{ form.horario_funcionamento(class="form-control") }}
+                        {% if form.horario_funcionamento.errors %}
+                            <div class="text-danger">
+                                {% for error in form.horario_funcionamento.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações Operacionais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Configurações Operacionais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.dias_aviso_vencimento.label(class="form-label") }}
+                            {{ form.dias_aviso_vencimento(class="form-control") }}
+                            {% if form.dias_aviso_vencimento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.dias_aviso_vencimento.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Dias antes do vencimento para enviar notificação</div>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.meses_validade_padrao.label(class="form-label") }}
+                            {{ form.meses_validade_padrao(class="form-control") }}
+                            {% if form.meses_validade_padrao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.meses_validade_padrao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Validade padrão das carteirinhas</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="form-check">
+                                    {{ form.permitir_dependentes(class="form-check-input") }}
+                                    {{ form.permitir_dependentes.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Personalização Visual -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-palette me-2"></i>
+                        Personalização Visual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.cor_primaria.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.cor_primaria(class="form-control") }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-palette"></i>
+                                </span>
+                            </div>
+                            {% if form.cor_primaria.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cor_primaria.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.cor_secundaria.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.cor_secundaria(class="form-control") }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-palette"></i>
+                                </span>
+                            </div>
+                            {% if form.cor_secundaria.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cor_secundaria.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Dica:</strong> As cores serão aplicadas na interface do sistema e nos emails de notificação.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                {{ form.submit(class="btn btn-success") }}
+                <a href="{{ url_for('configuracoes') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Preview do Condomínio -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if condominio %}
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="width: 60px; height: 60px; background-color: {{ condominio.cor_primaria or '#007bff' }}; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-building text-white fa-2x"></i>
+                        </div>
+                        <h6>{{ condominio.nome or 'Nome do Condomínio' }}</h6>
+                    </div>
+                    
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>CNPJ:</strong></td>
+                            <td>{{ condominio.cnpj or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Telefone:</strong></td>
+                            <td>{{ condominio.telefone or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ condominio.email_administracao or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>WhatsApp:</strong></td>
+                            <td>{{ condominio.whatsapp or '-' }}</td>
+                        </tr>
+                    </table>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Dicas -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Dicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mantenha os dados de contato sempre atualizados
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Use cores que combinem com a identidade visual
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Configure o prazo de aviso conforme necessário
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Teste as notificações após configurar
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

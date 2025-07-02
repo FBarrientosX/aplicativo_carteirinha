@@ -1,0 +1,17 @@
+SISTEMA CARTEIRINHA PISCINA - NOTIFICAÇÃO
+
+{{ mensagem_personalizada or "Notificação sobre sua carteirinha da piscina." }}
+
+DADOS DO MORADOR:
+- Nome: {{ morador.nome_completo }}
+- Bloco/Apartamento: {{ morador.bloco }}/{{ morador.apartamento }}
+- Email: {{ morador.email }}
+{% if morador.data_vencimento %}
+- Vencimento da Carteirinha: {{ morador.data_vencimento|dateformat }}
+- Status: {% if morador.dias_para_vencer <= 0 %}VENCIDA{% elif morador.dias_para_vencer <= 30 %}A VENCER{% else %}REGULAR{% endif %}
+{% endif %}
+
+---
+Este email foi enviado automaticamente pelo Sistema de Carteirinhas da Piscina.
+Data de envio: {{ data_atual|dateformat('%d/%m/%Y às %H:%M') if data_atual else 'Agora' }}
+Em caso de dúvidas, entre em contato com a administração. 

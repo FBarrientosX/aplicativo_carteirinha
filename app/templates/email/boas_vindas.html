@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao Sistema de Carteirinhas</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #28a745; color: white; text-align: center; padding: 20px; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+        .welcome { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .next-steps { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏊‍♂️ Sistema Carteirinha Piscina</h1>
+            <h2>Bem-vindo!</h2>
+        </div>
+        
+        <div class="content">
+            <div class="welcome">
+                <h3>🎉 Parabéns, {{ morador.nome_completo }}!</h3>
+                <p>Seu cadastro foi realizado com <strong>sucesso</strong> no nosso sistema de carteirinhas da piscina!</p>
+            </div>
+            
+            <div class="info">
+                <h3>📋 Seus dados cadastrados:</h3>
+                <ul>
+                    <li><strong>Nome:</strong> {{ morador.nome_completo }}</li>
+                    <li><strong>Bloco/Apartamento:</strong> {{ morador.bloco }}/{{ morador.apartamento }}</li>
+                    <li><strong>Email:</strong> {{ morador.email }}</li>
+                    <li><strong>Cadastrado em:</strong> {{ morador.data_cadastro|dateformat('%d/%m/%Y às %H:%M') }}</li>
+                    {% if not morador.eh_titular %}
+                        <li><strong>Titular:</strong> {{ morador.email_titular }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            {% if morador.data_vencimento %}
+            <div class="info">
+                <h3>✅ Status da Carteirinha:</h3>
+                <ul>
+                    <li><strong>Vencimento:</strong> {{ morador.data_vencimento|dateformat }}</li>
+                    <li><strong>Status:</strong> 
+                        {% if morador.carteirinha_ativa %}
+                            <span style="color: #28a745;">✅ ATIVA</span>
+                        {% else %}
+                            <span style="color: #dc3545;">❌ INATIVA</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="next-steps">
+                <h3>⏳ Carteirinha pendente de validação</h3>
+                <p>Sua carteirinha ainda não foi validada. Procure a administração para completar o processo.</p>
+            </div>
+            {% endif %}
+            
+            <div class="next-steps">
+                <h3>🚀 Próximos passos:</h3>
+                {% if not morador.data_vencimento %}
+                <ol>
+                    <li>Apresente-se na administração com os documentos necessários</li>
+                    <li>Efetue o pagamento das taxas</li>
+                    <li>Aguarde a validação da carteirinha</li>
+                    <li>Receba confirmação por email quando estiver ativa</li>
+                </ol>
+                {% else %}
+                <ol>
+                    <li><strong>Sua carteirinha já está ativa e pronta para uso! 🎊</strong></li>
+                    <li>Aproveite a piscina do condomínio</li>
+                    <li>Lembre-se de renovar antes do vencimento</li>
+                </ol>
+                {% endif %}
+            </div>
+            
+            <div class="info">
+                <h3>❓ Dúvidas?</h3>
+                <p>Em caso de dúvidas, entre em contato com a administração do condomínio.</p>
+                <p><strong>Importante:</strong> Você receberá notificações automáticas sobre o vencimento da sua carteirinha.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Este é um email automático do Sistema de Carteirinhas da Piscina.</p>
+            <p><strong>Bem-vindo ao nosso condomínio!</strong></p>
+            <p>© {{ ""|now }} Seu Condomínio</p>
+        </div>
+    </div>
+</body>
+</html> 

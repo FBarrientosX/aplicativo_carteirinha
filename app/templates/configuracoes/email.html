@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-envelope me-2"></i>
+                Configurações de Email
+            </h1>
+            <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    Configurações SMTP
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.mail_server.label(class="form-label") }}
+                            {{ form.mail_server(class="form-control") }}
+                            {% if form.mail_server.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.mail_server.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.mail_port.label(class="form-label") }}
+                            {{ form.mail_port(class="form-control") }}
+                            {% if form.mail_port.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.mail_port.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.mail_use_tls(class="form-check-input") }}
+                            {{ form.mail_use_tls.label(class="form-check-label") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.mail_username.label(class="form-label") }}
+                        {{ form.mail_username(class="form-control") }}
+                        {% if form.mail_username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.mail_username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.mail_password.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.mail_password(class="form-control", placeholder="mhsv edef eybs pfsf (senha de app de 16 dígitos)") }}
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.mail_password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.mail_password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                            <strong>Gmail:</strong> Use senha de app de 16 dígitos (pode ter espaços), <strong>NÃO</strong> sua senha normal!
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.mail_default_sender.label(class="form-label") }}
+                        {{ form.mail_default_sender(class="form-control") }}
+                        {% if form.mail_default_sender.errors %}
+                            <div class="text-danger">
+                                {% for error in form.mail_default_sender.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Deixe vazio para usar o mesmo email do usuário.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <div class="d-flex gap-2">
+                            <a href="https://myaccount.google.com/apppasswords" target="_blank" class="btn btn-warning btn-sm">
+                                <i class="fab fa-google me-1"></i>
+                                Senha Gmail
+                            </a>
+                            <a href="{{ url_for('teste_email_configurado') }}" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-1"></i>
+                                Testar Email
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Guia de Configuração -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>
+                    Guia de Configuração
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="guiaEmail">
+                    <!-- Gmail -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingGmail">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGmail">
+                                <i class="fab fa-google me-2"></i>
+                                Gmail
+                            </button>
+                        </h2>
+                        <div id="collapseGmail" class="accordion-collapse collapse show" data-bs-parent="#guiaEmail">
+                            <div class="accordion-body">
+                                <div class="bg-warning bg-opacity-10 p-2 rounded mb-2">
+                                    <strong class="text-warning">⚠️ Erro 530 Authentication Required?</strong>
+                                </div>
+                                <small>
+                                    <strong>Servidor:</strong> smtp.gmail.com<br>
+                                    <strong>Porta:</strong> 587<br>
+                                    <strong>TLS:</strong> Sim<br><br>
+                                    
+                                    <strong class="text-danger">OBRIGATÓRIO:</strong><br>
+                                    1. <strong>Ativar 2FA:</strong> 
+                                    <a href="https://myaccount.google.com/security" target="_blank" class="text-decoration-none">
+                                        myaccount.google.com/security
+                                    </a><br>
+                                    
+                                    2. <strong>Gerar Senha de App:</strong> 
+                                    <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-decoration-none">
+                                        myaccount.google.com/apppasswords
+                                    </a><br>
+                                    
+                                    3. <strong>Usar senha de 16 dígitos gerada, NÃO sua senha normal do Gmail</strong><br><br>
+                                    
+                                    <div class="bg-danger bg-opacity-10 p-1 rounded">
+                                        <strong class="text-danger">❌ Não funciona:</strong> Senha normal<br>
+                                        <strong class="text-success">✅ Funciona:</strong> Senha de app de 16 dígitos
+                                    </div>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Outlook -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOutlook">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutlook">
+                                <i class="fab fa-microsoft me-2"></i>
+                                Outlook
+                            </button>
+                        </h2>
+                        <div id="collapseOutlook" class="accordion-collapse collapse" data-bs-parent="#guiaEmail">
+                            <div class="accordion-body">
+                                <small>
+                                    <strong>Servidor:</strong> smtp-mail.outlook.com<br>
+                                    <strong>Porta:</strong> 587<br>
+                                    <strong>TLS:</strong> Sim<br><br>
+                                    Use sua senha normal do Outlook.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Yahoo -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingYahoo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseYahoo">
+                                <i class="fab fa-yahoo me-2"></i>
+                                Yahoo
+                            </button>
+                        </h2>
+                        <div id="collapseYahoo" class="accordion-collapse collapse" data-bs-parent="#guiaEmail">
+                            <div class="accordion-body">
+                                <small>
+                                    <strong>Servidor:</strong> smtp.mail.yahoo.com<br>
+                                    <strong>Porta:</strong> 587<br>
+                                    <strong>TLS:</strong> Sim<br><br>
+                                    <strong>Importante:</strong> Gere uma senha de app nas configurações de segurança do Yahoo.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status -->
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <h6 class="card-title">Status da Configuração</h6>
+                <div id="status-email">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                    <p class="small mb-0">Configure o email para ativar as notificações automáticas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle para mostrar/ocultar senha
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('mail_password');
+    
+    if (togglePassword && passwordField) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

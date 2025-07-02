@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-bell me-2"></i>
+                Resultado das Notificações
+            </h1>
+            <div>
+                <a href="{{ url_for('relatorios') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar aos Relatórios
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo dos Resultados -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Resumo dos Envios
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
+                            <h3 class="mb-1">{{ enviadas }}</h3>
+                            <p class="text-muted mb-0">Total Enviadas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                            <h3 class="mb-1">{{ erros }}</h3>
+                            <p class="text-muted mb-0">Com Erros</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h3 class="mb-1">{{ enviadas - erros if enviadas > erros else 0 }}</h3>
+                            <p class="text-muted mb-0">Com Sucesso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalhes dos Resultados -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Status do Envio
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if enviadas > 0 %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Sucesso!</strong> {{ enviadas }} notificação(ões) enviada(s) com sucesso.
+                    </div>
+                    
+                    {% if erros > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> {{ erros }} notificação(ões) tiveram erro no envio.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-check-circle text-success me-2"></i>Enviadas com sucesso</span>
+                        <span class="badge bg-success">{{ enviadas - erros if enviadas > erros else 0 }}</span>
+                    </div>
+                    
+                    {% if erros > 0 %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="fas fa-times-circle text-danger me-2"></i>Com erros</span>
+                            <span class="badge bg-danger">{{ erros }}</span>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nenhuma notificação foi enviada.</strong> Verifique se há moradores selecionados ou se as configurações de email estão corretas.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Importantes
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        Os emails foram enviados para os titulares ou dependentes conforme cadastrado
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-history text-info me-2"></i>
+                        As notificações são enviadas automaticamente apenas uma vez por período
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar text-success me-2"></i>
+                        Notificações de 30 dias são enviadas automaticamente todo dia às 9h
+                    </li>
+                    <li>
+                        <i class="fas fa-database text-secondary me-2"></i>
+                        Todos os envios são registrados no log do sistema
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Erros (se houver) -->
+{% if erros > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erros Encontrados ({{ erros }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <p><strong>{{ erros }} erro(s) ocorreram durante o envio das notificações.</strong></p>
+                    <p>Para ver os detalhes dos erros, verifique as mensagens de flash na página anterior ou os logs do sistema.</p>
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Dica:</strong> Verifique se os emails estão corretos no cadastro dos moradores e se o servidor de email está configurado.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Próximas Ações -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>
+                    Próximas Ações
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <a href="{{ url_for('listar_moradores') }}?status=a_vencer" class="btn btn-warning btn-lg">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Ver A Vencer
+                            </a>
+                            <p class="text-muted mt-2 mb-0">Ver moradores com carteirinhas a vencer</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <a href="{{ url_for('listar_moradores') }}?status=vencida" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times-circle me-2"></i>
+                                Ver Vencidas
+                            </a>
+                            <p class="text-muted mt-2 mb-0">Ver carteirinhas que já venceram</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <a href="{{ url_for('relatorios') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Ver Relatórios
+                            </a>
+                            <p class="text-muted mt-2 mb-0">Voltar aos relatórios gerais</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
