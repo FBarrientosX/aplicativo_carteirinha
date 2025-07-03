@@ -1,8 +1,10 @@
 from flask import render_template, flash, redirect, url_for, request, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
+import io
 from app import app, db
-from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio
-from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm
+from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas
+from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm
+from app.carteirinha_service import gerar_carteirinha_completa, gerar_pdf_carteirinha, gerar_lote_pdf
 from app.email_service import enviar_email_boas_vindas, verificar_e_enviar_notificacoes, enviar_notificacao_30_dias, enviar_notificacao_vencimento, enviar_email
 from datetime import datetime, timedelta
 import os
@@ -16,7 +18,7 @@ from sqlalchemy import func
 @app.route('/index')
 def index():
     """Dashboard principal com estatísticas"""
-    # Estatísticas gerais
+    # Estatísticas de moradores
     total_moradores = Morador.query.count()
     
     # Contadores por status
@@ -39,13 +41,24 @@ def index():
         Morador.data_vencimento.is_(None)
     ).count()
     
+    # Estatísticas de salva-vidas
+    total_salva_vidas = SalvaVidas.query.count()
+    salva_vidas_ativos = SalvaVidas.query.filter_by(status='ativo').count()
+    salva_vidas_certificados = SalvaVidas.query.filter(
+        SalvaVidas.certificacao_salvamento == True,
+        SalvaVidas.certificacao_primeiros_socorros == True
+    ).count()
+    
     # Dados para gráficos
     stats = {
         'total_moradores': total_moradores,
         'regulares': regulares,
         'a_vencer': a_vencer,
         'vencidas': vencidas,
-        'sem_carteirinha': sem_carteirinha
+        'sem_carteirinha': sem_carteirinha,
+        'total_salva_vidas': total_salva_vidas,
+        'salva_vidas_ativos': salva_vidas_ativos,
+        'salva_vidas_certificados': salva_vidas_certificados
     }
     
     # Gráfico de pizza
@@ -345,45 +358,56 @@ def executar_notificacoes():
                          enviadas=total_enviadas,
                          erros=len(resultados['erros']) if resultados['erros'] else 0)
 
-@app.route('/notificacoes/teste-email')
-def teste_email():
-    """Testar configuração de email SMTP"""
-    try:
-        from app.email_service import mail
-        from flask import current_app
-        from flask_mail import Message
-        from datetime import datetime
-        
-        # Verificar se as configurações estão definidas
-        if not current_app.config.get('MAIL_USERNAME'):
-            flash('Configurações de email não encontradas! Verifique o arquivo .env', 'danger')
-            return redirect(url_for('relatorios'))
-        
-        # Criar mensagem de teste
-        msg = Message(
-            subject="✅ Teste de Email - Sistema Carteirinhas",
-            recipients=[current_app.config['MAIL_USERNAME']],  # Enviar para próprio email
-            html=render_template('email/teste_email.html', data_atual=datetime.now()),
-            body="Teste de email - Se você está lendo isso, o SMTP está funcionando!"
-        )
-        
-        # Tentar enviar
-        mail.send(msg)
-        
-        flash(f'✅ Email de teste enviado com sucesso para {current_app.config["MAIL_USERNAME"]}!', 'success')
-        
-    except Exception as e:
-        flash(f'❌ Erro ao enviar email de teste: {str(e)}', 'danger')
-    
-    return redirect(url_for('relatorios'))
+# Rota de teste de email removida - usar /notificacoes/teste-email-configurado
 
 @app.route('/configuracoes')
 def configuracoes():
     """Página principal de configurações"""
     from datetime import datetime
+    from app.models import ConfiguracaoSistema, Morador
+    import os
+    
+    # Verificar status das configurações
+    mail_server = ConfiguracaoSistema.get_valor('MAIL_SERVER')
+    mail_username = ConfiguracaoSistema.get_valor('MAIL_USERNAME')
+    mail_password = ConfiguracaoSistema.get_valor('MAIL_PASSWORD')
+    
+    # Status do email
+    email_configurado = bool(mail_server and mail_username and mail_password)
+    
+    # Status do banco de dados
+    try:
+        total_moradores = Morador.query.count()
+        banco_conectado = True
+    except:
+        total_moradores = 0
+        banco_conectado = False
+    
+    # Status do backup
+    backup_automatico = ConfiguracaoSistema.get_valor('BACKUP_AUTOMATICO', False)
+    
+    # Status de segurança (baseado em configurações)
+    timeout_configurado = ConfiguracaoSistema.get_valor('SESSAO_TIMEOUT', 120) > 0
+    max_tentativas_configurado = ConfiguracaoSistema.get_valor('MAX_TENTATIVAS_LOGIN', 5) > 0
+    seguranca_ativa = timeout_configurado and max_tentativas_configurado
+    
+    # Informações do sistema
+    db_path = os.path.join(os.path.dirname(__file__), '..', 'carteirinha_piscina.db')
+    db_existe = os.path.exists(db_path)
+    
+    # Determinar modo (baseado em configurações de debug)
+    modo_sistema = "Desenvolvimento" if app.debug else "Produção"
+    
     return render_template('configuracoes/index.html', 
                          title='Configurações',
-                         data_atual=datetime.now().strftime('%d/%m/%Y'))
+                         data_atual=datetime.now().strftime('%d/%m/%Y'),
+                         email_configurado=email_configurado,
+                         banco_conectado=banco_conectado,
+                         backup_automatico=backup_automatico,
+                         seguranca_ativa=seguranca_ativa,
+                         total_moradores=total_moradores,
+                         db_existe=db_existe,
+                         modo_sistema=modo_sistema)
 
 @app.route('/configuracoes/email', methods=['GET', 'POST'])
 def configuracoes_email():
@@ -432,9 +456,16 @@ def configuracoes_email():
     form.mail_username.data = ConfiguracaoSistema.get_valor('MAIL_USERNAME', '')
     form.mail_default_sender.data = ConfiguracaoSistema.get_valor('MAIL_DEFAULT_SENDER', '')
     
+    # Verificar se o email está configurado para mostrar status
+    mail_server = ConfiguracaoSistema.get_valor('MAIL_SERVER')
+    mail_username = ConfiguracaoSistema.get_valor('MAIL_USERNAME')
+    mail_password = ConfiguracaoSistema.get_valor('MAIL_PASSWORD')
+    email_configurado = bool(mail_server and mail_username and mail_password)
+    
     return render_template('configuracoes/email.html', 
                          title='Configurações de Email', 
-                         form=form)
+                         form=form,
+                         email_configurado=email_configurado)
 
 @app.route('/configuracoes/condominio', methods=['GET', 'POST'])
 def configuracoes_condominio():
@@ -520,9 +551,26 @@ def configuracoes_geral():
     form.notificacoes_automaticas.data = ConfiguracaoSistema.get_valor('NOTIFICACOES_AUTOMATICAS', True)
     form.horario_notificacoes.data = ConfiguracaoSistema.get_valor('HORARIO_NOTIFICACOES', '09:00')
     
+    # Verificar status do email para mostrar no template
+    mail_server = ConfiguracaoSistema.get_valor('MAIL_SERVER')
+    mail_username = ConfiguracaoSistema.get_valor('MAIL_USERNAME')
+    mail_password = ConfiguracaoSistema.get_valor('MAIL_PASSWORD')
+    email_configurado = bool(mail_server and mail_username and mail_password)
+    
+    # Status do backup (baseado na configuração carregada)
+    backup_configurado = form.backup_automatico.data if hasattr(form, 'backup_automatico') and form.backup_automatico.data is not None else ConfiguracaoSistema.get_valor('BACKUP_AUTOMATICO', False)
+    
+    # Status de segurança (baseado nas configurações carregadas)
+    timeout_ok = form.sessao_timeout.data if hasattr(form, 'sessao_timeout') and form.sessao_timeout.data is not None else ConfiguracaoSistema.get_valor('SESSAO_TIMEOUT', 120) > 0
+    tentativas_ok = form.max_tentativas_login.data if hasattr(form, 'max_tentativas_login') and form.max_tentativas_login.data is not None else ConfiguracaoSistema.get_valor('MAX_TENTATIVAS_LOGIN', 5) > 0
+    seguranca_configurada = timeout_ok and tentativas_ok
+    
     return render_template('configuracoes/geral.html', 
                          title='Configurações Gerais', 
-                         form=form)
+                         form=form,
+                         email_configurado=email_configurado,
+                         backup_configurado=backup_configurado,
+                         seguranca_configurada=seguranca_configurada)
 
 @app.route('/notificacoes/teste-email-configurado')
 def teste_email_configurado():
@@ -587,6 +635,342 @@ def teste_email_configurado():
             flash(f'❌ Erro ao enviar email de teste: {erro_msg}', 'danger')
     
     return redirect(url_for('configuracoes_email'))
+
+# ===== ROTAS PARA SALVA-VIDAS =====
+
+@app.route('/salva-vidas')
+def listar_salva_vidas():
+    """Lista todos os salva-vidas com filtros"""
+    form = FiltroSalvaVidasForm(request.args)
+    
+    # Query base
+    query = SalvaVidas.query
+    
+    # Aplicar filtros
+    if form.status.data:
+        query = query.filter(SalvaVidas.status == form.status.data)
+    
+    if form.busca.data:
+        query = query.filter(SalvaVidas.nome_completo.contains(form.busca.data))
+    
+    if form.certificacao.data:
+        if form.certificacao.data == 'salvamento':
+            query = query.filter(SalvaVidas.certificacao_salvamento == True)
+        elif form.certificacao.data == 'primeiros_socorros':
+            query = query.filter(SalvaVidas.certificacao_primeiros_socorros == True)
+        elif form.certificacao.data == 'ambas':
+            query = query.filter(
+                SalvaVidas.certificacao_salvamento == True,
+                SalvaVidas.certificacao_primeiros_socorros == True
+            )
+    
+    # Paginação
+    page = request.args.get('page', 1, type=int)
+    salva_vidas = query.order_by(SalvaVidas.nome_completo).paginate(
+        page=page, per_page=15, error_out=False
+    )
+    
+    # Estatísticas rápidas
+    stats = {
+        'total': SalvaVidas.query.count(),
+        'ativos': SalvaVidas.query.filter_by(status='ativo').count(),
+        'inativos': SalvaVidas.query.filter(SalvaVidas.status != 'ativo').count(),
+        'certificados': SalvaVidas.query.filter(
+            SalvaVidas.certificacao_salvamento == True,
+            SalvaVidas.certificacao_primeiros_socorros == True
+        ).count()
+    }
+    
+    return render_template('salva_vidas/listar.html',
+                         title='Equipe de Salva-vidas',
+                         salva_vidas=salva_vidas,
+                         form=form,
+                         stats=stats)
+
+@app.route('/salva-vidas/novo', methods=['GET', 'POST'])
+def novo_salva_vidas():
+    """Cadastrar novo salva-vidas"""
+    form = SalvaVidasForm()
+    
+    if form.validate_on_submit():
+        salva_vidas = SalvaVidas(
+            nome_completo=form.nome_completo.data,
+            cpf=form.cpf.data,
+            rg=form.rg.data,
+            data_nascimento=form.data_nascimento.data,
+            telefone=form.telefone.data,
+            email=form.email.data,
+            endereco=form.endereco.data,
+            data_contratacao=form.data_contratacao.data,
+            data_demissao=form.data_demissao.data,
+            status=form.status.data,
+            salario=form.salario.data,
+            certificacao_salvamento=form.certificacao_salvamento.data,
+            certificacao_primeiros_socorros=form.certificacao_primeiros_socorros.data,
+            data_vencimento_certificacao=form.data_vencimento_certificacao.data,
+            outras_qualificacoes=form.outras_qualificacoes.data,
+            horario_trabalho=form.horario_trabalho.data,
+            observacoes=form.observacoes.data
+        )
+        
+        # Salvar foto se fornecida
+        if form.foto.data:
+            salvar_foto_salva_vidas(salva_vidas, form.foto.data)
+        
+        db.session.add(salva_vidas)
+        db.session.commit()
+        
+        flash('Salva-vidas cadastrado com sucesso!', 'success')
+        return redirect(url_for('listar_salva_vidas'))
+    
+    return render_template('salva_vidas/form.html',
+                         title='Novo Salva-vidas',
+                         form=form)
+
+@app.route('/salva-vidas/<int:id>/editar', methods=['GET', 'POST'])
+def editar_salva_vidas(id):
+    """Editar salva-vidas existente"""
+    salva_vidas = SalvaVidas.query.get_or_404(id)
+    form = SalvaVidasForm(obj=salva_vidas)
+    
+    if form.validate_on_submit():
+        form.populate_obj(salva_vidas)
+        salva_vidas.data_atualizacao = datetime.utcnow()
+        
+        # Salvar foto se fornecida
+        if form.foto.data:
+            salvar_foto_salva_vidas(salva_vidas, form.foto.data)
+        
+        db.session.commit()
+        flash('Dados atualizados com sucesso!', 'success')
+        return redirect(url_for('ver_salva_vidas', id=id))
+    
+    return render_template('salva_vidas/form.html',
+                         title='Editar Salva-vidas',
+                         form=form,
+                         salva_vidas=salva_vidas)
+
+@app.route('/salva-vidas/<int:id>')
+def ver_salva_vidas(id):
+    """Ver detalhes do salva-vidas"""
+    salva_vidas = SalvaVidas.query.get_or_404(id)
+    return render_template('salva_vidas/detalhes.html',
+                         title=f'Salva-vidas: {salva_vidas.nome_completo}',
+                         salva_vidas=salva_vidas)
+
+@app.route('/salva-vidas/<int:id>/inativar', methods=['POST'])
+def inativar_salva_vidas(id):
+    """Inativar salva-vidas"""
+    salva_vidas = SalvaVidas.query.get_or_404(id)
+    salva_vidas.status = 'inativo'
+    salva_vidas.data_atualizacao = datetime.utcnow()
+    db.session.commit()
+    
+    flash(f'Salva-vidas {salva_vidas.nome_completo} foi inativado.', 'warning')
+    return redirect(url_for('ver_salva_vidas', id=id))
+
+@app.route('/salva-vidas/<int:id>/reativar', methods=['POST'])
+def reativar_salva_vidas(id):
+    """Reativar salva-vidas"""
+    salva_vidas = SalvaVidas.query.get_or_404(id)
+    salva_vidas.status = 'ativo'
+    salva_vidas.data_atualizacao = datetime.utcnow()
+    db.session.commit()
+    
+    flash(f'Salva-vidas {salva_vidas.nome_completo} foi reativado.', 'success')
+    return redirect(url_for('ver_salva_vidas', id=id))
+
+def salvar_foto_salva_vidas(salva_vidas, arquivo):
+    """Salvar foto do salva-vidas"""
+    if arquivo:
+        filename = secure_filename(arquivo.filename)
+        # Gerar nome único
+        nome_unico = f"salva_vidas_{salva_vidas.id}_{uuid.uuid4().hex[:8]}.{filename.rsplit('.', 1)[1].lower()}"
+        
+        # Criar diretório se não existir
+        upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'salva_vidas')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Salvar arquivo
+        caminho_arquivo = os.path.join(upload_dir, nome_unico)
+        arquivo.save(caminho_arquivo)
+        
+        # Atualizar banco
+        salva_vidas.foto_filename = nome_unico
+        db.session.commit()
+
+@app.route('/salva-vidas/foto/<filename>')
+def foto_salva_vidas(filename):
+    """Servir foto do salva-vidas"""
+    return send_from_directory(
+        os.path.join(app.config['UPLOAD_FOLDER'], 'salva_vidas'),
+        filename
+    )
+
+# ===== ROTAS PARA CARTEIRINHAS =====
+
+@app.route('/morador/<int:id>/carteirinha')
+def visualizar_carteirinha(id):
+    """Visualizar carteirinha do morador"""
+    morador = Morador.query.get_or_404(id)
+    condominio = Condominio.query.first()
+    
+    return render_template('moradores/carteirinha.html',
+                         title=f'Carteirinha - {morador.nome_completo}',
+                         morador=morador,
+                         condominio=condominio)
+
+@app.route('/morador/<int:id>/carteirinha/gerar')
+def gerar_carteirinha_imagem(id):
+    """Gerar imagem PNG da carteirinha"""
+    return gerar_carteirinha_png(id)
+
+@app.route('/morador/<int:id>/carteirinha/png')
+def gerar_carteirinha_png(id):
+    """Gerar imagem da carteirinha"""
+    try:
+        print(f"Iniciando geração da carteirinha para morador ID: {id}")
+        
+        morador = Morador.query.get_or_404(id)
+        print(f"Morador encontrado: {morador.nome_completo}")
+        
+        condominio = Condominio.query.first()
+        print(f"Condomínio: {condominio.nome if condominio else 'Não encontrado'}")
+        
+        # Gerar a carteirinha
+        print("Gerando carteirinha...")
+        img = gerar_carteirinha_completa(morador, condominio)
+        print(f"Carteirinha gerada com sucesso! Tamanho: {img.size}")
+        
+        # Salvar em buffer
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='PNG', quality=95, dpi=(300, 300))
+        img_buffer.seek(0)
+        
+        print(f"Buffer criado com {len(img_buffer.getvalue())} bytes")
+        
+        # Retornar como resposta
+        from flask import Response
+        return Response(
+            img_buffer.getvalue(),
+            mimetype='image/png',
+            headers={'Content-Disposition': f'inline; filename=carteirinha_{morador.id}.png'}
+        )
+        
+    except Exception as e:
+        print(f'Erro ao gerar carteirinha: {str(e)}')
+        import traceback
+        traceback.print_exc()
+        
+        # Retornar erro HTTP 500 com mensagem
+        from flask import Response
+        return Response(
+            f'Erro ao gerar carteirinha: {str(e)}',
+            status=500,
+            mimetype='text/plain'
+        )
+
+@app.route('/morador/<int:id>/carteirinha/download-pdf')
+def download_carteirinha_pdf(id):
+    """Download da carteirinha em PDF"""
+    morador = Morador.query.get_or_404(id)
+    condominio = Condominio.query.first()
+    
+    try:
+        # Gerar PDF da carteirinha
+        pdf_buffer = gerar_pdf_carteirinha(morador, condominio)
+        
+        # Retornar como download
+        from flask import Response
+        return Response(
+            pdf_buffer.getvalue(),
+            mimetype='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename=carteirinha_{morador.nome_completo.replace(" ", "_")}.pdf'}
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao gerar PDF: {str(e)}', 'danger')
+        return redirect(url_for('ver_morador', id=id))
+
+@app.route('/carteirinhas/selecionar')
+def selecionar_morador_carteirinha():
+    """Página para selecionar morador para gerar carteirinha"""
+    from app.forms import FiltroMoradorForm
+    
+    form = FiltroMoradorForm()
+    
+    # Configurar choices do form
+    blocos = db.session.query(Morador.bloco).distinct().all()
+    form.bloco.choices = [('', 'Todos os blocos')] + [(b[0], f'Bloco {b[0]}') for b in blocos]
+    
+    # Aplicar filtros
+    query = Morador.query
+    
+    if form.bloco.data:
+        query = query.filter(Morador.bloco == form.bloco.data)
+    
+    if form.status.data:
+        if form.status.data == 'regular':
+            query = query.filter(Morador.carteirinha_ativa == True)
+        elif form.status.data == 'vencida':
+            query = query.filter(Morador.data_vencimento < date.today())
+        elif form.status.data == 'a_vencer':
+            data_limite = date.today() + timedelta(days=30)
+            query = query.filter(Morador.data_vencimento.between(date.today(), data_limite))
+        elif form.status.data == 'sem_carteirinha':
+            query = query.filter(Morador.data_vencimento.is_(None))
+    
+    if form.busca.data:
+        busca = f"%{form.busca.data}%"
+        query = query.filter(Morador.nome_completo.ilike(busca))
+    
+    # Paginação
+    page = request.args.get('page', 1, type=int)
+    moradores = query.order_by(Morador.nome_completo).paginate(
+        page=page, per_page=12, error_out=False
+    )
+    
+    return render_template('moradores/selecionar_carteirinha.html', 
+                         moradores=moradores, form=form)
+
+@app.route('/carteirinhas/lote', methods=['GET', 'POST'])
+def gerar_carteirinhas_lote():
+    """Gerar carteirinhas em lote"""
+    if request.method == 'POST':
+        ids_moradores = request.form.getlist('moradores_ids')
+        
+        if not ids_moradores:
+            flash('Selecione pelo menos um morador.', 'warning')
+            return redirect(url_for('gerar_carteirinhas_lote'))
+        
+        try:
+            # Buscar moradores selecionados
+            moradores = Morador.query.filter(Morador.id.in_(ids_moradores)).all()
+            condominio = Condominio.query.first()
+            
+            # Gerar PDF com múltiplas carteirinhas
+            pdf_buffer = gerar_lote_pdf(moradores, condominio)
+            
+            # Retornar como download
+            from flask import Response
+            return Response(
+                pdf_buffer.getvalue(),
+                mimetype='application/pdf',
+                headers={'Content-Disposition': f'attachment; filename=carteirinhas_lote_{len(moradores)}_moradores.pdf'}
+            )
+            
+        except Exception as e:
+            flash(f'Erro ao gerar carteirinhas em lote: {str(e)}', 'danger')
+            return redirect(url_for('gerar_carteirinhas_lote'))
+    
+    # GET - mostrar formulário de seleção
+    moradores = Morador.query.filter(
+        Morador.data_vencimento.isnot(None)
+    ).order_by(Morador.nome_completo).all()
+    
+    return render_template('moradores/carteirinhas_lote.html',
+                         title='Gerar Carteirinhas em Lote',
+                         moradores=moradores)
 
 @app.route('/notificacoes/manual', methods=['GET', 'POST'])
 def notificacoes_manual():

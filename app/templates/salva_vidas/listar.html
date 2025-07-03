@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-life-ring me-2"></i>
+                Equipe de Salva-vidas
+            </h1>
+            <a href="{{ url_for('novo_salva_vidas') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Novo Salva-vidas
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x text-info mb-2"></i>
+                <h3 class="mb-1">{{ stats.total }}</h3>
+                <p class="text-muted mb-0">Total</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h3 class="mb-1">{{ stats.ativos }}</h3>
+                <p class="text-muted mb-0">Ativos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-pause-circle fa-2x text-warning mb-2"></i>
+                <h3 class="mb-1">{{ stats.inativos }}</h3>
+                <p class="text-muted mb-0">Inativos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-certificate fa-2x text-primary mb-2"></i>
+                <h3 class="mb-1">{{ stats.certificados }}</h3>
+                <p class="text-muted mb-0">Certificados</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.certificacao.label(class="form-label") }}
+                        {{ form.certificacao(class="form-select") }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.busca.label(class="form-label") }}
+                        {{ form.busca(class="form-control") }}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        {{ form.submit(class="btn btn-outline-primary w-100") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Salva-vidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Salva-vidas
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if salva_vidas.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Status</th>
+                                    <th>Certificações</th>
+                                    <th>Tempo de Serviço</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sv in salva_vidas.items %}
+                                <tr>
+                                    <td>
+                                        {% if sv.foto_filename %}
+                                            <img src="{{ url_for('foto_salva_vidas', filename=sv.foto_filename) }}" 
+                                                 class="rounded-circle" width="40" height="40" alt="Foto">
+                                        {% else %}
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ sv.nome_completo }}</strong>
+                                            <br><small class="text-muted">{{ sv.idade }} anos</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ sv.telefone }}</td>
+                                    <td>
+                                        <span class="badge {{ sv.status_badge_class }}">
+                                            {{ sv.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if sv.certificacao_salvamento %}
+                                            <span class="badge bg-info me-1">Salvamento</span>
+                                        {% endif %}
+                                        {% if sv.certificacao_primeiros_socorros %}
+                                            <span class="badge bg-success">P. Socorros</span>
+                                        {% endif %}
+                                        {% if not sv.certificacao_salvamento and not sv.certificacao_primeiros_socorros %}
+                                            <span class="text-muted">Nenhuma</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sv.tempo_servico %}
+                                            {{ sv.tempo_servico }} anos
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('ver_salva_vidas', id=sv.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('editar_salva_vidas', id=sv.id) }}" 
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if salva_vidas.pages > 1 %}
+                    <nav aria-label="Paginação">
+                        <ul class="pagination justify-content-center mt-3">
+                            {% if salva_vidas.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('listar_salva_vidas', page=salva_vidas.prev_num) }}">
+                                        Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in salva_vidas.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != salva_vidas.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('listar_salva_vidas', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if salva_vidas.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('listar_salva_vidas', page=salva_vidas.next_num) }}">
+                                        Próximo
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-life-ring fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum salva-vidas encontrado</h5>
+                        <p class="text-muted">Cadastre o primeiro salva-vidas da equipe.</p>
+                        <a href="{{ url_for('novo_salva_vidas') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>
+                            Cadastrar Salva-vidas
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

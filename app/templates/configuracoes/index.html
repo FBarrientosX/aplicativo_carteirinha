@@ -74,30 +74,54 @@
                 <div class="row">
                     <div class="col-md-3">
                         <div class="text-center">
-                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                            <h6>Sistema</h6>
-                            <span class="badge bg-success">Online</span>
+                            {% if total_moradores >= 0 %}
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h6>Sistema</h6>
+                                <span class="badge bg-success">Online</span>
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <h6>Sistema</h6>
+                                <span class="badge bg-warning">Erro</span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
-                            <h6>Banco de Dados</h6>
-                            <span class="badge bg-success">Conectado</span>
+                            {% if banco_conectado %}
+                                <i class="fas fa-database fa-2x text-success mb-2"></i>
+                                <h6>Banco de Dados</h6>
+                                <span class="badge bg-success">Conectado</span>
+                            {% else %}
+                                <i class="fas fa-database fa-2x text-danger mb-2"></i>
+                                <h6>Banco de Dados</h6>
+                                <span class="badge bg-danger">Erro</span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <i class="fas fa-envelope fa-2x text-warning mb-2"></i>
-                            <h6>Email SMTP</h6>
-                            <span class="badge bg-warning">Configurar</span>
+                            {% if email_configurado %}
+                                <i class="fas fa-envelope fa-2x text-success mb-2"></i>
+                                <h6>Email SMTP</h6>
+                                <span class="badge bg-success">Configurado</span>
+                            {% else %}
+                                <i class="fas fa-envelope fa-2x text-warning mb-2"></i>
+                                <h6>Email SMTP</h6>
+                                <span class="badge bg-warning">Configurar</span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
-                            <h6>Segurança</h6>
-                            <span class="badge bg-success">Ativo</span>
+                            {% if seguranca_ativa %}
+                                <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                <h6>Segurança</h6>
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                                <h6>Segurança</h6>
+                                <span class="badge bg-warning">Configurar</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -126,11 +150,11 @@
                             </tr>
                             <tr>
                                 <td><strong>Banco de Dados:</strong></td>
-                                <td>SQLite (Desenvolvimento)</td>
+                                <td>SQLite ({{ modo_sistema }})</td>
                             </tr>
                             <tr>
-                                <td><strong>Framework:</strong></td>
-                                <td>Flask + SQLAlchemy</td>
+                                <td><strong>Total de Moradores:</strong></td>
+                                <td>{{ total_moradores }}</td>
                             </tr>
                         </table>
                     </div>
@@ -138,15 +162,27 @@
                         <table class="table table-sm">
                             <tr>
                                 <td><strong>Data de Instalação:</strong></td>
-                                <td>29/12/2024</td>
+                                <td>{{ data_atual }}</td>
                             </tr>
                             <tr>
-                                <td><strong>Último Backup:</strong></td>
-                                <td>Não configurado</td>
+                                <td><strong>Backup Automático:</strong></td>
+                                <td>
+                                    {% if backup_automatico %}
+                                        <span class="text-success">✅ Ativo</span>
+                                    {% else %}
+                                        <span class="text-warning">⚠️ Desativado</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             <tr>
                                 <td><strong>Modo:</strong></td>
-                                <td>Desenvolvimento</td>
+                                <td>
+                                    {% if modo_sistema == 'Desenvolvimento' %}
+                                        <span class="text-info">🔧 {{ modo_sistema }}</span>
+                                    {% else %}
+                                        <span class="text-success">🚀 {{ modo_sistema }}</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                         </table>
                     </div>

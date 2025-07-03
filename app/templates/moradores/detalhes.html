@@ -127,15 +127,61 @@
                     </dd>
                 </dl>
                 
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('validar_carteirinha', id=morador.id) }}" class="btn btn-success me-2">
-                        <i class="fas fa-check me-1"></i>
-                        Validar Carteirinha
-                    </a>
-                    <a href="{{ url_for('ajustar_vencimento', id=morador.id) }}" class="btn btn-warning">
-                        <i class="fas fa-calendar-alt me-1"></i>
-                        Ajustar Vencimento
-                    </a>
+                <div class="mt-3">
+                    <h6 class="text-center mb-3">Ações da Carteirinha</h6>
+                    
+                    <!-- Geração de Carteirinha -->
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="{{ url_for('visualizar_carteirinha', id=morador.id) }}" 
+                           class="btn btn-primary" target="_blank">
+                            <i class="fas fa-id-card me-2"></i>
+                            Visualizar Carteirinha
+                        </a>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <a href="{{ url_for('gerar_carteirinha_png', id=morador.id) }}" 
+                               class="btn btn-outline-info w-100" target="_blank">
+                                <i class="fas fa-image me-1"></i>
+                                Download PNG
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{{ url_for('download_carteirinha_pdf', id=morador.id) }}" 
+                               class="btn btn-outline-danger w-100">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                Download PDF
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Outras Ações -->
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <a href="{{ url_for('validar_carteirinha', id=morador.id) }}" 
+                               class="btn btn-success w-100 btn-sm">
+                                <i class="fas fa-check me-1"></i>
+                                Validar
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="{{ url_for('ajustar_vencimento', id=morador.id) }}" 
+                               class="btn btn-warning w-100 btn-sm">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Vencimento
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="{{ url_for('gerar_carteirinhas_lote') }}?morador={{ morador.id }}" 
+                               class="btn btn-info w-100 btn-sm">
+                                <i class="fas fa-print me-1"></i>
+                                Imprimir
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

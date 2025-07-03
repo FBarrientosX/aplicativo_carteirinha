@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitField, SelectField, IntegerField, PasswordField
-from wtforms.validators import DataRequired, Email, Length, Optional
+from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitField, SelectField, IntegerField, PasswordField, DecimalField
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from datetime import datetime
 
 class MoradorForm(FlaskForm):
@@ -137,4 +137,78 @@ class AjusteVencimentoForm(FlaskForm):
     """Formulário para ajuste rápido de vencimento"""
     nova_data_vencimento = DateField('Nova Data de Vencimento', validators=[DataRequired()])
     motivo_ajuste = TextAreaField('Motivo do Ajuste', validators=[Optional(), Length(max=500)])
-    submit = SubmitField('Ajustar Vencimento') 
+    submit = SubmitField('Ajustar Vencimento')
+
+class SalvaVidasForm(FlaskForm):
+    """Formulário para cadastro e edição de salva-vidas"""
+    # Dados pessoais
+    nome_completo = StringField('Nome Completo', validators=[DataRequired(), Length(min=2, max=200)])
+    cpf = StringField('CPF', validators=[DataRequired(), Length(min=11, max=14)],
+                     render_kw={'placeholder': '000.000.000-00'})
+    rg = StringField('RG', validators=[Optional(), Length(max=20)],
+                    render_kw={'placeholder': '00.000.000-0'})
+    data_nascimento = DateField('Data de Nascimento', validators=[DataRequired()])
+    telefone = StringField('Telefone', validators=[DataRequired(), Length(min=10, max=20)],
+                          render_kw={'placeholder': '(11) 99999-9999'})
+    email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
+    endereco = TextAreaField('Endereço', validators=[Optional(), Length(max=500)])
+    
+    # Dados profissionais
+    data_contratacao = DateField('Data de Contratação', validators=[DataRequired()])
+    data_demissao = DateField('Data de Demissão', validators=[Optional()])
+    status = SelectField('Status', 
+                        choices=[
+                            ('ativo', 'Ativo'),
+                            ('inativo', 'Inativo'),
+                            ('demitido', 'Demitido'),
+                            ('férias', 'Férias'),
+                            ('licença', 'Licença Médica')
+                        ],
+                        default='ativo',
+                        validators=[DataRequired()])
+    salario = DecimalField('Salário (R$)', validators=[Optional(), NumberRange(min=0)],
+                          render_kw={'step': '0.01', 'placeholder': '0.00'})
+    
+    # Certificações
+    certificacao_salvamento = BooleanField('Certificação em Salvamento Aquático')
+    certificacao_primeiros_socorros = BooleanField('Certificação em Primeiros Socorros')
+    data_vencimento_certificacao = DateField('Vencimento das Certificações', validators=[Optional()])
+    outras_qualificacoes = TextAreaField('Outras Qualificações', validators=[Optional(), Length(max=500)])
+    
+    # Horários
+    horario_trabalho = TextAreaField('Horário de Trabalho', validators=[Optional(), Length(max=500)],
+                                    render_kw={'placeholder': 'Ex: Segunda a Sexta: 8h às 16h\nSábado: 8h às 12h'})
+    
+    # Observações
+    observacoes = TextAreaField('Observações', validators=[Optional(), Length(max=1000)])
+    
+    # Upload de foto
+    foto = FileField('Foto do Salva-vidas', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Apenas imagens: jpg, jpeg, png, gif')
+    ])
+    
+    submit = SubmitField('Salvar')
+
+class FiltroSalvaVidasForm(FlaskForm):
+    """Formulário para filtrar salva-vidas"""
+    status = SelectField('Status', 
+                        choices=[
+                            ('', 'Todos'),
+                            ('ativo', 'Ativo'),
+                            ('inativo', 'Inativo'),
+                            ('demitido', 'Demitido'),
+                            ('férias', 'Férias'),
+                            ('licença', 'Licença Médica')
+                        ],
+                        validators=[Optional()])
+    certificacao = SelectField('Certificação',
+                              choices=[
+                                  ('', 'Todas'),
+                                  ('salvamento', 'Salvamento Aquático'),
+                                  ('primeiros_socorros', 'Primeiros Socorros'),
+                                  ('ambas', 'Ambas as Certificações')
+                              ],
+                              validators=[Optional()])
+    busca = StringField('Buscar por nome', validators=[Optional(), Length(max=200)])
+    submit = SubmitField('Filtrar') 

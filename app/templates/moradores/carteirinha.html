@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-id-card me-2"></i>
+                    Carteirinha da Piscina
+                </h1>
+                <div>
+                    <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                    <button onclick="imprimirCarteirinha()" class="btn btn-primary">
+                        <i class="fas fa-print me-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview da Carteirinha -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        Preview da Carteirinha
+                    </h5>
+                </div>
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    
+                    <!-- Loading -->
+                    <div id="loading" class="text-center p-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p>Gerando carteirinha...</p>
+                    </div>
+                    
+                    <!-- Carteirinha -->
+                    <div id="carteirinha-container" style="display: none;">
+                        <img 
+                            id="carteirinha-img"
+                            src="{{ url_for('gerar_carteirinha_imagem', id=morador.id) }}" 
+                            alt="Carteirinha de {{ morador.nome_completo }}"
+                            class="img-fluid rounded shadow-lg"
+                            style="max-width: 600px; border: 2px solid #dee2e6; cursor: zoom-in;"
+                        >
+                    </div>
+                    
+                    <!-- Erro -->
+                    <div id="erro" class="text-center text-danger p-5" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5>Erro ao Carregar Carteirinha</h5>
+                        <p id="erro-msg">Erro desconhecido</p>
+                        <button class="btn btn-danger me-2" onclick="location.reload()">Tentar Novamente</button>
+                        <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-secondary">Voltar</a>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da carteirinha -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações da Carteirinha
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Morador:</strong> {{ morador.nome_completo }}</p>
+                        <p class="mb-1"><strong>Apartamento:</strong> {{ morador.bloco }}-{{ morador.apartamento }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if morador.data_vencimento %}
+                            <p class="mb-1"><strong>Validade:</strong> {{ morador.data_vencimento|dateformat }}</p>
+                            <p class="mb-1"><strong>Status:</strong> 
+                                <span class="badge bg-{% if morador.status_carteirinha == 'regular' %}success{% elif morador.status_carteirinha == 'a_vencer' %}warning{% else %}danger{% endif %}">
+                                    {{ morador.status_carteirinha.replace('_', ' ').title() }}
+                                </span>
+                            </p>
+                        {% else %}
+                            <p class="mb-1"><strong>Validade:</strong> Não definida</p>
+                            <p class="mb-1"><strong>Status:</strong> 
+                                <span class="badge bg-secondary">Sem carteirinha</span>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opções de Download -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-download me-2"></i>
+                        Opções de Download e Impressão
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <a href="{{ url_for('download_carteirinha_pdf', id=morador.id) }}" 
+                                   class="btn btn-outline-danger" target="_blank">
+                                    <i class="fas fa-file-pdf me-2"></i>
+                                    Download PDF
+                                </a>
+                                <small class="text-muted mt-1 text-center">Melhor para impressão</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <a href="{{ url_for('gerar_carteirinha_imagem', id=morador.id) }}" 
+                                   class="btn btn-outline-primary" target="_blank" download="carteirinha_{{ morador.id }}.png">
+                                    <i class="fas fa-image me-2"></i>
+                                    Download PNG
+                                </a>
+                                <small class="text-muted mt-1 text-center">Melhor para compartilhar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid">
+                                <button onclick="imprimirCarteirinha()" class="btn btn-outline-success">
+                                    <i class="fas fa-print me-2"></i>
+                                    Imprimir Agora
+                                </button>
+                                <small class="text-muted mt-1 text-center">Impressão direta</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 INICIANDO CARREGAMENTO DA CARTEIRINHA');
+    
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('carteirinha-container');
+    const img = document.getElementById('carteirinha-img');
+    const erro = document.getElementById('erro');
+    const erroMsg = document.getElementById('erro-msg');
+    
+    console.log('📋 Elementos:', {
+        loading: !!loading,
+        container: !!container,
+        img: !!img,
+        erro: !!erro
+    });
+    
+    if (!img) {
+        console.error('❌ Imagem não encontrada!');
+        return;
+    }
+    
+    console.log('🔗 URL da imagem:', img.src);
+    
+    function mostrarCarteirinha() {
+        console.log('✅ MOSTRANDO CARTEIRINHA');
+        loading.style.display = 'none';
+        container.style.display = 'block';
+        erro.style.display = 'none';
+    }
+    
+    function mostrarErro(msg) {
+        console.error('❌ ERRO:', msg);
+        loading.style.display = 'none';
+        container.style.display = 'none';
+        erro.style.display = 'block';
+        erroMsg.textContent = msg;
+    }
+    
+    // Verificar se já carregou
+    if (img.complete && img.naturalHeight > 0) {
+        console.log('⚡ Imagem já estava carregada!');
+        mostrarCarteirinha();
+        return;
+    }
+    
+    // Event listeners
+    img.onload = function() {
+        console.log('🎉 IMAGEM CARREGOU!', this.naturalWidth + 'x' + this.naturalHeight);
+        mostrarCarteirinha();
+    };
+    
+    img.onerror = function() {
+        console.error('💥 ERRO AO CARREGAR IMAGEM');
+        mostrarErro('Erro ao carregar a imagem da carteirinha');
+    };
+    
+    // Timeout
+    setTimeout(function() {
+        if (loading.style.display !== 'none') {
+            console.warn('⏰ TIMEOUT - Recarregando...');
+            img.src = img.src + '?reload=' + Date.now();
+        }
+    }, 8000);
+    
+    setTimeout(function() {
+        if (loading.style.display !== 'none') {
+            console.error('💀 TIMEOUT FINAL');
+            mostrarErro('Timeout ao carregar a carteirinha');
+        }
+    }, 15000);
+    
+    // Zoom
+    img.onclick = function() {
+        const zoom = this.style.transform === 'scale(1.5)';
+        this.style.transform = zoom ? 'scale(1)' : 'scale(1.5)';
+        this.style.cursor = zoom ? 'zoom-in' : 'zoom-out';
+        this.style.transition = 'transform 0.3s ease';
+    };
+});
+
+function imprimirCarteirinha() {
+    window.open("{{ url_for('download_carteirinha_pdf', id=morador.id) }}", '_blank');
+}
+</script>
+{% endblock %} 

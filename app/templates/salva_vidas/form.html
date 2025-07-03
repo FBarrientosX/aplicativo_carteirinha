@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-life-ring me-2"></i>
+                {{ title }}
+            </h1>
+            <a href="{{ url_for('listar_salva_vidas') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Dados Pessoais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Dados Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.nome_completo.label(class="form-label") }}
+                            {{ form.nome_completo(class="form-control") }}
+                            {% if form.nome_completo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.nome_completo.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.cpf.label(class="form-label") }}
+                            {{ form.cpf(class="form-control") }}
+                            {% if form.cpf.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cpf.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.rg.label(class="form-label") }}
+                            {{ form.rg(class="form-control") }}
+                            {% if form.rg.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.rg.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.data_nascimento.label(class="form-label") }}
+                            {{ form.data_nascimento(class="form-control") }}
+                            {% if form.data_nascimento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_nascimento.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.telefone.label(class="form-label") }}
+                            {{ form.telefone(class="form-control") }}
+                            {% if form.telefone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.telefone.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.endereco.label(class="form-label") }}
+                            {{ form.endereco(class="form-control", rows="3") }}
+                            {% if form.endereco.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.endereco.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dados Profissionais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-briefcase me-2"></i>
+                        Dados Profissionais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.data_contratacao.label(class="form-label") }}
+                            {{ form.data_contratacao(class="form-control") }}
+                            {% if form.data_contratacao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_contratacao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.data_demissao.label(class="form-label") }}
+                            {{ form.data_demissao(class="form-control") }}
+                            {% if form.data_demissao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_demissao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Deixe vazio se ainda estiver ativo</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.status.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.salario.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                {{ form.salario(class="form-control") }}
+                            </div>
+                            {% if form.salario.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.salario.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Campo opcional</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.horario_trabalho.label(class="form-label") }}
+                            {{ form.horario_trabalho(class="form-control", rows="3") }}
+                            {% if form.horario_trabalho.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.horario_trabalho.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Certificações -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-certificate me-2"></i>
+                        Certificações e Qualificações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.certificacao_salvamento(class="form-check-input") }}
+                                {{ form.certificacao_salvamento.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.certificacao_primeiros_socorros(class="form-check-input") }}
+                                {{ form.certificacao_primeiros_socorros.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.data_vencimento_certificacao.label(class="form-label") }}
+                            {{ form.data_vencimento_certificacao(class="form-control") }}
+                            {% if form.data_vencimento_certificacao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_vencimento_certificacao.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Data de vencimento das certificações</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.outras_qualificacoes.label(class="form-label") }}
+                            {{ form.outras_qualificacoes(class="form-control", rows="3") }}
+                            {% if form.outras_qualificacoes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.outras_qualificacoes.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Observações -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        Observações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{ form.observacoes.label(class="form-label") }}
+                    {{ form.observacoes(class="form-control", rows="4") }}
+                    {% if form.observacoes.errors %}
+                        <div class="text-danger">
+                            {% for error in form.observacoes.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Foto -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-camera me-2"></i>
+                        Foto
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if salva_vidas and salva_vidas.foto_filename %}
+                        <img src="{{ url_for('foto_salva_vidas', filename=salva_vidas.foto_filename) }}" 
+                             class="img-fluid rounded-circle mb-3" 
+                             style="max-width: 150px; max-height: 150px;" alt="Foto atual">
+                        <p class="text-muted small">Foto atual</p>
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-3x text-muted"></i>
+                        </div>
+                        <p class="text-muted small">Nenhuma foto</p>
+                    {% endif %}
+                    
+                    {{ form.foto.label(class="form-label") }}
+                    {{ form.foto(class="form-control") }}
+                    {% if form.foto.errors %}
+                        <div class="text-danger">
+                            {% for error in form.foto.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Formatos: JPG, JPEG, PNG, GIF</div>
+                </div>
+            </div>
+            
+            <!-- Ações -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('listar_salva_vidas') }}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %} 

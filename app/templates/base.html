@@ -46,6 +46,21 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('listar_moradores') }}">Listar Moradores</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('novo_morador') }}">Novo Morador</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('gerar_carteirinhas_lote') }}">
+                                <i class="fas fa-id-card-alt me-2"></i>
+                                Carteirinhas em Lote
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-life-ring me-1"></i>
+                            Salva-vidas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('listar_salva_vidas') }}">Listar Equipe</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('novo_salva_vidas') }}">Novo Salva-vidas</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

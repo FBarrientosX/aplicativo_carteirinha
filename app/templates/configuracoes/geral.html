@@ -200,20 +200,32 @@
             <div class="card-body">
                 <div class="list-group list-group-flush">
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="fas fa-shield-alt text-success me-2"></i>Segurança</span>
-                        <span class="badge bg-success">Ativo</span>
+                        <span><i class="fas fa-shield-alt {% if seguranca_configurada %}text-success{% else %}text-warning{% endif %} me-2"></i>Segurança</span>
+                        {% if seguranca_configurada %}
+                            <span class="badge bg-success">Configurado</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pendente</span>
+                        {% endif %}
                     </div>
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="fas fa-database text-info me-2"></i>Backup</span>
-                        <span class="badge bg-info">Configurado</span>
+                        <span><i class="fas fa-database {% if backup_configurado %}text-success{% else %}text-warning{% endif %} me-2"></i>Backup</span>
+                        {% if backup_configurado %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-warning">Desativado</span>
+                        {% endif %}
                     </div>
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="fas fa-bell text-warning me-2"></i>Notificações</span>
-                        <span class="badge bg-warning">Pendente Email</span>
+                        <span><i class="fas fa-bell {% if email_configurado %}text-success{% else %}text-warning{% endif %} me-2"></i>Notificações</span>
+                        {% if email_configurado %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pendente Email</span>
+                        {% endif %}
                     </div>
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="fas fa-cogs text-primary me-2"></i>Sistema</span>
-                        <span class="badge bg-primary">Operacional</span>
+                        <span><i class="fas fa-cogs text-success me-2"></i>Sistema</span>
+                        <span class="badge bg-success">Operacional</span>
                     </div>
                 </div>
             </div>

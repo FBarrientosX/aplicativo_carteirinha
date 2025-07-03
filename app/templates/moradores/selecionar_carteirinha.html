@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-id-card me-2"></i>
+                Selecionar Morador para Carteirinha
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Informações -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle me-2"></i>Como funciona:</h5>
+            <ul class="mb-0">
+                <li><strong>Clique no botão "Gerar Carteirinha"</strong> ao lado do morador desejado</li>
+                <li><strong>Funciona mesmo sem foto</strong> - será criado um placeholder automático</li>
+                <li><strong>Carteirinha profissional</strong> com QR Code, dados e design moderno</li>
+                <li><strong>Pronta para impressão</strong> em 300 DPI de alta qualidade</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('selecionar_morador_carteirinha') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ form.bloco.label(class="form-label") }}
+                            {{ form.bloco(class="form-select") }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.busca.label(class="form-label") }}
+                            {{ form.busca(class="form-control", placeholder="Digite o nome do morador") }}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Moradores -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Moradores Disponíveis ({{ moradores.total }} encontrados)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if moradores.items %}
+                    <div class="row">
+                        {% for morador in moradores.items %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="card-title mb-1">{{ morador.nome_completo }}</h6>
+                                                <p class="card-text mb-2">
+                                                    <span class="badge bg-secondary">{{ morador.bloco }}/{{ morador.apartamento }}</span>
+                                                    {% if not morador.eh_titular %}
+                                                        <span class="badge bg-info">Dependente</span>
+                                                    {% endif %}
+                                                </p>
+                                                
+                                                <!-- Status -->
+                                                {% set status = morador.status_carteirinha %}
+                                                {% if status == 'regular' %}
+                                                    <span class="badge bg-success mb-2">Regular</span>
+                                                {% elif status == 'a_vencer' %}
+                                                    <span class="badge bg-warning mb-2">A Vencer</span>
+                                                {% elif status == 'vencida' %}
+                                                    <span class="badge bg-danger mb-2">Vencida</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary mb-2">Sem Carteirinha</span>
+                                                {% endif %}
+                                                
+                                                <!-- Vencimento -->
+                                                {% if morador.data_vencimento %}
+                                                    <small class="text-muted d-block">
+                                                        Vence: {{ morador.data_vencimento|dateformat }}
+                                                    </small>
+                                                {% endif %}
+                                                
+                                                <!-- Foto disponível -->
+                                                {% if morador.anexos.count() > 0 %}
+                                                    <small class="text-success d-block">
+                                                        <i class="fas fa-camera me-1"></i>Com foto
+                                                    </small>
+                                                {% else %}
+                                                    <small class="text-muted d-block">
+                                                        <i class="fas fa-user me-1"></i>Sem foto (placeholder)
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Botões de Ação -->
+                                        <div class="mt-3 d-grid gap-2">
+                                            <a href="{{ url_for('visualizar_carteirinha', id=morador.id) }}" 
+                                               class="btn btn-primary" target="_blank">
+                                                <i class="fas fa-id-card me-2"></i>
+                                                Gerar Carteirinha
+                                            </a>
+                                            
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="{{ url_for('gerar_carteirinha_png', id=morador.id) }}" 
+                                                   class="btn btn-outline-info btn-sm" target="_blank" title="Download PNG">
+                                                    <i class="fas fa-image"></i>
+                                                </a>
+                                                <a href="{{ url_for('download_carteirinha_pdf', id=morador.id) }}" 
+                                                   class="btn btn-outline-danger btn-sm" title="Download PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                                <a href="{{ url_for('ver_morador', id=morador.id) }}" 
+                                                   class="btn btn-outline-secondary btn-sm" title="Ver detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if moradores.pages > 1 %}
+                        <nav aria-label="Navegação de páginas" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if moradores.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('selecionar_morador_carteirinha', page=moradores.prev_num, **request.args) }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in moradores.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != moradores.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('selecionar_morador_carteirinha', page=page_num, **request.args) }}">
+                                                    {{ page_num }}
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if moradores.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('selecionar_morador_carteirinha', page=moradores.next_num, **request.args) }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                        <h4>Nenhum morador encontrado</h4>
+                        <p class="text-muted">Não há moradores cadastrados ou que atendam aos filtros selecionados.</p>
+                        <a href="{{ url_for('novo_morador') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Cadastrar Primeiro Morador
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Outras Opções
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <a href="{{ url_for('gerar_carteirinhas_lote') }}" class="btn btn-info me-2">
+                    <i class="fas fa-id-card-alt me-2"></i>
+                    Gerar Carteirinhas em Lote
+                </a>
+                <a href="{{ url_for('novo_morador') }}" class="btn btn-success me-2">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Cadastrar Novo Morador
+                </a>
+                <a href="{{ url_for('listar_moradores') }}" class="btn btn-secondary">
+                    <i class="fas fa-list me-2"></i>
+                    Lista Completa de Moradores
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Adicionar tooltip nos botões
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %} 

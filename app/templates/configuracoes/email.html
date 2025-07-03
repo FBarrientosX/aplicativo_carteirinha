@@ -226,8 +226,13 @@
             <div class="card-body text-center">
                 <h6 class="card-title">Status da Configuração</h6>
                 <div id="status-email">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                    <p class="small mb-0">Configure o email para ativar as notificações automáticas</p>
+                    {% if email_configurado %}
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p class="small mb-0 text-success"><strong>✅ Email configurado!</strong><br>Notificações automáticas ativas</p>
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="small mb-0">Configure o email para ativar as notificações automáticas</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

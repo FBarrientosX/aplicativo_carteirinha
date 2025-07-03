@@ -75,7 +75,7 @@
                                     <th>Status</th>
                                     <th>Vencimento</th>
                                     <th>Telefone</th>
-                                    <th>Ações</th>
+                                    <th style="width: 180px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -128,6 +128,10 @@
                                                 <a href="{{ url_for('editar_morador', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-secondary" title="Editar">
                                                     <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{{ url_for('visualizar_carteirinha', id=morador.id) }}" 
+                                                   class="btn btn-sm btn-outline-info" title="Gerar Carteirinha" target="_blank">
+                                                    <i class="fas fa-id-card"></i>
                                                 </a>
                                                 <a href="{{ url_for('validar_carteirinha', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-success" title="Validar carteirinha">

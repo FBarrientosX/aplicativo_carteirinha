@@ -218,6 +218,89 @@ class Usuario(db.Model):
     condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'))
     condominio = db.relationship('Condominio', backref='usuarios')
 
+class SalvaVidas(db.Model):
+    """Gerenciamento dos salva-vidas da piscina"""
+    __tablename__ = 'salva_vidas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Dados pessoais
+    nome_completo = db.Column(db.String(200), nullable=False)
+    cpf = db.Column(db.String(14), unique=True, nullable=False)
+    rg = db.Column(db.String(20), nullable=True)
+    data_nascimento = db.Column(db.Date, nullable=False)
+    telefone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
+    endereco = db.Column(db.Text, nullable=True)
+    
+    # Dados profissionais
+    data_contratacao = db.Column(db.Date, nullable=False)
+    data_demissao = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(20), default='ativo', nullable=False)  # ativo, inativo, demitido, férias
+    salario = db.Column(db.Numeric(10, 2), nullable=True)
+    
+    # Certificações e qualificações
+    certificacao_salvamento = db.Column(db.Boolean, default=False)
+    certificacao_primeiros_socorros = db.Column(db.Boolean, default=False)
+    data_vencimento_certificacao = db.Column(db.Date, nullable=True)
+    outras_qualificacoes = db.Column(db.Text, nullable=True)
+    
+    # Horários de trabalho
+    horario_trabalho = db.Column(db.Text, nullable=True)  # JSON ou texto livre
+    
+    # Observações
+    observacoes = db.Column(db.Text, nullable=True)
+    
+    # Controle do sistema
+    foto_filename = db.Column(db.String(100), nullable=True)
+    condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'), default=1)
+    
+    # Timestamps
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamento
+    condominio = db.relationship('Condominio', backref='salva_vidas')
+    
+    def __repr__(self):
+        return f'<SalvaVidas {self.nome_completo}>'
+    
+    @property
+    def idade(self):
+        """Calcula a idade baseada na data de nascimento"""
+        if not self.data_nascimento:
+            return None
+        hoje = datetime.now().date()
+        return hoje.year - self.data_nascimento.year - ((hoje.month, hoje.day) < (self.data_nascimento.month, self.data_nascimento.day))
+    
+    @property
+    def tempo_servico(self):
+        """Calcula o tempo de serviço em anos"""
+        if not self.data_contratacao:
+            return None
+        fim = self.data_demissao if self.data_demissao else datetime.now().date()
+        tempo = fim - self.data_contratacao
+        return round(tempo.days / 365.25, 1)
+    
+    @property
+    def certificacao_valida(self):
+        """Verifica se as certificações estão válidas"""
+        if not self.data_vencimento_certificacao:
+            return None
+        return self.data_vencimento_certificacao > datetime.now().date()
+    
+    @property
+    def status_badge_class(self):
+        """Retorna a classe CSS para o badge de status"""
+        status_classes = {
+            'ativo': 'bg-success',
+            'inativo': 'bg-secondary', 
+            'demitido': 'bg-danger',
+            'férias': 'bg-warning',
+            'licença': 'bg-info'
+        }
+        return status_classes.get(self.status, 'bg-secondary')
+
 class LogAuditoria(db.Model):
     """Log de auditoria do sistema"""
     __tablename__ = 'log_auditoria'
