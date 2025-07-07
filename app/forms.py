@@ -211,4 +211,36 @@ class FiltroSalvaVidasForm(FlaskForm):
                               ],
                               validators=[Optional()])
     busca = StringField('Buscar por nome', validators=[Optional(), Length(max=200)])
+    submit = SubmitField('Filtrar')
+
+class RegistroAcessoForm(FlaskForm):
+    """Formulário para registrar entrada/saída manual"""
+    morador_id = SelectField('Morador', coerce=int, validators=[DataRequired()])
+    tipo = SelectField('Tipo', choices=[('entrada', 'Entrada'), ('saida', 'Saída')], validators=[DataRequired()])
+    guardiao = StringField('Nome do Guardião', validators=[DataRequired(), Length(max=100)])
+    observacoes = TextAreaField('Observações', validators=[Length(max=500)])
+    submit = SubmitField('Registrar Acesso')
+    
+    def __init__(self, *args, **kwargs):
+        super(RegistroAcessoForm, self).__init__(*args, **kwargs)
+        # Carregar moradores ativos
+        from app.models import Morador
+        self.morador_id.choices = [(0, 'Selecione um morador')] + [
+            (m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}")
+            for m in Morador.query.filter(Morador.carteirinha_ativa == True).order_by(Morador.nome_completo).all()
+        ]
+
+class BuscaMoradorForm(FlaskForm):
+    """Formulário para buscar morador por QR Code ou manualmente"""
+    codigo_qr = StringField('Código QR ou ID do Morador')
+    busca_nome = StringField('Buscar por Nome')
+    submit_qr = SubmitField('Processar QR Code')
+    submit_busca = SubmitField('Buscar Morador')
+
+class FiltroAcessoForm(FlaskForm):
+    """Formulário para filtrar registros de acesso"""
+    morador_id = SelectField('Morador', coerce=int)
+    data_inicio = DateField('Data Início')
+    data_fim = DateField('Data Fim')
+    tipo = SelectField('Tipo', choices=[('', 'Todos'), ('entrada', 'Entradas'), ('saida', 'Saídas')])
     submit = SubmitField('Filtrar') 

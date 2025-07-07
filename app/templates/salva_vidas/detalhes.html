@@ -9,11 +9,11 @@
                 {{ salva_vidas.nome_completo }}
             </h1>
             <div>
-                <a href="{{ url_for('editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-primary me-2">
+                <a href="{{ url_for('main.editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-primary me-2">
                     <i class="fas fa-edit me-1"></i>
                     Editar
                 </a>
-                <a href="{{ url_for('listar_salva_vidas') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.listar_salva_vidas') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i>
                     Voltar
                 </a>
@@ -28,7 +28,7 @@
         <div class="card mb-4">
             <div class="card-body text-center">
                 {% if salva_vidas.foto_filename %}
-                    <img src="{{ url_for('foto_salva_vidas', filename=salva_vidas.foto_filename) }}" 
+                    <img src="{{ url_for('main.foto_salva_vidas', filename=salva_vidas.foto_filename) }}" 
                          class="img-fluid rounded-circle mb-3" 
                          style="max-width: 200px; max-height: 200px;" alt="Foto">
                 {% else %}
@@ -64,7 +64,7 @@
             <div class="card-body">
                 <div class="d-grid gap-2">
                     {% if salva_vidas.status == 'ativo' %}
-                        <form method="POST" action="{{ url_for('inativar_salva_vidas', id=salva_vidas.id) }}" 
+                        <form method="POST" action="{{ url_for('main.inativar_salva_vidas', id=salva_vidas.id) }}" 
                               style="display: inline;" onsubmit="return confirm('Tem certeza que deseja inativar este salva-vidas?')">
                             <button type="submit" class="btn btn-warning w-100">
                                 <i class="fas fa-pause me-1"></i>
@@ -72,7 +72,7 @@
                             </button>
                         </form>
                     {% else %}
-                        <form method="POST" action="{{ url_for('reativar_salva_vidas', id=salva_vidas.id) }}" 
+                        <form method="POST" action="{{ url_for('main.reativar_salva_vidas', id=salva_vidas.id) }}" 
                               style="display: inline;" onsubmit="return confirm('Tem certeza que deseja reativar este salva-vidas?')">
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fas fa-play me-1"></i>
@@ -81,7 +81,7 @@
                         </form>
                     {% endif %}
                     
-                    <a href="{{ url_for('editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('main.editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-outline-primary">
                         <i class="fas fa-edit me-1"></i>
                         Editar Dados
                     </a>

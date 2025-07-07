@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
+                <h1 class="mb-2 mb-sm-0">
+                    <i class="fas fa-qrcode me-2 text-primary"></i>
+                    <span class="d-none d-md-inline">Leitor QR Code</span>
+                    <span class="d-md-none">QR Code</span>
+                </h1>
+                <a href="{{ url_for('main.controle_acesso') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
+            <!-- Formulário de Busca -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Buscar Morador
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="qrcode-form">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-6">
+                                <label for="codigo_qr" class="form-label">Código QR ou ID</label>
+                                {{ form.codigo_qr(class="form-control form-control-lg", placeholder="Cole o código QR aqui ou digite o ID") }}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Escaneie o QR Code da carteirinha ou digite o ID do morador
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-4">
+                                <label for="busca_nome" class="form-label">Buscar por Nome</label>
+                                {{ form.busca_nome(class="form-control", placeholder="Nome do morador") }}
+                            </div>
+                            
+                            <div class="col-12 col-lg-2">
+                                <label class="form-label d-none d-lg-block">&nbsp;</label>
+                                <div class="d-grid gap-2">
+                                    {{ form.submit_qr(class="btn btn-primary") }}
+                                    {{ form.submit_busca(class="btn btn-outline-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Resultado da Busca -->
+            {% if erro %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ erro }}
+                </div>
+            {% endif %}
+
+            {% if moradores is defined and moradores %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Moradores Encontrados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for m in moradores %}
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="card h-100">
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title">{{ m.nome_completo }}</h6>
+                                        <p class="card-text text-muted mb-auto">{{ m.bloco }}-{{ m.apartamento }}</p>
+                                        <div class="d-grid gap-1">
+                                            <a href="{{ url_for('main.processar_acesso_rapido', morador_id=m.id, tipo='entrada') }}" 
+                                               class="btn btn-success btn-sm">
+                                                <i class="fas fa-sign-in-alt me-1"></i>
+                                                Entrada
+                                            </a>
+                                            <a href="{{ url_for('main.processar_acesso_rapido', morador_id=m.id, tipo='saida') }}" 
+                                               class="btn btn-danger btn-sm">
+                                                <i class="fas fa-sign-out-alt me-1"></i>
+                                                Saída
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if morador %}
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-check me-2"></i>
+                            Morador Encontrado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-8">
+                                <h4>{{ morador.nome_completo }}</h4>
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-building me-1"></i>
+                                    Bloco {{ morador.bloco }}, Apartamento {{ morador.apartamento }}
+                                </p>
+                                <p class="mb-2">
+                                    <span class="badge bg-{% if morador.carteirinha_ativa %}success{% else %}danger{% endif %} fs-6">
+                                        {% if morador.carteirinha_ativa %}
+                                            <i class="fas fa-check me-1"></i>Carteirinha Ativa
+                                        {% else %}
+                                            <i class="fas fa-times me-1"></i>Carteirinha Inativa
+                                        {% endif %}
+                                    </span>
+                                </p>
+                                
+                                {% if morador.carteirinha_ativa %}
+                                    <!-- Status Atual -->
+                                    {% set esta_na_piscina = morador.registros_acesso and morador.registros_acesso[0].tipo == 'entrada' %}
+                                    <div class="alert alert-{% if esta_na_piscina %}warning{% else %}info{% endif %} mb-3">
+                                        <i class="fas fa-{% if esta_na_piscina %}swimming-pool{% else %}home{% endif %} me-2"></i>
+                                        <strong>Status:</strong> 
+                                        {% if esta_na_piscina %}
+                                            Na piscina
+                                        {% else %}
+                                            Fora da piscina
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Botões de Ação -->
+                                    <div class="d-grid gap-2 d-sm-flex">
+                                        {% if not esta_na_piscina %}
+                                            <a href="{{ url_for('main.processar_acesso_rapido', morador_id=morador.id, tipo='entrada') }}" 
+                                               class="btn btn-success btn-lg flex-fill">
+                                                <i class="fas fa-sign-in-alt me-2"></i>
+                                                <span class="d-none d-sm-inline">Registrar </span>Entrada
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('main.processar_acesso_rapido', morador_id=morador.id, tipo='saida') }}" 
+                                               class="btn btn-danger btn-lg flex-fill">
+                                                <i class="fas fa-sign-out-alt me-2"></i>
+                                                <span class="d-none d-sm-inline">Registrar </span>Saída
+                                            </a>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('main.historico_morador', morador_id=morador.id) }}" 
+                                           class="btn btn-outline-info btn-lg flex-fill">
+                                            <i class="fas fa-history me-2"></i>
+                                            Histórico
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Carteirinha inativa. Não é possível registrar acesso.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12 col-md-4 text-center mt-3 mt-md-0">
+                                {% if morador.anexos %}
+                                    <div class="mb-3">
+                                        <img src="data:image/jpeg;base64,{{ morador.anexos[0].dados_base64 }}" 
+                                             alt="Foto do morador" 
+                                             class="img-fluid rounded border"
+                                             style="max-height: 150px; max-width: 100%;">
+                                    </div>
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" 
+                                         style="height: 150px;">
+                                        <i class="fas fa-user fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="text-muted small">
+                                    <i class="fas fa-id-card me-1"></i>
+                                    ID: {{ morador.id }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Instruções -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Como Usar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3 mb-md-0">
+                            <h6><i class="fas fa-qrcode me-2 text-primary"></i>QR Code</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Escaneie o QR Code da carteirinha</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cole o código no campo "Código QR"</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Clique em "Processar QR Code"</li>
+                            </ul>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <h6><i class="fas fa-search me-2 text-info"></i>Busca Manual</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Digite o nome do morador</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Clique em "Buscar Morador"</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Selecione o morador correto</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-focus no campo de QR Code
+document.getElementById('codigo_qr').focus();
+
+// Limpar campo após 5 segundos
+setTimeout(function() {
+    document.getElementById('codigo_qr').value = '';
+}, 5000);
+</script>
+{% endblock %} 

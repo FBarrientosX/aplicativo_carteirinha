@@ -6,41 +6,55 @@ from flask_apscheduler import APScheduler
 from app.config import Config
 from datetime import datetime
 
-app = Flask(__name__)
-app.config.from_object(Config)
-
 # Inicialização das extensões
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-mail = Mail(app)
+db = SQLAlchemy()
+migrate = Migrate()
+mail = Mail()
 scheduler = APScheduler()
 
-# Filtro personalizado para formatação de datas
-@app.template_filter('dateformat')
-def dateformat(value, format='%d/%m/%Y'):
-    """Filtro para formatação de datas nos templates"""
-    if value is None:
-        return ''
-    if isinstance(value, str):
-        # Se for string, tentar converter para datetime
-        try:
-            value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
-        except:
+def create_app(config_class=Config):
+    """Factory function para criar a aplicação Flask"""
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Inicializar extensões
+    db.init_app(app)
+    migrate.init_app(app, db)
+    mail.init_app(app)
+    
+    # Filtro personalizado para formatação de datas
+    @app.template_filter('dateformat')
+    def dateformat(value, format='%d/%m/%Y'):
+        """Filtro para formatação de datas nos templates"""
+        if value is None:
+            return ''
+        if isinstance(value, str):
+            # Se for string, tentar converter para datetime
             try:
-                value = datetime.strptime(value, '%Y-%m-%d')
+                value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
             except:
-                return value
-    return value.strftime(format)
+                try:
+                    value = datetime.strptime(value, '%Y-%m-%d')
+                except:
+                    return value
+        return value.strftime(format)
 
-@app.template_filter('now')
-def now_filter(format='%Y'):
-    """Filtro para data atual"""
-    return datetime.now().strftime(format)
+    @app.template_filter('now')
+    def now_filter(format='%Y'):
+        """Filtro para data atual"""
+        return datetime.now().strftime(format)
 
-# Inicializar o scheduler apenas em produção
-if not app.debug:
-    scheduler.init_app(app)
-    scheduler.start()
+    # Inicializar o scheduler apenas em produção
+    if not app.debug:
+        scheduler.init_app(app)
+        scheduler.start()
 
-# Importa as rotas e modelos após a criação de 'app' e 'db'
-from app import routes, models 
+    # Importa as rotas e modelos após a criação de 'app' e 'db'
+    from app import models
+    from app.routes import bp as main_bp
+    app.register_blueprint(main_bp)
+    
+    return app
+
+# Para compatibilidade com versões anteriores
+app = create_app() 

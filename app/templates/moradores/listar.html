@@ -8,7 +8,7 @@
                 <i class="fas fa-users me-2"></i>
                 Moradores
             </h1>
-            <a href="{{ url_for('novo_morador') }}" class="btn btn-primary">
+            <a href="{{ url_for('main.novo_morador') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>
                 Novo Morador
             </a>
@@ -27,7 +27,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="GET" action="{{ url_for('listar_moradores') }}">
+                <form method="GET" action="{{ url_for('main.listar_moradores') }}">
                     <div class="row">
                         <div class="col-md-3">
                             {{ form.bloco.label(class="form-label") }}
@@ -121,19 +121,19 @@
                                         <td>{{ morador.celular }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ url_for('ver_morador', id=morador.id) }}" 
+                                                <a href="{{ url_for('main.ver_morador', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-primary" title="Ver detalhes">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ url_for('editar_morador', id=morador.id) }}" 
+                                                <a href="{{ url_for('main.editar_morador', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-secondary" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="{{ url_for('visualizar_carteirinha', id=morador.id) }}" 
+                                                <a href="{{ url_for('main.visualizar_carteirinha', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-info" title="Gerar Carteirinha" target="_blank">
                                                     <i class="fas fa-id-card"></i>
                                                 </a>
-                                                <a href="{{ url_for('validar_carteirinha', id=morador.id) }}" 
+                                                <a href="{{ url_for('main.validar_carteirinha', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-success" title="Validar carteirinha">
                                                     <i class="fas fa-check"></i>
                                                 </a>
@@ -151,7 +151,7 @@
                             <ul class="pagination justify-content-center">
                                 {% if moradores.has_prev %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('listar_moradores', page=moradores.prev_num, **request.args) }}">
+                                        <a class="page-link" href="{{ url_for('main.listar_moradores', page=moradores.prev_num, **request.args) }}">
                                             <i class="fas fa-chevron-left"></i>
                                         </a>
                                     </li>
@@ -161,7 +161,7 @@
                                     {% if page_num %}
                                         {% if page_num != moradores.page %}
                                             <li class="page-item">
-                                                <a class="page-link" href="{{ url_for('listar_moradores', page=page_num, **request.args) }}">
+                                                <a class="page-link" href="{{ url_for('main.listar_moradores', page=page_num, **request.args) }}">
                                                     {{ page_num }}
                                                 </a>
                                             </li>
@@ -179,7 +179,7 @@
                                 
                                 {% if moradores.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('listar_moradores', page=moradores.next_num, **request.args) }}">
+                                        <a class="page-link" href="{{ url_for('main.listar_moradores', page=moradores.next_num, **request.args) }}">
                                             <i class="fas fa-chevron-right"></i>
                                         </a>
                                     </li>
@@ -192,7 +192,7 @@
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <h4>Nenhum morador encontrado</h4>
                         <p class="text-muted">Não há moradores cadastrados ou que atendam aos filtros selecionados.</p>
-                        <a href="{{ url_for('novo_morador') }}" class="btn btn-primary">
+                        <a href="{{ url_for('main.novo_morador') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>
                             Cadastrar Primeiro Morador
                         </a>

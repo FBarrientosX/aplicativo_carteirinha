@@ -145,7 +145,7 @@
                         <strong>Testar configurações de email</strong>
                         <br><small class="text-muted">Verificar se o SMTP está configurado corretamente</small>
                     </div>
-                    <a href="{{ url_for('teste_email_configurado') }}" class="btn btn-sm btn-primary">
+                    <a href="{{ url_for('main.teste_email_configurado') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-paper-plane me-1"></i>
                         Testar Email
                     </a>
@@ -158,7 +158,7 @@
                             <strong>Notificar moradores com carteirinhas a vencer</strong>
                             <br><small class="text-muted">{{ stats.a_vencer }} carteirinhas vencem nos próximos 30 dias</small>
                         </div>
-                        <a href="{{ url_for('executar_notificacoes') }}" class="btn btn-sm btn-warning">
+                        <a href="{{ url_for('main.executar_notificacoes') }}" class="btn btn-sm btn-warning">
                             <i class="fas fa-paper-plane me-1"></i>
                             Enviar Notificações
                         </a>
@@ -172,7 +172,7 @@
                                 <strong>Renovar carteirinhas vencidas</strong>
                                 <br><small class="text-muted">{{ stats.vencidas }} carteirinhas precisam ser renovadas</small>
                             </div>
-                            <a href="{{ url_for('listar_moradores') }}?status=vencida" class="btn btn-sm btn-danger">
+                            <a href="{{ url_for('main.listar_moradores') }}?status=vencida" class="btn btn-sm btn-danger">
                                 <i class="fas fa-list me-1"></i>
                                 Ver Lista
                             </a>
@@ -186,7 +186,7 @@
                                 <strong>Validar novos moradores</strong>
                                 <br><small class="text-muted">{{ stats.sem_carteirinha }} moradores ainda não têm carteirinha</small>
                             </div>
-                            <a href="{{ url_for('listar_moradores') }}?status=sem_carteirinha" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('main.listar_moradores') }}?status=sem_carteirinha" class="btn btn-sm btn-info">
                                 <i class="fas fa-list me-1"></i>
                                 Ver Lista
                             </a>

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-history me-2 text-info"></i>
+                    Histórico de Acessos
+                </h1>
+                <div>
+                    <a href="{{ url_for('main.controle_acesso') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                    <button class="btn btn-success" onclick="exportarCSV()">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Filtros
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="morador_id" class="form-label">Morador</label>
+                    {{ form.morador_id(class="form-select") }}
+                </div>
+                <div class="col-md-2">
+                    <label for="data_inicio" class="form-label">Data Início</label>
+                    {{ form.data_inicio(class="form-control") }}
+                </div>
+                <div class="col-md-2">
+                    <label for="data_fim" class="form-label">Data Fim</label>
+                    {{ form.data_fim(class="form-control") }}
+                </div>
+                <div class="col-md-2">
+                    <label for="tipo" class="form-label">Tipo</label>
+                    {{ form.tipo(class="form-select") }}
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    {{ form.submit(class="btn btn-primary me-2") }}
+                    <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-eraser me-1"></i>
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Registros
+                {% if registros.total > 0 %}
+                    <span class="badge bg-primary">{{ registros.total }}</span>
+                {% endif %}
+            </h5>
+            
+            {% if registros.total > 0 %}
+                <small class="text-muted">
+                    Mostrando {{ registros.per_page * (registros.page - 1) + 1 }} a 
+                    {{ registros.per_page * (registros.page - 1) + registros.items|length }} 
+                    de {{ registros.total }} registros
+                </small>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            {% if registros.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Morador</th>
+                                <th>Tipo</th>
+                                <th>Data/Hora</th>
+                                <th>Método</th>
+                                <th>Guardião</th>
+                                <th>Duração</th>
+                                <th>Observações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registro in registros.items %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ registro.morador.nome_completo }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ registro.morador.bloco }}-{{ registro.morador.apartamento }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if registro.tipo == 'entrada' %}success{% else %}danger{% endif %}">
+                                        <i class="fas fa-{% if registro.tipo == 'entrada' %}sign-in-alt{% else %}sign-out-alt{% endif %} me-1"></i>
+                                        {{ registro.tipo|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ registro.data_hora.strftime('%d/%m/%Y') }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ registro.data_hora.strftime('%H:%M:%S') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if registro.metodo == 'qrcode' %}primary{% elif registro.metodo == 'manual' %}secondary{% else %}info{% endif %}">
+                                        <i class="fas fa-{% if registro.metodo == 'qrcode' %}qrcode{% elif registro.metodo == 'manual' %}edit{% else %}barcode{% endif %} me-1"></i>
+                                        {{ registro.metodo|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ registro.guardiao or '-' }}</small>
+                                </td>
+                                <td>
+                                    {% if registro.duracao_permanencia %}
+                                        <span class="text-info">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ registro.duracao_permanencia }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if registro.observacoes %}
+                                        <small class="text-muted" title="{{ registro.observacoes }}">
+                                            {{ registro.observacoes[:30] }}{% if registro.observacoes|length > 30 %}...{% endif %}
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('main.historico_morador', morador_id=registro.morador.id) }}" 
+                                           class="btn btn-sm btn-outline-info" 
+                                           title="Ver histórico do morador">
+                                            <i class="fas fa-user-clock"></i>
+                                        </a>
+                                        <a href="{{ url_for('detalhes_morador', id=registro.morador.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Ver detalhes do morador">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Paginação -->
+                {% if registros.pages > 1 %}
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Paginação">
+                            <ul class="pagination">
+                                {% if registros.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('main.historico_acesso', page=registros.prev_num, **request.args) }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in registros.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != registros.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('main.historico_acesso', page=page_num, **request.args) }}">
+                                                    {{ page_num }}
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if registros.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('main.historico_acesso', page=registros.next_num, **request.args) }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum registro encontrado</h5>
+                    <p class="text-muted">
+                        {% if request.args %}
+                            Tente ajustar os filtros ou 
+                            <a href="{{ url_for('main.historico_acesso') }}" class="text-decoration-none">limpar a busca</a>
+                        {% else %}
+                            Ainda não há registros de acesso à piscina
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function exportarCSV() {
+    // Coletar dados da tabela
+    const table = document.querySelector('table');
+    if (!table) {
+        alert('Nenhum dado para exportar');
+        return;
+    }
+    
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    // Cabeçalho
+    const headers = [];
+    rows[0].querySelectorAll('th').forEach(th => {
+        headers.push(th.textContent.trim());
+    });
+    csv.push(headers.join(','));
+    
+    // Dados
+    for (let i = 1; i < rows.length; i++) {
+        const row = [];
+        const cols = rows[i].querySelectorAll('td');
+        
+        cols.forEach((col, index) => {
+            if (index < 7) { // Ignorar coluna de ações
+                let text = col.textContent.trim().replace(/\n/g, ' ').replace(/,/g, ';');
+                row.push('"' + text + '"');
+            }
+        });
+        csv.push(row.join(','));
+    }
+    
+    // Download
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'historico_acesso_piscina.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %} 

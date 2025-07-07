@@ -316,3 +316,68 @@ class LogAuditoria(db.Model):
     data_acao = db.Column(db.DateTime, default=datetime.utcnow)
     
     usuario = db.relationship('Usuario', backref='logs_auditoria')
+
+class RegistroAcesso(db.Model):
+    """Modelo para registrar entradas e saídas da piscina"""
+    __tablename__ = 'registro_acesso'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    tipo = db.Column(db.String(10), nullable=False)  # 'entrada' ou 'saida'
+    data_hora = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    metodo = db.Column(db.String(20), nullable=False)  # 'manual', 'qrcode', 'barcode'
+    guardiao = db.Column(db.String(100))  # Nome do guardião que registrou
+    observacoes = db.Column(db.Text)
+    ip_origem = db.Column(db.String(45))  # IP de onde foi registrado
+    
+    # Relacionamento
+    morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
+    
+    def __repr__(self):
+        return f'<RegistroAcesso {self.morador.nome_completo} - {self.tipo} em {self.data_hora}>'
+    
+    @property
+    def duracao_permanencia(self):
+        """Calcula duração da permanência se houver entrada e saída"""
+        if self.tipo == 'saida':
+            # Buscar última entrada
+            entrada = RegistroAcesso.query.filter_by(
+                morador_id=self.morador_id,
+                tipo='entrada'
+            ).filter(
+                RegistroAcesso.data_hora < self.data_hora
+            ).order_by(RegistroAcesso.data_hora.desc()).first()
+            
+            if entrada:
+                return self.data_hora - entrada.data_hora
+        return None
+    
+    @staticmethod
+    def morador_esta_na_piscina(morador_id):
+        """Verifica se o morador está atualmente na piscina"""
+        ultimo_registro = RegistroAcesso.query.filter_by(
+            morador_id=morador_id
+        ).order_by(RegistroAcesso.data_hora.desc()).first()
+        
+        return ultimo_registro and ultimo_registro.tipo == 'entrada'
+    
+    @staticmethod
+    def obter_moradores_na_piscina():
+        """Retorna lista de moradores que estão atualmente na piscina"""
+        # Subconsulta para obter o último registro de cada morador
+        subq = db.session.query(
+            RegistroAcesso.morador_id,
+            db.func.max(RegistroAcesso.data_hora).label('ultima_data')
+        ).group_by(RegistroAcesso.morador_id).subquery()
+        
+        # Buscar registros que são entradas
+        moradores_dentro = db.session.query(Morador).join(
+            RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+        ).join(
+            subq, db.and_(
+                RegistroAcesso.morador_id == subq.c.morador_id,
+                RegistroAcesso.data_hora == subq.c.ultima_data
+            )
+        ).filter(RegistroAcesso.tipo == 'entrada').all()
+        
+        return moradores_dentro

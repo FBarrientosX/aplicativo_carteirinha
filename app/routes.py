@@ -1,9 +1,9 @@
-from flask import render_template, flash, redirect, url_for, request, send_from_directory, jsonify
+from flask import render_template, flash, redirect, url_for, request, send_from_directory, jsonify, current_app, Blueprint
 from werkzeug.utils import secure_filename
 import io
-from app import app, db
-from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas
-from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm
+from app import db
+from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas, RegistroAcesso
+from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm, RegistroAcessoForm, BuscaMoradorForm
 from app.carteirinha_service import gerar_carteirinha_completa, gerar_pdf_carteirinha, gerar_lote_pdf
 from app.email_service import enviar_email_boas_vindas, verificar_e_enviar_notificacoes, enviar_notificacao_30_dias, enviar_notificacao_vencimento, enviar_email
 from datetime import datetime, timedelta
@@ -14,8 +14,11 @@ import plotly.utils
 import json
 from sqlalchemy import func
 
-@app.route('/')
-@app.route('/index')
+# Criar blueprint para as rotas
+bp = Blueprint('main', __name__)
+
+@bp.route('/')
+@bp.route('/index')
 def index():
     """Dashboard principal com estatísticas"""
     # Estatísticas de moradores
@@ -41,6 +44,19 @@ def index():
         Morador.data_vencimento.is_(None)
     ).count()
     
+    # Estatísticas de acesso à piscina
+    moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina())
+    
+    # Entradas hoje
+    hoje = datetime.now().date()
+    entradas_hoje = RegistroAcesso.query.filter(
+        db.func.date(RegistroAcesso.data_hora) == hoje,
+        RegistroAcesso.tipo == 'entrada'
+    ).count()
+    
+    # Total de registros de acesso
+    total_registros_acesso = RegistroAcesso.query.count()
+    
     # Estatísticas de salva-vidas
     total_salva_vidas = SalvaVidas.query.count()
     salva_vidas_ativos = SalvaVidas.query.filter_by(status='ativo').count()
@@ -56,6 +72,9 @@ def index():
         'a_vencer': a_vencer,
         'vencidas': vencidas,
         'sem_carteirinha': sem_carteirinha,
+        'moradores_na_piscina': moradores_na_piscina,
+        'entradas_hoje': entradas_hoje,
+        'total_registros_acesso': total_registros_acesso,
         'total_salva_vidas': total_salva_vidas,
         'salva_vidas_ativos': salva_vidas_ativos,
         'salva_vidas_certificados': salva_vidas_certificados
@@ -86,7 +105,7 @@ def index():
                          stats=stats,
                          graph_json=graph_json)
 
-@app.route('/moradores')
+@bp.route('/moradores')
 def listar_moradores():
     """Lista todos os moradores com filtros"""
     form = FiltroMoradorForm(request.args)
@@ -129,7 +148,7 @@ def listar_moradores():
                          moradores=moradores,
                          form=form)
 
-@app.route('/morador/novo', methods=['GET', 'POST'])
+@bp.route('/morador/novo', methods=['GET', 'POST'])
 def novo_morador():
     """Cadastrar novo morador"""
     form = MoradorForm()
@@ -169,7 +188,7 @@ def novo_morador():
                          title='Novo Morador',
                          form=form)
 
-@app.route('/morador/<int:id>/editar', methods=['GET', 'POST'])
+@bp.route('/morador/<int:id>/editar', methods=['GET', 'POST'])
 def editar_morador(id):
     """Editar morador existente"""
     morador = Morador.query.get_or_404(id)
@@ -204,7 +223,7 @@ def editar_morador(id):
                          form=form,
                          morador=morador)
 
-@app.route('/morador/<int:id>')
+@bp.route('/morador/<int:id>')
 def ver_morador(id):
     """Ver detalhes do morador"""
     morador = Morador.query.get_or_404(id)
@@ -212,7 +231,7 @@ def ver_morador(id):
                          title=f'Morador: {morador.nome_completo}',
                          morador=morador)
 
-@app.route('/morador/<int:id>/validar', methods=['GET', 'POST'])
+@bp.route('/morador/<int:id>/validar', methods=['GET', 'POST'])
 def validar_carteirinha(id):
     """Validar carteirinha do morador"""
     morador = Morador.query.get_or_404(id)
@@ -237,7 +256,7 @@ def validar_carteirinha(id):
                          morador=morador,
                          form=form)
 
-@app.route('/morador/<int:id>/anexos')
+@bp.route('/morador/<int:id>/anexos')
 def listar_anexos(id):
     """Listar anexos do morador"""
     morador = Morador.query.get_or_404(id)
@@ -245,7 +264,7 @@ def listar_anexos(id):
                          title='Anexos',
                          morador=morador)
 
-@app.route('/anexo/<int:id>')
+@bp.route('/anexo/<int:id>')
 def baixar_anexo(id):
     """Download de anexo"""
     anexo = AnexoMorador.query.get_or_404(id)
@@ -256,7 +275,7 @@ def baixar_anexo(id):
         download_name=anexo.nome_original
     )
 
-@app.route('/relatorios')
+@bp.route('/relatorios')
 def relatorios():
     """Página de relatórios e analytics"""
     # Estatísticas gerais (mesmas da página principal)
@@ -334,7 +353,7 @@ def relatorios():
                          graph_validacoes_json=graph_validacoes_json,
                          data_atual=datetime.now().strftime('%d/%m/%Y às %H:%M'))
 
-@app.route('/notificacoes/executar')
+@bp.route('/notificacoes/executar')
 def executar_notificacoes():
     """Executar verificação e envio de notificações manualmente"""
     resultados = verificar_e_enviar_notificacoes()
@@ -360,7 +379,7 @@ def executar_notificacoes():
 
 # Rota de teste de email removida - usar /notificacoes/teste-email-configurado
 
-@app.route('/configuracoes')
+@bp.route('/configuracoes')
 def configuracoes():
     """Página principal de configurações"""
     from datetime import datetime
@@ -396,7 +415,7 @@ def configuracoes():
     db_existe = os.path.exists(db_path)
     
     # Determinar modo (baseado em configurações de debug)
-    modo_sistema = "Desenvolvimento" if app.debug else "Produção"
+    modo_sistema = "Desenvolvimento" if current_app.debug else "Produção"
     
     return render_template('configuracoes/index.html', 
                          title='Configurações',
@@ -409,7 +428,7 @@ def configuracoes():
                          db_existe=db_existe,
                          modo_sistema=modo_sistema)
 
-@app.route('/configuracoes/email', methods=['GET', 'POST'])
+@bp.route('/configuracoes/email', methods=['GET', 'POST'])
 def configuracoes_email():
     """Configurações de email"""
     form = ConfiguracaoEmailForm()
@@ -432,7 +451,7 @@ def configuracoes_email():
                                      'Email remetente padrão', 'email', 'email')
         
         # Atualizar configurações da aplicação E reinicializar Flask-Mail
-        app.config.update({
+        current_app.config.update({
             'MAIL_SERVER': form.mail_server.data,
             'MAIL_PORT': form.mail_port.data,
             'MAIL_USE_TLS': form.mail_use_tls.data,
@@ -444,7 +463,7 @@ def configuracoes_email():
         
         # Reinicializar Flask-Mail
         from app.email_service import mail
-        mail.init_app(app)
+        mail.init_app(current_app)
         
         flash('Configurações de email salvas com sucesso!', 'success')
         return redirect(url_for('configuracoes_email'))
@@ -467,7 +486,7 @@ def configuracoes_email():
                          form=form,
                          email_configurado=email_configurado)
 
-@app.route('/configuracoes/condominio', methods=['GET', 'POST'])
+@bp.route('/configuracoes/condominio', methods=['GET', 'POST'])
 def configuracoes_condominio():
     """Configurações específicas do condomínio"""
     form = ConfiguracaoCondominioForm()
@@ -517,7 +536,7 @@ def configuracoes_condominio():
                          form=form, 
                          condominio=condominio)
 
-@app.route('/configuracoes/geral', methods=['GET', 'POST'])
+@bp.route('/configuracoes/geral', methods=['GET', 'POST'])
 def configuracoes_geral():
     """Configurações gerais do sistema"""
     form = ConfiguracaoGeralForm()
@@ -572,7 +591,7 @@ def configuracoes_geral():
                          backup_configurado=backup_configurado,
                          seguranca_configurada=seguranca_configurada)
 
-@app.route('/notificacoes/teste-email-configurado')
+@bp.route('/notificacoes/teste-email-configurado')
 def teste_email_configurado():
     """Testar configuração de email usando configurações internas"""
     try:
@@ -594,7 +613,7 @@ def teste_email_configurado():
         mail_password = mail_password.strip().replace(' ', '')
         
         # Atualizar configurações da aplicação E reinicializar o Flask-Mail
-        app.config.update({
+        current_app.config.update({
             'MAIL_SERVER': mail_server,
             'MAIL_PORT': ConfiguracaoSistema.get_valor('MAIL_PORT', 587),
             'MAIL_USE_TLS': ConfiguracaoSistema.get_valor('MAIL_USE_TLS', True),
@@ -605,12 +624,12 @@ def teste_email_configurado():
         })
         
         # Reinicializar o Flask-Mail com as novas configurações
-        mail.init_app(app)
+        mail.init_app(current_app)
         
         # Criar mensagem de teste
         msg = Message(
             subject="✅ Teste de Email - Sistema Configurado",
-            sender=app.config['MAIL_DEFAULT_SENDER'],
+            sender=current_app.config['MAIL_DEFAULT_SENDER'],
             recipients=[mail_username],
             html=render_template('email/teste_email.html', data_atual=datetime.now()),
             body="Teste de email usando configurações internas - Funcionando perfeitamente!"
@@ -638,7 +657,7 @@ def teste_email_configurado():
 
 # ===== ROTAS PARA SALVA-VIDAS =====
 
-@app.route('/salva-vidas')
+@bp.route('/salva-vidas')
 def listar_salva_vidas():
     """Lista todos os salva-vidas com filtros"""
     form = FiltroSalvaVidasForm(request.args)
@@ -687,7 +706,7 @@ def listar_salva_vidas():
                          form=form,
                          stats=stats)
 
-@app.route('/salva-vidas/novo', methods=['GET', 'POST'])
+@bp.route('/salva-vidas/novo', methods=['GET', 'POST'])
 def novo_salva_vidas():
     """Cadastrar novo salva-vidas"""
     form = SalvaVidasForm()
@@ -727,7 +746,7 @@ def novo_salva_vidas():
                          title='Novo Salva-vidas',
                          form=form)
 
-@app.route('/salva-vidas/<int:id>/editar', methods=['GET', 'POST'])
+@bp.route('/salva-vidas/<int:id>/editar', methods=['GET', 'POST'])
 def editar_salva_vidas(id):
     """Editar salva-vidas existente"""
     salva_vidas = SalvaVidas.query.get_or_404(id)
@@ -750,7 +769,7 @@ def editar_salva_vidas(id):
                          form=form,
                          salva_vidas=salva_vidas)
 
-@app.route('/salva-vidas/<int:id>')
+@bp.route('/salva-vidas/<int:id>')
 def ver_salva_vidas(id):
     """Ver detalhes do salva-vidas"""
     salva_vidas = SalvaVidas.query.get_or_404(id)
@@ -758,7 +777,7 @@ def ver_salva_vidas(id):
                          title=f'Salva-vidas: {salva_vidas.nome_completo}',
                          salva_vidas=salva_vidas)
 
-@app.route('/salva-vidas/<int:id>/inativar', methods=['POST'])
+@bp.route('/salva-vidas/<int:id>/inativar', methods=['POST'])
 def inativar_salva_vidas(id):
     """Inativar salva-vidas"""
     salva_vidas = SalvaVidas.query.get_or_404(id)
@@ -769,7 +788,7 @@ def inativar_salva_vidas(id):
     flash(f'Salva-vidas {salva_vidas.nome_completo} foi inativado.', 'warning')
     return redirect(url_for('ver_salva_vidas', id=id))
 
-@app.route('/salva-vidas/<int:id>/reativar', methods=['POST'])
+@bp.route('/salva-vidas/<int:id>/reativar', methods=['POST'])
 def reativar_salva_vidas(id):
     """Reativar salva-vidas"""
     salva_vidas = SalvaVidas.query.get_or_404(id)
@@ -788,7 +807,7 @@ def salvar_foto_salva_vidas(salva_vidas, arquivo):
         nome_unico = f"salva_vidas_{salva_vidas.id}_{uuid.uuid4().hex[:8]}.{filename.rsplit('.', 1)[1].lower()}"
         
         # Criar diretório se não existir
-        upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'salva_vidas')
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'salva_vidas')
         os.makedirs(upload_dir, exist_ok=True)
         
         # Salvar arquivo
@@ -799,17 +818,17 @@ def salvar_foto_salva_vidas(salva_vidas, arquivo):
         salva_vidas.foto_filename = nome_unico
         db.session.commit()
 
-@app.route('/salva-vidas/foto/<filename>')
+@bp.route('/salva-vidas/foto/<filename>')
 def foto_salva_vidas(filename):
     """Servir foto do salva-vidas"""
     return send_from_directory(
-        os.path.join(app.config['UPLOAD_FOLDER'], 'salva_vidas'),
+        os.path.join(current_app.config['UPLOAD_FOLDER'], 'salva_vidas'),
         filename
     )
 
 # ===== ROTAS PARA CARTEIRINHAS =====
 
-@app.route('/morador/<int:id>/carteirinha')
+@bp.route('/morador/<int:id>/carteirinha')
 def visualizar_carteirinha(id):
     """Visualizar carteirinha do morador"""
     morador = Morador.query.get_or_404(id)
@@ -820,12 +839,12 @@ def visualizar_carteirinha(id):
                          morador=morador,
                          condominio=condominio)
 
-@app.route('/morador/<int:id>/carteirinha/gerar')
+@bp.route('/morador/<int:id>/carteirinha/gerar')
 def gerar_carteirinha_imagem(id):
     """Gerar imagem PNG da carteirinha"""
     return gerar_carteirinha_png(id)
 
-@app.route('/morador/<int:id>/carteirinha/png')
+@bp.route('/morador/<int:id>/carteirinha/png')
 def gerar_carteirinha_png(id):
     """Gerar imagem da carteirinha"""
     try:
@@ -870,7 +889,7 @@ def gerar_carteirinha_png(id):
             mimetype='text/plain'
         )
 
-@app.route('/morador/<int:id>/carteirinha/download-pdf')
+@bp.route('/morador/<int:id>/carteirinha/download-pdf')
 def download_carteirinha_pdf(id):
     """Download da carteirinha em PDF"""
     morador = Morador.query.get_or_404(id)
@@ -892,7 +911,7 @@ def download_carteirinha_pdf(id):
         flash(f'Erro ao gerar PDF: {str(e)}', 'danger')
         return redirect(url_for('ver_morador', id=id))
 
-@app.route('/carteirinhas/selecionar')
+@bp.route('/carteirinhas/selecionar')
 def selecionar_morador_carteirinha():
     """Página para selecionar morador para gerar carteirinha"""
     from app.forms import FiltroMoradorForm
@@ -933,7 +952,7 @@ def selecionar_morador_carteirinha():
     return render_template('moradores/selecionar_carteirinha.html', 
                          moradores=moradores, form=form)
 
-@app.route('/carteirinhas/lote', methods=['GET', 'POST'])
+@bp.route('/carteirinhas/lote', methods=['GET', 'POST'])
 def gerar_carteirinhas_lote():
     """Gerar carteirinhas em lote"""
     if request.method == 'POST':
@@ -972,7 +991,7 @@ def gerar_carteirinhas_lote():
                          title='Gerar Carteirinhas em Lote',
                          moradores=moradores)
 
-@app.route('/notificacoes/manual', methods=['GET', 'POST'])
+@bp.route('/notificacoes/manual', methods=['GET', 'POST'])
 def notificacoes_manual():
     """Página para envio manual de notificações"""
     from app.forms import NotificacaoManualForm
@@ -1049,7 +1068,7 @@ def notificacoes_manual():
                          form=form,
                          moradores=moradores)
 
-@app.route('/notificacoes/resultado')
+@bp.route('/notificacoes/resultado')
 def notificacoes_resultado():
     """Página de resultado das notificações"""
     enviadas = request.args.get('enviadas', 0, type=int)
@@ -1060,7 +1079,7 @@ def notificacoes_resultado():
                          enviadas=enviadas,
                          erros=erros)
 
-@app.route('/morador/<int:id>/ajustar-vencimento', methods=['GET', 'POST'])
+@bp.route('/morador/<int:id>/ajustar-vencimento', methods=['GET', 'POST'])
 def ajustar_vencimento(id):
     """Ajustar data de vencimento de um morador"""
     from app.forms import AjusteVencimentoForm
@@ -1097,7 +1116,7 @@ def ajustar_vencimento(id):
                          morador=morador,
                          form=form)
 
-@app.route('/morador/<int:id>/notificar/<tipo>')
+@bp.route('/morador/<int:id>/notificar/<tipo>')
 def notificar_morador(id, tipo):
     """Enviar notificação individual para um morador"""
 
@@ -1113,7 +1132,7 @@ def notificar_morador(id, tipo):
         return redirect(url_for('configuracoes_email'))
     
     # Atualizar configurações da aplicação
-    app.config.update({
+    current_app.config.update({
         'MAIL_SERVER': mail_server,
         'MAIL_PORT': ConfiguracaoSistema.get_valor('MAIL_PORT', 587),
         'MAIL_USE_TLS': ConfiguracaoSistema.get_valor('MAIL_USE_TLS', True),
@@ -1125,7 +1144,7 @@ def notificar_morador(id, tipo):
     
     # Reinicializar Flask-Mail
     from app.email_service import mail
-    mail.init_app(app)
+    mail.init_app(current_app)
     
     morador = Morador.query.get_or_404(id)
     
@@ -1154,7 +1173,7 @@ def salvar_anexo(morador, arquivo):
     """Salva anexo do morador"""
     if arquivo and arquivo.filename:
         # Criar diretório se não existir
-        upload_dir = app.config['UPLOAD_FOLDER']
+        upload_dir = current_app.config['UPLOAD_FOLDER']
         morador_dir = os.path.join(upload_dir, f'morador_{morador.id}')
         os.makedirs(morador_dir, exist_ok=True)
         
@@ -1184,7 +1203,7 @@ def salvar_anexo(morador, arquivo):
     
     return None
 
-@app.route('/logs')
+@bp.route('/logs')
 def ver_logs():
     """Visualizar logs do sistema"""
     import os
@@ -1284,11 +1303,253 @@ def ver_logs():
                          title='Logs do Sistema',
                          logs_info=logs_info)
 
-# Configurar tarefa automatizada
-if not app.debug:
-    from app import scheduler
+# === CONTROLE DE ACESSO À PISCINA ===
+
+@bp.route('/acesso-piscina')
+def controle_acesso():
+    """Página principal do controle de acesso"""
+    from app.models import RegistroAcesso
     
-    @scheduler.task('cron', id='verificar_notificacoes', hour=9, minute=0)
-    def job_notificacoes():
-        with app.app_context():
-            verificar_e_enviar_notificacoes()
+    # Moradores atualmente na piscina
+    moradores_dentro = RegistroAcesso.obter_moradores_na_piscina()
+    
+    # Últimos 10 registros
+    ultimos_registros = RegistroAcesso.query.order_by(
+        RegistroAcesso.data_hora.desc()
+    ).limit(10).all()
+    
+    # Estatísticas do dia
+    hoje = datetime.now().date()
+    entradas_hoje = RegistroAcesso.query.filter(
+        db.func.date(RegistroAcesso.data_hora) == hoje,
+        RegistroAcesso.tipo == 'entrada'
+    ).count()
+    
+    return render_template('acesso/index.html',
+                         moradores_dentro=moradores_dentro,
+                         ultimos_registros=ultimos_registros,
+                         entradas_hoje=entradas_hoje,
+                         total_dentro=len(moradores_dentro))
+
+@bp.route('/acesso-piscina/registrar', methods=['GET', 'POST'])
+def registrar_acesso():
+    """Registrar entrada/saída manual"""
+    from app.forms import RegistroAcessoForm
+    from app.models import RegistroAcesso, Morador
+    
+    form = RegistroAcessoForm()
+    
+    if form.validate_on_submit():
+        morador = Morador.query.get_or_404(form.morador_id.data)
+        
+        # Verificar se o morador está atualmente na piscina
+        esta_dentro = RegistroAcesso.morador_esta_na_piscina(morador.id)
+        
+        # Validar tipo de registro
+        if form.tipo.data == 'entrada' and esta_dentro:
+            flash(f'{morador.nome_completo} já está na piscina!', 'warning')
+            return render_template('acesso/registrar.html', form=form, morador=morador)
+        
+        if form.tipo.data == 'saida' and not esta_dentro:
+            flash(f'{morador.nome_completo} não está na piscina!', 'warning')
+            return render_template('acesso/registrar.html', form=form, morador=morador)
+        
+        # Criar registro
+        registro = RegistroAcesso(
+            morador_id=morador.id,
+            tipo=form.tipo.data,
+            metodo='manual',
+            guardiao=form.guardiao.data,
+            observacoes=form.observacoes.data,
+            ip_origem=request.remote_addr
+        )
+        
+        db.session.add(registro)
+        db.session.commit()
+        
+        acao = 'entrou na' if form.tipo.data == 'entrada' else 'saiu da'
+        flash(f'✅ {morador.nome_completo} {acao} piscina às {registro.data_hora.strftime("%H:%M")}', 'success')
+        
+        return redirect(url_for('controle_acesso'))
+    
+    return render_template('acesso/registrar.html', form=form)
+
+@bp.route('/acesso-piscina/qrcode', methods=['GET', 'POST'])
+def acesso_qrcode():
+    """Interface para leitura de QR Code"""
+    from app.forms import BuscaMoradorForm
+    from app.models import RegistroAcesso, Morador
+    import json
+    
+    form = BuscaMoradorForm()
+    morador = None
+    erro = None
+    
+    if form.validate_on_submit():
+        if form.submit_qr.data and form.codigo_qr.data:
+            # Processar QR Code
+            try:
+                # Tentar decodificar JSON do QR Code
+                dados_qr = json.loads(form.codigo_qr.data)
+                morador_id = dados_qr.get('id')
+                
+                if morador_id:
+                    morador = Morador.query.get(morador_id)
+                    if not morador:
+                        erro = "Morador não encontrado no sistema"
+                else:
+                    erro = "QR Code inválido - ID não encontrado"
+                    
+            except (json.JSONDecodeError, ValueError):
+                # Se não for JSON, tentar como ID direto
+                try:
+                    morador_id = int(form.codigo_qr.data)
+                    morador = Morador.query.get(morador_id)
+                    if not morador:
+                        erro = "Morador não encontrado"
+                except ValueError:
+                    erro = "Código QR inválido"
+        
+        elif form.submit_busca.data and form.busca_nome.data:
+            # Buscar por nome
+            moradores = Morador.query.filter(
+                Morador.nome_completo.ilike(f"%{form.busca_nome.data}%")
+            ).all()
+            
+            if len(moradores) == 1:
+                morador = moradores[0]
+            elif len(moradores) > 1:
+                return render_template('acesso/qrcode.html', 
+                                     form=form, 
+                                     moradores=moradores,
+                                     erro="Múltiplos moradores encontrados. Selecione um:")
+            else:
+                erro = "Nenhum morador encontrado"
+    
+    return render_template('acesso/qrcode.html', form=form, morador=morador, erro=erro)
+
+@bp.route('/acesso-piscina/processar/<int:morador_id>/<tipo>')
+def processar_acesso_rapido(morador_id, tipo):
+    """Processar entrada/saída rápida via QR Code"""
+    from app.models import RegistroAcesso, Morador
+    
+    if tipo not in ['entrada', 'saida']:
+        flash('Tipo de acesso inválido!', 'danger')
+        return redirect(url_for('acesso_qrcode'))
+    
+    morador = Morador.query.get_or_404(morador_id)
+    
+    # Verificar carteirinha válida
+    if not morador.carteirinha_ativa:
+        flash(f'Carteirinha de {morador.nome_completo} não está ativa!', 'danger')
+        return redirect(url_for('acesso_qrcode'))
+    
+    # Verificar status atual
+    esta_dentro = RegistroAcesso.morador_esta_na_piscina(morador.id)
+    
+    if tipo == 'entrada' and esta_dentro:
+        flash(f'{morador.nome_completo} já está na piscina!', 'warning')
+        return redirect(url_for('acesso_qrcode'))
+    
+    if tipo == 'saida' and not esta_dentro:
+        flash(f'{morador.nome_completo} não está na piscina!', 'warning')
+        return redirect(url_for('acesso_qrcode'))
+    
+    # Registrar acesso
+    registro = RegistroAcesso(
+        morador_id=morador.id,
+        tipo=tipo,
+        metodo='qrcode',
+        guardiao='Sistema QR Code',
+        ip_origem=request.remote_addr
+    )
+    
+    db.session.add(registro)
+    db.session.commit()
+    
+    acao = 'entrou na' if tipo == 'entrada' else 'saiu da'
+    flash(f'✅ {morador.nome_completo} {acao} piscina às {registro.data_hora.strftime("%H:%M")}', 'success')
+    
+    return redirect(url_for('acesso_qrcode'))
+
+@bp.route('/acesso-piscina/historico')
+def historico_acesso():
+    """Histórico de acessos com filtros"""
+    from app.forms import FiltroAcessoForm
+    from app.models import RegistroAcesso, Morador
+    
+    form = FiltroAcessoForm()
+    
+    # Configurar choices do formulário
+    form.morador_id.choices = [(0, 'Todos os moradores')] + [
+        (m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}")
+        for m in Morador.query.order_by(Morador.nome_completo).all()
+    ]
+    
+    # Construir query
+    query = RegistroAcesso.query
+    
+    # Aplicar filtros se fornecidos
+    if request.args.get('morador_id') and int(request.args.get('morador_id')) > 0:
+        query = query.filter(RegistroAcesso.morador_id == request.args.get('morador_id'))
+        form.morador_id.data = int(request.args.get('morador_id'))
+    
+    if request.args.get('data_inicio'):
+        data_inicio = datetime.strptime(request.args.get('data_inicio'), '%Y-%m-%d').date()
+        query = query.filter(db.func.date(RegistroAcesso.data_hora) >= data_inicio)
+        form.data_inicio.data = data_inicio
+    
+    if request.args.get('data_fim'):
+        data_fim = datetime.strptime(request.args.get('data_fim'), '%Y-%m-%d').date()
+        query = query.filter(db.func.date(RegistroAcesso.data_hora) <= data_fim)
+        form.data_fim.data = data_fim
+    
+    if request.args.get('tipo'):
+        query = query.filter(RegistroAcesso.tipo == request.args.get('tipo'))
+        form.tipo.data = request.args.get('tipo')
+    
+    # Paginação
+    page = request.args.get('page', 1, type=int)
+    registros = query.order_by(RegistroAcesso.data_hora.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('acesso/historico.html', 
+                         registros=registros, 
+                         form=form,
+                         title='Histórico de Acessos')
+
+@bp.route('/acesso-piscina/morador/<int:morador_id>')
+def historico_morador(morador_id):
+    """Histórico específico de um morador"""
+    from app.models import RegistroAcesso, Morador
+    
+    morador = Morador.query.get_or_404(morador_id)
+    
+    # Registros do morador
+    registros = RegistroAcesso.query.filter_by(
+        morador_id=morador_id
+    ).order_by(RegistroAcesso.data_hora.desc()).limit(50).all()
+    
+    # Estatísticas
+    total_entradas = RegistroAcesso.query.filter_by(
+        morador_id=morador_id, tipo='entrada'
+    ).count()
+    
+    # Frequência nos últimos 30 dias
+    trinta_dias_atras = datetime.now() - timedelta(days=30)
+    entradas_30_dias = RegistroAcesso.query.filter(
+        RegistroAcesso.morador_id == morador_id,
+        RegistroAcesso.tipo == 'entrada',
+        RegistroAcesso.data_hora >= trinta_dias_atras
+    ).count()
+    
+    # Verificar se está na piscina
+    esta_na_piscina = RegistroAcesso.morador_esta_na_piscina(morador_id)
+    
+    return render_template('acesso/historico_morador.html',
+                         morador=morador,
+                         registros=registros,
+                         total_entradas=total_entradas,
+                         entradas_30_dias=entradas_30_dias,
+                         esta_na_piscina=esta_na_piscina)

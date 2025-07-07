@@ -21,7 +21,7 @@
                 <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
                 <h5 class="card-title">Configurações de Email</h5>
                 <p class="card-text">Configure servidor SMTP, credenciais e remetente padrão para notificações automáticas.</p>
-                <a href="{{ url_for('configuracoes_email') }}" class="btn btn-primary">
+                <a href="{{ url_for('main.configuracoes_email') }}" class="btn btn-primary">
                     <i class="fas fa-cog me-1"></i>
                     Configurar Email
                 </a>
@@ -36,7 +36,7 @@
                 <i class="fas fa-building fa-3x text-success mb-3"></i>
                 <h5 class="card-title">Dados do Condomínio</h5>
                 <p class="card-text">Configure informações, contatos, personalização visual e regras específicas do condomínio.</p>
-                <a href="{{ url_for('configuracoes_condominio') }}" class="btn btn-success">
+                <a href="{{ url_for('main.configuracoes_condominio') }}" class="btn btn-success">
                     <i class="fas fa-edit me-1"></i>
                     Configurar Condomínio
                 </a>
@@ -51,7 +51,7 @@
                 <i class="fas fa-server fa-3x text-info mb-3"></i>
                 <h5 class="card-title">Configurações Gerais</h5>
                 <p class="card-text">Defina configurações de segurança, backup, notificações e outras opções do sistema.</p>
-                <a href="{{ url_for('configuracoes_geral') }}" class="btn btn-info">
+                <a href="{{ url_for('main.configuracoes_geral') }}" class="btn btn-info">
                     <i class="fas fa-sliders-h me-1"></i>
                     Configurar Sistema
                 </a>
@@ -205,7 +205,7 @@
             <div class="card-body">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group me-2" role="group">
-                        <a href="{{ url_for('teste_email_configurado') }}" class="btn btn-outline-primary">
+                        <a href="{{ url_for('main.teste_email_configurado') }}" class="btn btn-outline-primary">
                             <i class="fas fa-paper-plane me-1"></i>
                             Testar Email
                         </a>
@@ -217,7 +217,7 @@
                         </button>
                     </div>
                     <div class="btn-group" role="group">
-                        <a href="{{ url_for('relatorios') }}" class="btn btn-outline-info">
+                        <a href="{{ url_for('main.relatorios') }}" class="btn btn-outline-info">
                             <i class="fas fa-chart-line me-1"></i>
                             Ver Relatórios
                         </a>

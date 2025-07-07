@@ -10,7 +10,7 @@
                     Carteirinha da Piscina
                 </h1>
                 <div>
-                    <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-secondary me-2">
+                    <a href="{{ url_for('main.ver_morador', id=morador.id) }}" class="btn btn-secondary me-2">
                         <i class="fas fa-arrow-left me-1"></i>
                         Voltar
                     </a>
@@ -47,7 +47,7 @@
                     <div id="carteirinha-container" style="display: none;">
                         <img 
                             id="carteirinha-img"
-                            src="{{ url_for('gerar_carteirinha_imagem', id=morador.id) }}" 
+                            src="{{ url_for('main.gerar_carteirinha_imagem', id=morador.id) }}" 
                             alt="Carteirinha de {{ morador.nome_completo }}"
                             class="img-fluid rounded shadow-lg"
                             style="max-width: 600px; border: 2px solid #dee2e6; cursor: zoom-in;"
@@ -60,7 +60,7 @@
                         <h5>Erro ao Carregar Carteirinha</h5>
                         <p id="erro-msg">Erro desconhecido</p>
                         <button class="btn btn-danger me-2" onclick="location.reload()">Tentar Novamente</button>
-                        <a href="{{ url_for('ver_morador', id=morador.id) }}" class="btn btn-secondary">Voltar</a>
+                        <a href="{{ url_for('main.ver_morador', id=morador.id) }}" class="btn btn-secondary">Voltar</a>
                     </div>
                     
                 </div>
@@ -115,7 +115,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="d-grid">
-                                <a href="{{ url_for('download_carteirinha_pdf', id=morador.id) }}" 
+                                <a href="{{ url_for('main.download_carteirinha_pdf', id=morador.id) }}" 
                                    class="btn btn-outline-danger" target="_blank">
                                     <i class="fas fa-file-pdf me-2"></i>
                                     Download PDF
@@ -125,7 +125,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="d-grid">
-                                <a href="{{ url_for('gerar_carteirinha_imagem', id=morador.id) }}" 
+                                <a href="{{ url_for('main.gerar_carteirinha_imagem', id=morador.id) }}" 
                                    class="btn btn-outline-primary" target="_blank" download="carteirinha_{{ morador.id }}.png">
                                     <i class="fas fa-image me-2"></i>
                                     Download PNG
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function imprimirCarteirinha() {
-    window.open("{{ url_for('download_carteirinha_pdf', id=morador.id) }}", '_blank');
+    window.open("{{ url_for('main.download_carteirinha_pdf', id=morador.id) }}", '_blank');
 }
 </script>
 {% endblock %} 

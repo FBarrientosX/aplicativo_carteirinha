@@ -122,8 +122,8 @@ body {
 
 /* Navbar customizada */
 .navbar-brand {
+    font-size: 1.1rem;
     font-weight: 600;
-    font-size: 1.5rem;
 }
 
 .navbar-nav .nav-link {
@@ -141,6 +141,7 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
 
 .card:hover {
@@ -504,5 +505,662 @@ footer {
     
     body {
         background-color: white !important;
+    }
+}
+
+/* Melhorias de responsividade para a navbar */
+@media (max-width: 1199.98px) {
+    .navbar-nav .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .navbar-nav .nav-link {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .navbar-brand {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .navbar-brand {
+        font-size: 0.9rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .navbar-nav .nav-link:last-child {
+        border-bottom: none;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* Melhorar espaçamento dos dropdowns */
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Container mais fluido */
+.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 0.85rem;
+    }
+}
+
+/* Melhorar contraste e legibilidade */
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+}
+
+.navbar-dark .navbar-nav .nav-link.dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Ajustar navbar collapse para telas muito pequenas */
+@media (max-width: 1399.98px) {
+    .navbar-collapse {
+        background-color: rgba(13, 110, 253, 0.95);
+        margin-top: 0.5rem;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+    }
+    
+    .navbar-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .navbar-nav .nav-item {
+        margin: 0.1rem 0;
+    }
+}
+
+/* Melhorias específicas para a página de QR Code */
+.qrcode-page .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.qrcode-page .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Melhorar botões em dispositivos móveis */
+@media (max-width: 575.98px) {
+    .btn-lg {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+    }
+    
+    .h1, h1 {
+        font-size: 1.5rem;
+    }
+    
+    .badge.fs-6 {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Melhorar grid de botões */
+.d-grid.gap-2 .btn {
+    min-height: 2.5rem;
+}
+
+@media (min-width: 576px) {
+    .d-grid.gap-2.d-sm-flex .btn {
+        min-height: auto;
+    }
+}
+
+/* Cards de moradores encontrados */
+.card.h-100 {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card.h-100:hover {
+    transform: translateY(-2px);
+}
+
+/* Melhorar espaçamento em telas pequenas */
+@media (max-width: 767.98px) {
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .alert {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Ajustar imagem do morador */
+.morador-foto {
+    max-height: 150px;
+    max-width: 100%;
+    object-fit: cover;
+    border-radius: 0.375rem;
+}
+
+/* Melhorar formulário de busca */
+.form-control-lg {
+    font-size: 1rem;
+}
+
+@media (max-width: 575.98px) {
+    .form-control-lg {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Status badges responsivos */
+.badge.fs-6 {
+    font-size: 0.875rem !important;
+}
+
+@media (max-width: 575.98px) {
+    .badge.fs-6 {
+        font-size: 0.75rem !important;
+        padding: 0.35em 0.65em;
+    }
+}
+
+/* Melhorar lista de instruções */
+.list-unstyled li {
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.list-unstyled li i {
+    flex-shrink: 0;
+}
+
+/* Ajustar título responsivo */
+@media (max-width: 767.98px) {
+    .d-flex.flex-column.flex-sm-row {
+        gap: 0.5rem;
+    }
+}
+
+/* Melhorar botões de ação principal */
+.btn.flex-fill {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 575.98px) {
+    .btn.flex-fill {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+}
+
+/* Garantir que elementos não extrapolem containers */
+.card-body {
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.row > * {
+    padding-left: calc(var(--bs-gutter-x) * 0.5);
+    padding-right: calc(var(--bs-gutter-x) * 0.5);
+}
+
+/* Ajustar botões em containers pequenos */
+@media (max-width: 991.98px) {
+    .d-grid.gap-2 {
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Melhorar responsividade específica da página QR Code */
+.qrcode-form {
+    width: 100%;
+    max-width: 100%;
+}
+
+.qrcode-form .row {
+    --bs-gutter-x: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.qrcode-form .col-lg-6,
+.qrcode-form .col-lg-4,
+.qrcode-form .col-lg-2 {
+    padding-left: calc(var(--bs-gutter-x) * 0.5);
+    padding-right: calc(var(--bs-gutter-x) * 0.5);
+}
+
+@media (max-width: 575.98px) {
+    .qrcode-form .row {
+        --bs-gutter-x: 0.5rem;
+    }
+    
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Ajustar grid específico do formulário QR Code */
+@media (max-width: 991.98px) {
+    .qrcode-form .col-lg-6,
+    .qrcode-form .col-lg-4,
+    .qrcode-form .col-lg-2 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .qrcode-form .col-lg-2:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Garantir que labels invisíveis não ocupem espaço */
+.form-label.d-none {
+    display: none !important;
+}
+
+@media (min-width: 992px) {
+    .form-label.d-none.d-lg-block {
+        display: block !important;
+        visibility: hidden;
+        height: 1.5rem;
+    }
+}
+
+/* Garantir que o formulário QR Code não extrapole */
+.qrcode-form .card-body {
+    overflow-x: hidden;
+    padding: 1rem;
+}
+
+/* Ajustar botões para não extrapolarem */
+.qrcode-form .btn {
+    max-width: 100%;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow: visible;
+}
+
+@media (max-width: 991.98px) {
+    .qrcode-form .col-lg-2 .d-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .qrcode-form .col-lg-2 .btn {
+        flex: none;
+        width: 100%;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .qrcode-form .col-lg-2 .d-grid {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .qrcode-form .col-lg-2 .btn {
+        flex: none;
+        width: 100%;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        white-space: normal;
+        overflow: visible;
+    }
+}
+
+/* Cards de Carteirinha - Efeitos Visuais Modernos */
+.carteirinha-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.carteirinha-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.carteirinha-card .card-body {
+    position: relative;
+    z-index: 2;
+}
+
+.carteirinha-card .card-icon-bg {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    font-size: 8rem;
+    opacity: 0.1;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.carteirinha-card .card-icon-bg i {
+    display: block;
+}
+
+.carteirinha-card .btn {
+    transition: all 0.3s ease;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.carteirinha-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.carteirinha-card .card-title {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.carteirinha-card ul li {
+    transition: all 0.2s ease;
+}
+
+.carteirinha-card:hover ul li {
+    transform: translateX(5px);
+}
+
+/* Efeito de brilho ao passar o mouse */
+.carteirinha-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+}
+
+.carteirinha-card:hover::before {
+    left: 100%;
+}
+
+/* Responsividade para cards de carteirinha */
+@media (max-width: 768px) {
+    .carteirinha-card .card-icon-bg {
+        font-size: 6rem;
+        top: -10px;
+        right: -10px;
+    }
+    
+    .carteirinha-card .btn {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .carteirinha-card .card-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carteirinha-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .carteirinha-card .card-icon-bg {
+        font-size: 4rem;
+        top: -5px;
+        right: -5px;
+    }
+    
+    .carteirinha-card .btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.8rem;
+    }
+}
+
+/* Botões de Ação Rápida */
+.action-btn {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    padding: 1.5rem 1rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn i {
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover i {
+    transform: scale(1.1);
+}
+
+.action-btn span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Efeito de ondulação nos botões */
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+}
+
+.action-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Responsividade para botões de ação */
+@media (max-width: 768px) {
+    .action-btn {
+        padding: 1.2rem 0.8rem;
+        border-radius: 12px;
+    }
+    
+    .action-btn i {
+        font-size: 1.5rem !important;
+    }
+    
+    .action-btn span {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .action-btn {
+        padding: 1rem 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .action-btn i {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .action-btn span {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+}
+
+/* Melhorar header do card de ações rápidas */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.card-header.bg-gradient-primary {
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+/* Página de Detalhes do Morador */
+.morador-detalhes .btn-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.morador-detalhes .btn-group .btn {
+    margin-bottom: 0.5rem;
+}
+
+/* Card de Geração de Carteirinha */
+.card.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.card.bg-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+}
+
+.card.bg-gradient-primary .btn-light {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.card.bg-gradient-primary .btn-light:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Seções organizadas */
+.detalhes-section h6.text-muted {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+/* Botões responsivos na página de detalhes */
+@media (max-width: 768px) {
+    .morador-detalhes .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .morador-detalhes .btn-group .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .morador-detalhes h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card.bg-gradient-primary .card-body {
+        padding: 1rem;
+    }
+    
+    .card.bg-gradient-primary .btn-light {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
     }
 }

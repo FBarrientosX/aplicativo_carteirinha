@@ -8,7 +8,7 @@
                 <i class="fas fa-id-card-alt me-2"></i>
                 Gerar Carteirinhas em Lote
             </h1>
-            <a href="{{ url_for('listar_moradores') }}" class="btn btn-secondary">
+            <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i>
                 Voltar para Moradores
             </a>
@@ -118,7 +118,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{{ url_for('visualizar_carteirinha', id=morador.id) }}" 
+                                                <a href="{{ url_for('main.visualizar_carteirinha', id=morador.id) }}" 
                                                    class="btn btn-sm btn-outline-primary" title="Ver Carteirinha">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
@@ -196,7 +196,7 @@
             <p class="mb-3">
                 Não há moradores com data de vencimento definida para gerar carteirinhas.
             </p>
-            <a href="{{ url_for('listar_moradores') }}" class="btn btn-primary">
+            <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-primary">
                 <i class="fas fa-users me-2"></i>
                 Ver Todos os Moradores
             </a>

@@ -9,7 +9,7 @@
                 Resultado das Notificações
             </h1>
             <div>
-                <a href="{{ url_for('relatorios') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.relatorios') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>
                     Voltar aos Relatórios
                 </a>
@@ -174,7 +174,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="text-center mb-3">
-                            <a href="{{ url_for('listar_moradores') }}?status=a_vencer" class="btn btn-warning btn-lg">
+                            <a href="{{ url_for('main.listar_moradores') }}?status=a_vencer" class="btn btn-warning btn-lg">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 Ver A Vencer
                             </a>
@@ -183,7 +183,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="text-center mb-3">
-                            <a href="{{ url_for('listar_moradores') }}?status=vencida" class="btn btn-danger btn-lg">
+                            <a href="{{ url_for('main.listar_moradores') }}?status=vencida" class="btn btn-danger btn-lg">
                                 <i class="fas fa-times-circle me-2"></i>
                                 Ver Vencidas
                             </a>
@@ -192,7 +192,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="text-center mb-3">
-                            <a href="{{ url_for('relatorios') }}" class="btn btn-primary btn-lg">
+                            <a href="{{ url_for('main.relatorios') }}" class="btn btn-primary btn-lg">
                                 <i class="fas fa-chart-line me-2"></i>
                                 Ver Relatórios
                             </a>

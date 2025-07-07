@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-swimming-pool me-2 text-primary"></i>
+                    Controle de Acesso à Piscina
+                </h1>
+                <div>
+                    <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-qrcode me-1"></i>
+                        QR Code
+                    </a>
+                    <a href="{{ url_for('main.registrar_acesso') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>
+                        Registrar Manual
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_dentro }}</h4>
+                            <p class="mb-0">Na Piscina Agora</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ entradas_hoje }}</h4>
+                            <p class="mb-0">Entradas Hoje</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sign-in-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ ultimos_registros|length }}</h4>
+                            <p class="mb-0">Últimos Registros</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">
+                                <a href="{{ url_for('main.historico_acesso') }}" class="text-white text-decoration-none">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    Relatórios
+                                </a>
+                            </h4>
+                            <p class="mb-0">Ver Histórico</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Moradores na Piscina -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Moradores na Piscina ({{ total_dentro }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if moradores_dentro %}
+                        <div class="list-group list-group-flush">
+                            {% for morador in moradores_dentro %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ morador.nome_completo }}</h6>
+                                    <small class="text-muted">{{ morador.bloco }}-{{ morador.apartamento }}</small>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('main.processar_acesso_rapido', morador_id=morador.id, tipo='saida') }}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Registrar saída de {{ morador.nome_completo }}?')">
+                                        <i class="fas fa-sign-out-alt me-1"></i>
+                                        Saída
+                                    </a>
+                                    <a href="{{ url_for('main.historico_morador', morador_id=morador.id) }}" 
+                                       class="btn btn-sm btn-outline-info ms-1">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-swimming-pool fa-3x mb-3"></i>
+                            <p>Nenhum morador na piscina no momento</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimos Registros -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Últimos Registros
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ultimos_registros %}
+                        <div class="list-group list-group-flush">
+                            {% for registro in ultimos_registros %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ registro.morador.nome_completo }}</h6>
+                                        <p class="mb-1">
+                                            <span class="badge bg-{% if registro.tipo == 'entrada' %}success{% else %}danger{% endif %}">
+                                                {% if registro.tipo == 'entrada' %}
+                                                    <i class="fas fa-sign-in-alt me-1"></i>Entrada
+                                                {% else %}
+                                                    <i class="fas fa-sign-out-alt me-1"></i>Saída
+                                                {% endif %}
+                                            </span>
+                                            <small class="text-muted ms-2">
+                                                via {{ registro.metodo|title }}
+                                                {% if registro.guardiao and registro.guardiao != 'Sistema QR Code' %}
+                                                    - {{ registro.guardiao }}
+                                                {% endif %}
+                                            </small>
+                                        </p>
+                                        {% if registro.duracao_permanencia and registro.tipo == 'saida' %}
+                                            <small class="text-info">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Permanência: {{ registro.duracao_permanencia }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ registro.data_hora.strftime('%H:%M') }}
+                                        <br>
+                                        {{ registro.data_hora.strftime('%d/%m') }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-list me-1"></i>
+                                Ver Histórico Completo
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-history fa-3x mb-3"></i>
+                            <p>Nenhum registro encontrado</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-qrcode fa-2x mb-2"></i>
+                                <span>Leitor QR Code</span>
+                                <small class="text-muted">Acesso automático</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('main.registrar_acesso') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-edit fa-2x mb-2"></i>
+                                <span>Registro Manual</span>
+                                <small class="text-muted">Entrada/saída manual</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                <span>Relatórios</span>
+                                <small class="text-muted">Histórico e estatísticas</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <span>Moradores</span>
+                                <small class="text-muted">Gerenciar carteirinhas</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh da página a cada 30 segundos
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %} 
