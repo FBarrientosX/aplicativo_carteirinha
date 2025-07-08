@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
+from flask_login import LoginManager
 from flask_apscheduler import APScheduler
 from app.config import Config
 from datetime import datetime
@@ -10,6 +11,7 @@ from datetime import datetime
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
+login_manager = LoginManager()
 scheduler = APScheduler()
 
 def create_app(config_class=Config):
@@ -22,6 +24,17 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     mail.init_app(app)
     
+    # Configurar Flask-Login
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+    login_manager.login_message_category = 'info'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        from app.models import Usuario
+        return Usuario.query.get(int(user_id))
+
     # Filtro personalizado para formatação de datas
     @app.template_filter('dateformat')
     def dateformat(value, format='%d/%m/%Y'):
@@ -40,19 +53,28 @@ def create_app(config_class=Config):
         return value.strftime(format)
 
     @app.template_filter('now')
-    def now_filter(format='%Y'):
+    def now_filter(value, format='%Y'):
         """Filtro para data atual"""
         return datetime.now().strftime(format)
 
-    # Inicializar o scheduler apenas em produção
-    if not app.debug:
-        scheduler.init_app(app)
-        scheduler.start()
+    # Inicializar o scheduler apenas em produção e se não estiver já rodando
+    if not app.debug and not scheduler.running:
+        try:
+            scheduler.init_app(app)
+            scheduler.start()
+        except Exception as e:
+            print(f"Aviso: Scheduler não pôde ser iniciado: {e}")
+            pass
 
     # Importa as rotas e modelos após a criação de 'app' e 'db'
     from app import models
     from app.routes import bp as main_bp
+    from app.auth import auth_bp
+    from app.salva_vidas_routes import salva_vidas_bp
+    
     app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(salva_vidas_bp, url_prefix='/salva_vidas')
     
     return app
 

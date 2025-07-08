@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-swimming-pool text-primary me-2"></i>
+                    Moradores na Piscina
+                </h2>
+                <div>
+                    <a href="{{ url_for('auth.salva_vidas_dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar ao Dashboard
+                    </a>
+                    <a href="{{ url_for('salva_vidas.qr_scanner') }}" class="btn btn-success">
+                        <i class="fas fa-qrcode me-1"></i>
+                        Scanner QR
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ moradores_dentro|length }}</h3>
+                    <p class="mb-0">
+                        <i class="fas fa-users me-1"></i>
+                        Na Piscina
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ "agora" | now('%H:%M') }}</h3>
+                    <p class="mb-0">
+                        <i class="fas fa-clock me-1"></i>
+                        Horário Atual
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ "hoje" | now('%d/%m') }}</h3>
+                    <p class="mb-0">
+                        <i class="fas fa-calendar me-1"></i>
+                        Data Atual
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">
+                        {% if moradores_dentro|length > 0 %}
+                            <i class="fas fa-check-circle"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle"></i>
+                        {% endif %}
+                    </h3>
+                    <p class="mb-0">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Status
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de Moradores -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Moradores Atualmente na Piscina
+                        <span class="badge bg-light text-primary ms-2">{{ moradores_dentro|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if moradores_dentro %}
+                        <div class="row">
+                            {% for morador in moradores_dentro %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card border-success">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-1">
+                                                        <i class="fas fa-user me-1"></i>
+                                                        {{ morador.nome_completo }}
+                                                    </h6>
+                                                    <p class="card-text text-muted mb-2">
+                                                        <i class="fas fa-building me-1"></i>
+                                                        Bloco {{ morador.bloco }}, Apt {{ morador.apartamento }}
+                                                    </p>
+                                                    
+                                                    <!-- Status da Carteirinha -->
+                                                    <div class="mb-2">
+                                                        {% if morador.status_carteirinha == 'regular' %}
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check-circle me-1"></i>
+                                                                Carteirinha Regular
+                                                            </span>
+                                                        {% elif morador.status_carteirinha == 'a_vencer' %}
+                                                            <span class="badge bg-warning">
+                                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                                A Vencer
+                                                            </span>
+                                                        {% elif morador.status_carteirinha == 'vencida' %}
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-times-circle me-1"></i>
+                                                                Vencida
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">
+                                                                <i class="fas fa-question-circle me-1"></i>
+                                                                Sem Carteirinha
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Último Acesso -->
+                                                    {% set ultimo_registro = morador.registros_acesso[0] if morador.registros_acesso else None %}
+                                                    {% if ultimo_registro and ultimo_registro.tipo == 'entrada' %}
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            Entrada: {{ ultimo_registro.data_hora.strftime('%H:%M') }}
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="ms-2">
+                                                    <span class="badge bg-success fs-6">
+                                                        <i class="fas fa-swimming-pool"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Ações -->
+                                            <div class="d-grid gap-2 d-md-flex">
+                                                <button type="button" 
+                                                        class="btn btn-outline-danger btn-sm flex-fill"
+                                                        onclick="registrarSaida({{ morador.id }}, '{{ morador.nome_completo }}')">
+                                                    <i class="fas fa-sign-out-alt me-1"></i>
+                                                    Registrar Saída
+                                                </button>
+                                                <a href="{{ url_for('main.ver_morador', id=morador.id) }}" 
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-swimming-pool fa-5x text-muted mb-4"></i>
+                            <h4 class="text-muted mb-3">Piscina Vazia</h4>
+                            <p class="text-muted mb-4">
+                                Nenhum morador está na piscina no momento.
+                            </p>
+                            <a href="{{ url_for('salva_vidas.qr_scanner') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-qrcode me-2"></i>
+                                Iniciar Scanner QR
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('salva_vidas.qr_scanner') }}" class="btn btn-success w-100">
+                                <i class="fas fa-qrcode me-1"></i>
+                                Scanner QR
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('salva_vidas.historico_acesso') }}" class="btn btn-info w-100">
+                                <i class="fas fa-history me-1"></i>
+                                Histórico
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button type="button" class="btn btn-warning w-100" onclick="atualizarPagina()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('auth.salva_vidas_dashboard') }}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-home me-1"></i>
+                                Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalSaida" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sign-out-alt me-2"></i>
+                    Confirmar Saída
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Confirma a saída de <strong id="nomeMoreadorSaida"></strong> da piscina?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarSaida">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Confirmar Saída
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let moradorIdSaida = null;
+
+function registrarSaida(moradorId, nomeMoreador) {
+    moradorIdSaida = moradorId;
+    document.getElementById('nomeMoreadorSaida').textContent = nomeMoreador;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalSaida'));
+    modal.show();
+}
+
+document.getElementById('btnConfirmarSaida').addEventListener('click', function() {
+    if (moradorIdSaida) {
+        // Redirecionar para a rota de registro de saída
+        window.location.href = `/salva_vidas/registrar-acesso/${moradorIdSaida}/saida`;
+    }
+});
+
+function atualizarPagina() {
+    location.reload();
+}
+
+// Auto-atualizar a cada 30 segundos
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+
+<style>
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-body {
+    border-radius: 10px;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.border-success {
+    border-width: 2px !important;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %} 

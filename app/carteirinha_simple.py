@@ -148,20 +148,53 @@ def gerar_carteirinha_simples(morador, condominio=None):
     # Título
     titulo = "CARTEIRINHA DA PISCINA"
     if condominio and hasattr(condominio, 'nome') and condominio.nome:
-        nome_cond = condominio.nome.upper()
-        if len(nome_cond) > 25:
-            nome_cond = nome_cond[:25] + "..."
-        titulo = nome_cond
+        titulo = condominio.nome.upper()
     
-    # Centralizar título
-    try:
-        bbox = draw.textbbox((0, 0), titulo, font=fonte_titulo)
-        text_width = bbox[2] - bbox[0]
-    except:
-        text_width = len(titulo) * 12  # Aproximação
+    # Função para quebrar texto em linhas
+    def quebrar_texto_titulo(texto, fonte, largura_max):
+        palavras = texto.split()
+        linhas = []
+        linha_atual = ""
+        
+        for palavra in palavras:
+            teste_linha = linha_atual + (" " if linha_atual else "") + palavra
+            try:
+                bbox = draw.textbbox((0, 0), teste_linha, font=fonte)
+                largura_teste = bbox[2] - bbox[0]
+            except:
+                largura_teste = len(teste_linha) * 12  # Aproximação
+            
+            if largura_teste <= largura_max:
+                linha_atual = teste_linha
+            else:
+                if linha_atual:
+                    linhas.append(linha_atual)
+                    linha_atual = palavra
+                else:
+                    # Palavra muito longa, quebrar no meio
+                    linhas.append(palavra[:len(palavra)//2] + "-")
+                    linha_atual = palavra[len(palavra)//2:]
+        
+        if linha_atual:
+            linhas.append(linha_atual)
+        
+        return linhas
     
-    x = (CARD_WIDTH - text_width) // 2
-    draw.text((x, 25), titulo, fill='white', font=fonte_titulo)
+    # Quebrar título em linhas se necessário
+    largura_max_titulo = CARD_WIDTH - 40  # 20px margem de cada lado
+    linhas_titulo = quebrar_texto_titulo(titulo, fonte_titulo, largura_max_titulo)
+    
+    # Renderizar título linha por linha
+    for i, linha in enumerate(linhas_titulo):
+        try:
+            bbox = draw.textbbox((0, 0), linha, font=fonte_titulo)
+            text_width = bbox[2] - bbox[0]
+        except:
+            text_width = len(linha) * 12  # Aproximação
+        
+        x = (CARD_WIDTH - text_width) // 2
+        y = 15 + (i * 20)  # 20px entre linhas
+        draw.text((x, y), linha, fill='white', font=fonte_titulo)
     
     # === FOTO ===
     foto_size = (180, 220)

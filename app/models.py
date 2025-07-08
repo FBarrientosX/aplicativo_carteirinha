@@ -12,6 +12,8 @@
 
 from datetime import datetime, timedelta
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 class Morador(db.Model):
     __tablename__ = 'moradores'
@@ -92,6 +94,26 @@ class Morador(db.Model):
     def get_email_notificacao(self):
         """Retorna o email para notificação (titular ou próprio)"""
         return self.email_titular if not self.eh_titular and self.email_titular else self.email
+    
+    @property
+    def foto_carteirinha(self):
+        """Retorna a foto da carteirinha (apenas uma)"""
+        # Buscar primeiro anexo de imagem
+        return self.anexos.filter(
+            AnexoMorador.tipo_arquivo.in_(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])
+        ).first()
+    
+    @property
+    def documentos(self):
+        """Retorna todos os documentos/atestados"""
+        # Buscar anexos que não são imagens
+        return self.anexos.filter(
+            ~AnexoMorador.tipo_arquivo.in_(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])
+        ).all()
+    
+    def tem_foto_carteirinha(self):
+        """Verifica se tem foto da carteirinha"""
+        return self.foto_carteirinha is not None
 
 class AnexoMorador(db.Model):
     __tablename__ = 'anexos_moradores'
@@ -103,10 +125,23 @@ class AnexoMorador(db.Model):
     tamanho_arquivo = db.Column(db.Integer, nullable=False)
     tipo_arquivo = db.Column(db.String(50), nullable=False)
     caminho_arquivo = db.Column(db.String(500), nullable=False)
+    # tipo_anexo = db.Column(db.String(20), nullable=False, default='documento')  # Temporariamente comentado
     data_upload = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
         return f'<AnexoMorador {self.nome_original}>'
+    
+    @property
+    def is_foto_carteirinha(self):
+        """Verifica se é uma foto da carteirinha"""
+        # Usar tipo de arquivo como fallback
+        return self.tipo_arquivo.lower() in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    
+    @property
+    def is_documento(self):
+        """Verifica se é um documento"""
+        # Usar tipo de arquivo como fallback
+        return self.tipo_arquivo.lower() not in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
 
 class LogNotificacao(db.Model):
     __tablename__ = 'log_notificacoes'
@@ -198,25 +233,42 @@ class Condominio(db.Model):
     # Relacionamentos
     moradores = db.relationship('Morador', backref='condominio_rel', lazy=True)
 
-class Usuario(db.Model):
-    """Usuários do sistema"""
-    __tablename__ = 'usuario'
+class Usuario(UserMixin, db.Model):
+    """Modelo de usuário para autenticação"""
+    __tablename__ = 'usuarios'
     
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    senha_hash = db.Column(db.String(255))
-    
-    # Permissões
-    tipo_usuario = db.Column(db.String(20), default='admin')  # admin, operador, visualizador
+    password_hash = db.Column(db.String(255), nullable=False)
+    tipo_usuario = db.Column(db.String(20), nullable=False)  # 'admin' ou 'salva_vidas'
+    nome_completo = db.Column(db.String(200), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
-    
-    # Auditoria
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    ultimo_acesso = db.Column(db.DateTime)
+    data_ultimo_login = db.Column(db.DateTime)
     
-    condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'))
-    condominio = db.relationship('Condominio', backref='usuarios')
+    # Relacionamento com salva-vidas (se aplicável)
+    salva_vidas_id = db.Column(db.Integer, db.ForeignKey('salva_vidas.id'), nullable=True)
+    salva_vidas = db.relationship('SalvaVidas', backref='usuario', uselist=False)
+    
+    def set_password(self, password):
+        """Define a senha do usuário"""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Verifica se a senha está correta"""
+        return check_password_hash(self.password_hash, password)
+    
+    def is_admin(self):
+        """Verifica se o usuário é administrador"""
+        return self.tipo_usuario == 'admin'
+    
+    def is_salva_vidas(self):
+        """Verifica se o usuário é salva-vidas"""
+        return self.tipo_usuario == 'salva_vidas'
+    
+    def __repr__(self):
+        return f'<Usuario {self.username}>'
 
 class SalvaVidas(db.Model):
     """Gerenciamento dos salva-vidas da piscina"""
@@ -306,7 +358,7 @@ class LogAuditoria(db.Model):
     __tablename__ = 'log_auditoria'
     
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     acao = db.Column(db.String(100), nullable=False)
     tabela = db.Column(db.String(50))
     registro_id = db.Column(db.Integer)

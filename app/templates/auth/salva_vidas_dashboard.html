@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-life-ring text-success me-2"></i>
+                    Dashboard Salva-vidas
+                </h2>
+                <div class="text-end">
+                    <small class="text-muted">
+                        Bem-vindo, {{ current_user.nome_completo }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0">{{ total_dentro }}</h3>
+                            <p class="mb-0">Na Piscina</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0">{{ entradas_hoje }}</h3>
+                            <p class="mb-0">Entradas Hoje</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sign-in-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0">{{ ultimos_registros|length }}</h3>
+                            <p class="mb-0">Registros Recentes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0">{{ "agora" | now('%H:%M') }}</h3>
+                            <p class="mb-0">Horário Atual</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ações Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('salva_vidas.qr_scanner') }}" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-qrcode fa-2x mb-2"></i>
+                                <br>
+                                <strong>Scanner QR</strong>
+                                <br>
+                                <small>Ler carteirinha</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('salva_vidas.moradores_dentro') }}" class="btn btn-info btn-lg w-100">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <br>
+                                <strong>Na Piscina</strong>
+                                <br>
+                                <small>Ver quem está</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('salva_vidas.historico_acesso') }}" class="btn btn-warning btn-lg w-100">
+                                <i class="fas fa-history fa-2x mb-2"></i>
+                                <br>
+                                <strong>Histórico</strong>
+                                <br>
+                                <small>Ver registros</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-lg w-100">
+                                <i class="fas fa-sign-out-alt fa-2x mb-2"></i>
+                                <br>
+                                <strong>Sair</strong>
+                                <br>
+                                <small>Logout</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Moradores na Piscina -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-swimming-pool me-2"></i>
+                        Moradores na Piscina ({{ total_dentro }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if moradores_dentro %}
+                        {% for morador in moradores_dentro %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <div>
+                                    <strong>{{ morador.nome_completo }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Bloco {{ morador.bloco }}, Apt {{ morador.apartamento }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success">Dentro</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-swimming-pool fa-3x mb-3"></i>
+                            <p>Nenhum morador na piscina no momento</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Últimos Registros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if ultimos_registros %}
+                        {% for registro in ultimos_registros %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <div>
+                                    <strong>{{ registro.morador.nome_completo }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ registro.data_hora.strftime('%H:%M') }} - 
+                                        {% if registro.tipo == 'entrada' %}
+                                            <span class="text-success">Entrada</span>
+                                        {% else %}
+                                            <span class="text-danger">Saída</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% if registro.tipo == 'entrada' %}
+                                        <i class="fas fa-sign-in-alt text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-sign-out-alt text-danger"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-history fa-3x mb-3"></i>
+                            <p>Nenhum registro encontrado</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn-lg {
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %} 

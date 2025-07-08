@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitField, SelectField, IntegerField, PasswordField, DecimalField
-from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange, ValidationError
 from datetime import datetime
 
 class MoradorForm(FlaskForm):
@@ -19,10 +19,16 @@ class MoradorForm(FlaskForm):
     
     observacoes = TextAreaField('Observações', validators=[Optional(), Length(max=1000)])
     
-    anexo = FileField('Anexar Arquivo', validators=[
+    foto_carteirinha = FileField('Foto para Carteirinha', validators=[
         Optional(),
-        FileAllowed(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'], 
-                   'Apenas arquivos: txt, pdf, png, jpg, jpeg, gif, doc, docx')
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'], 
+                   'Apenas imagens: jpg, jpeg, png, gif, bmp, webp')
+    ])
+    
+    documentos = FileField('Documentos/Atestados Médicos', validators=[
+        Optional(),
+        FileAllowed(['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'txt'], 
+                   'Arquivos: pdf, jpg, jpeg, png, gif, doc, docx, txt')
     ])
     
     submit = SubmitField('Salvar')
@@ -243,4 +249,28 @@ class FiltroAcessoForm(FlaskForm):
     data_inicio = DateField('Data Início')
     data_fim = DateField('Data Fim')
     tipo = SelectField('Tipo', choices=[('', 'Todos'), ('entrada', 'Entradas'), ('saida', 'Saídas')])
-    submit = SubmitField('Filtrar') 
+    submit = SubmitField('Filtrar')
+
+class LoginForm(FlaskForm):
+    """Formulário de login"""
+    username = StringField('Usuário', validators=[DataRequired(), Length(min=3, max=80)])
+    password = PasswordField('Senha', validators=[DataRequired()])
+    remember_me = BooleanField('Lembrar de mim')
+    submit = SubmitField('Entrar')
+
+class CadastroUsuarioForm(FlaskForm):
+    """Formulário para cadastro de usuário"""
+    username = StringField('Usuário', validators=[DataRequired(), Length(min=3, max=80)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    nome_completo = StringField('Nome Completo', validators=[DataRequired(), Length(min=2, max=200)])
+    password = PasswordField('Senha', validators=[DataRequired(), Length(min=6)])
+    password2 = PasswordField('Confirmar Senha', validators=[DataRequired()])
+    tipo_usuario = SelectField('Tipo de Usuário', 
+                              choices=[('admin', 'Administrador'), ('salva_vidas', 'Salva-vidas')],
+                              validators=[DataRequired()])
+    salva_vidas_id = SelectField('Salva-vidas Associado', coerce=int, validators=[Optional()])
+    submit = SubmitField('Cadastrar')
+    
+    def validate_password2(self, password2):
+        if self.password.data != password2.data:
+            raise ValidationError('As senhas devem ser iguais.') 

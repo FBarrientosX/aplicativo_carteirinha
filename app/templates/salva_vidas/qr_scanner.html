@@ -1,0 +1,827 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Meta tags específicas para câmera em dispositivos móveis -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-qrcode text-primary me-2"></i>
+                    <span class="d-none d-md-inline">Leitor QR Code</span>
+                    <span class="d-md-none">QR Code</span>
+                </h2>
+                <div>
+                    <a href="{{ url_for('salva_vidas.moradores_dentro') }}" class="btn btn-info me-2">
+                        <i class="fas fa-users"></i>
+                        <span class="d-none d-md-inline">Na Piscina</span>
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="d-none d-md-inline">Sair</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Scanner QR -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-camera me-2"></i>
+                        Scanner QR Code
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Alerta de Permissões -->
+                    <div id="permission-alert" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Permissão necessária:</strong> 
+                        Permita o acesso à câmera quando solicitado pelo navegador.
+                        <br><small>Se não aparecer a solicitação, verifique as configurações do navegador.</small>
+                    </div>
+                    
+                    <!-- Alerta de Erro -->
+                    <div id="error-alert" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Erro de Câmera:</strong> 
+                        <span id="error-message"></span>
+                    </div>
+                    
+                    <!-- Alerta Informativo -->
+                    <div id="info-alert" class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Dica:</strong> 
+                        Se a câmera não funcionar, use a opção de upload de imagem abaixo.
+                        <br><small>Funciona melhor em HTTPS. Certifique-se de permitir acesso à câmera.</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="scanner-container text-center qr-scanner-container">
+                                <div id="qr-reader" style="width: 100%; max-width: 400px; margin: 0 auto; min-height: 300px; border: 2px dashed #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative;">
+                                    <div id="scanner-placeholder" class="text-muted">
+                                        <i class="fas fa-camera fa-3x mb-2"></i>
+                                        <p>Clique em "Iniciar Scanner" para ativar a câmera</p>
+                                        <small class="text-muted">Certifique-se de estar em HTTPS</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3 scanner-buttons">
+                                    <button id="start-scan" class="btn btn-success btn-lg">
+                                        <i class="fas fa-play me-2"></i>
+                                        Iniciar Scanner
+                                    </button>
+                                    <button id="stop-scan" class="btn btn-danger btn-lg ms-2" style="display: none;">
+                                        <i class="fas fa-stop me-2"></i>
+                                        Parar Scanner
+                                    </button>
+                                </div>
+                                
+                                <!-- Fallback: Upload de Imagem -->
+                                <div class="mt-3 upload-section">
+                                    <hr>
+                                    <h6><i class="fas fa-upload me-2"></i>Ou envie uma foto do QR Code:</h6>
+                                    <div class="mb-3">
+                                        <input type="file" id="qr-file" class="form-control" accept="image/*" capture="environment">
+                                    </div>
+                                    <button id="process-file" class="btn btn-primary">
+                                        <i class="fas fa-upload me-2"></i>
+                                        Processar Imagem
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="manual-input">
+                                <h6><i class="fas fa-keyboard me-2"></i>Entrada Manual:</h6>
+                                <div class="input-group mb-3">
+                                    <input type="text" id="manual-qr" class="form-control form-control-lg" 
+                                           placeholder="Digite o código QR ou ID do morador">
+                                    <button class="btn btn-primary" id="process-manual">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                
+                                <h6><i class="fas fa-user-search me-2"></i>Buscar por Nome:</h6>
+                                <div class="input-group mb-3">
+                                    <input type="text" id="search-name" class="form-control" 
+                                           placeholder="Digite o nome do morador">
+                                    <button class="btn btn-secondary" id="search-by-name">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Status da Câmera -->
+                                <div class="camera-status">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Status: <span id="camera-status">Não iniciada</span>
+                                    </small>
+                                </div>
+                                
+                                <!-- Informações de Debug -->
+                                <div class="device-info">
+                                    <small class="text-muted">
+                                        <i class="fas fa-mobile-alt me-1"></i>
+                                        Dispositivo: <span id="device-info">Detectando...</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações do Morador -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Informações do Morador
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="morador-info" class="text-center text-muted morador-info-card">
+                        <i class="fas fa-qrcode fa-3x mb-3"></i>
+                        <p>Escaneie um QR Code ou digite o ID do morador</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resultados de Busca -->
+    <div class="row" id="search-results" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Resultados da Busca
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="search-results-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Acesso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="confirm-entrada">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Registrar Entrada
+                </button>
+                <button type="button" class="btn btn-danger" id="confirm-saida">
+                    <i class="fas fa-sign-out-alt me-2"></i>
+                    Registrar Saída
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+let html5QrCode = null;
+let currentMorador = null;
+let isScanning = false;
+
+// Detectar dispositivo e navegador
+const userAgent = navigator.userAgent.toLowerCase();
+const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+const isAndroid = /android/i.test(userAgent);
+const isSafari = /safari/i.test(userAgent) && !/chrome/i.test(userAgent);
+const isChrome = /chrome/i.test(userAgent);
+const isFirefox = /firefox/i.test(userAgent);
+
+// Atualizar informações do dispositivo
+document.addEventListener('DOMContentLoaded', function() {
+    let deviceInfo = '';
+    if (isIOS) deviceInfo = 'iOS';
+    else if (isAndroid) deviceInfo = 'Android';
+    else deviceInfo = 'Desktop';
+    
+    if (isSafari) deviceInfo += ' (Safari)';
+    else if (isChrome) deviceInfo += ' (Chrome)';
+    else if (isFirefox) deviceInfo += ' (Firefox)';
+    
+    document.getElementById('device-info').textContent = deviceInfo;
+});
+
+// Configuração do scanner QR
+const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+    if (!isScanning) return; // Evitar múltiplas leituras
+    
+    isScanning = false;
+    updateCameraStatus('QR Code detectado!');
+    processQRCode(decodedText);
+    
+    // Parar scanner após leitura bem-sucedida
+    setTimeout(() => {
+        if (html5QrCode) {
+            stopScanner();
+        }
+    }, 1000);
+};
+
+const qrCodeErrorCallback = (error) => {
+    // Silenciar erros de scanning contínuo
+    // console.log('Scanning...', error);
+};
+
+// Função para verificar suporte à câmera
+function checkCameraSupport() {
+    // Verificar se está em HTTPS, localhost ou IP local
+    const isSecure = location.protocol === 'https:' || 
+                    location.hostname === 'localhost' || 
+                    location.hostname === '127.0.0.1' ||
+                    location.hostname.startsWith('192.168.') ||
+                    location.hostname.startsWith('10.') ||
+                    location.hostname.startsWith('172.');
+    
+    if (!isSecure) {
+        showWarning('⚠️ Câmera funciona melhor em HTTPS. Se não funcionar, use upload de imagem.');
+        // Não bloquear, apenas avisar
+    }
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showError('Seu navegador não suporta acesso à câmera.');
+        return false;
+    }
+    
+    return true;
+}
+
+// Mostrar aviso (menos crítico que erro)
+function showWarning(message) {
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-alert').className = 'alert alert-warning';
+    document.getElementById('error-alert').style.display = 'block';
+    // Manter o alerta info visível também
+}
+
+// Mostrar erro
+function showError(message) {
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-alert').className = 'alert alert-danger';
+    document.getElementById('error-alert').style.display = 'block';
+    document.getElementById('info-alert').style.display = 'none';
+}
+
+// Esconder erro
+function hideError() {
+    document.getElementById('error-alert').style.display = 'none';
+    document.getElementById('info-alert').style.display = 'block';
+}
+
+// Atualizar status da câmera
+function updateCameraStatus(status) {
+    document.getElementById('camera-status').textContent = status;
+}
+
+// Inicializar scanner
+document.getElementById('start-scan').addEventListener('click', function() {
+    startScanner();
+});
+
+function startScanner() {
+    if (!checkCameraSupport()) {
+        return;
+    }
+    
+    hideError();
+    updateCameraStatus('Iniciando...');
+    document.getElementById('permission-alert').style.display = 'block';
+    
+    // Limpar placeholder
+    document.getElementById('scanner-placeholder').style.display = 'none';
+    
+    html5QrCode = new Html5Qrcode("qr-reader");
+    
+    // Configurações otimizadas para diferentes dispositivos
+    const config = {
+        fps: isMobile ? (isIOS ? 3 : 5) : 10, // iOS precisa de FPS mais baixo
+        qrbox: function(viewfinderWidth, viewfinderHeight) {
+            let minEdgePercentage = isMobile ? 0.8 : 0.7; // Área maior em mobile
+            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            return {
+                width: qrboxSize,
+                height: qrboxSize
+            };
+        },
+        aspectRatio: 1.0,
+        disableFlip: false, // Permitir flip para câmera frontal
+        // Configurações específicas para mobile
+        ...(isMobile && {
+            videoConstraints: {
+                facingMode: 'environment' // Preferir câmera traseira
+            }
+        })
+    };
+    
+    // Estratégia de inicialização por dispositivo
+    if (isMobile) {
+        startMobileScanner(config);
+    } else {
+        startDesktopScanner(config);
+    }
+}
+
+// Scanner para dispositivos móveis
+function startMobileScanner(config) {
+    // Estratégia em múltiplas etapas para dispositivos móveis
+    
+    // Etapa 1: Tentar com configurações básicas primeiro
+    const basicConstraints = {
+        video: {
+            facingMode: 'environment' // Câmera traseira
+        }
+    };
+    
+    // Verificar se getUserMedia funciona primeiro
+    navigator.mediaDevices.getUserMedia(basicConstraints)
+        .then(stream => {
+            // Parar o stream de teste
+            stream.getTracks().forEach(track => track.stop());
+            updateCameraStatus('Câmera detectada, iniciando scanner...');
+            
+            // Agora iniciar o scanner
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+                    
+                    // Procurar câmera traseira
+                    for (let device of devices) {
+                        const label = device.label.toLowerCase();
+                        if (label.includes('back') || 
+                            label.includes('rear') ||
+                            label.includes('traseira') ||
+                            label.includes('environment')) {
+                            cameraId = device.id;
+                            break;
+                        }
+                    }
+                    
+                    startScannerWithCamera(cameraId, config);
+                } else {
+                    showError('Nenhuma câmera encontrada no dispositivo.');
+                }
+            }).catch(err => {
+                console.error('Erro ao listar câmeras:', err);
+                // Tentar abordagem alternativa
+                tryAlternativeCamera(config);
+            });
+        })
+        .catch(err => {
+            console.error('Erro no teste de getUserMedia:', err);
+            // Tentar abordagem alternativa antes de falhar
+            tryAlternativeCamera(config);
+        });
+}
+
+// Tentar abordagem alternativa para câmera
+function tryAlternativeCamera(config) {
+    updateCameraStatus('Tentando método alternativo...');
+    
+    // Tentar sem especificar facingMode
+    const fallbackConstraints = {
+        video: true
+    };
+    
+    navigator.mediaDevices.getUserMedia(fallbackConstraints)
+        .then(stream => {
+            stream.getTracks().forEach(track => track.stop());
+            
+            // Tentar iniciar scanner diretamente
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    // Usar primeira câmera disponível
+                    startScannerWithCamera(devices[0].id, config);
+                } else {
+                    handleCameraError(new Error('Nenhuma câmera encontrada'));
+                }
+            }).catch(err => {
+                handleCameraError(err);
+            });
+        })
+        .catch(err => {
+            handleCameraError(err);
+        });
+}
+
+// Scanner para desktop
+function startDesktopScanner(config) {
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            let cameraId = devices[0].id;
+            
+            // Procurar câmera traseira
+            for (let device of devices) {
+                const label = device.label.toLowerCase();
+                if (label.includes('back') || 
+                    label.includes('rear') ||
+                    label.includes('traseira')) {
+                    cameraId = device.id;
+                    break;
+                }
+            }
+            
+            startScannerWithCamera(cameraId, config);
+        } else {
+            showError('Nenhuma câmera encontrada no dispositivo.');
+        }
+    }).catch(err => {
+        console.error('Erro ao listar câmeras:', err);
+        showError('Erro ao acessar câmeras do dispositivo.');
+    });
+}
+
+// Iniciar scanner com câmera específica
+function startScannerWithCamera(cameraId, config) {
+    html5QrCode.start(
+        cameraId,
+        config,
+        qrCodeSuccessCallback,
+        qrCodeErrorCallback
+    ).then(() => {
+        document.getElementById('start-scan').style.display = 'none';
+        document.getElementById('stop-scan').style.display = 'inline-block';
+        document.getElementById('permission-alert').style.display = 'none';
+        updateCameraStatus('Scanner ativo');
+        isScanning = true;
+        hideError();
+    }).catch(err => {
+        console.error('Erro ao iniciar scanner:', err);
+        handleCameraError(err);
+        document.getElementById('scanner-placeholder').style.display = 'block';
+        document.getElementById('permission-alert').style.display = 'none';
+    });
+}
+
+// Tratar erros de câmera
+function handleCameraError(err) {
+    updateCameraStatus('Erro ao acessar câmera');
+    
+    let errorMsg = 'Erro ao acessar a câmera.';
+    let solution = '';
+    
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMsg = 'Permissão de câmera negada.';
+        if (isIOS) {
+            solution = '📱 No Safari: toque no ícone "Aa" na barra de endereços → Configurações do Site → Câmera → Permitir.';
+        } else if (isAndroid) {
+            solution = '📱 No Chrome: toque nos 3 pontos → Configurações → Configurações do site → Câmera → Permitir.';
+        } else {
+            solution = '🔧 Verifique as configurações de privacidade do navegador.';
+        }
+    } else if (err.name === 'NotFoundError') {
+        errorMsg = 'Nenhuma câmera encontrada no dispositivo.';
+        solution = '📷 Verifique se seu dispositivo possui câmera e se não está sendo usada por outro aplicativo.';
+    } else if (err.name === 'NotSupportedError') {
+        errorMsg = 'Câmera não suportada neste navegador.';
+        solution = '🌐 Tente usar Chrome, Safari ou Firefox mais recente.';
+    } else if (err.name === 'NotReadableError') {
+        errorMsg = 'Câmera está sendo usada por outro aplicativo.';
+        solution = '📱 Feche outros aplicativos que possam estar usando a câmera e tente novamente.';
+    } else if (err.name === 'OverconstrainedError') {
+        errorMsg = 'Configurações de câmera não suportadas.';
+        solution = '🔄 Tente recarregar a página ou reiniciar o navegador.';
+    } else if (err.message && err.message.includes('HTTPS')) {
+        errorMsg = 'Câmera requer conexão segura.';
+        solution = '🔒 Acesse via HTTPS ou use a opção de upload de imagem.';
+    }
+    
+    const fullMessage = errorMsg + (solution ? '\n\n' + solution : '') + '\n\n📤 Use a opção de upload de imagem como alternativa.';
+    showError(fullMessage);
+    
+    // Destacar a opção de upload
+    document.getElementById('qr-file').style.border = '2px solid #007bff';
+    document.getElementById('process-file').classList.add('btn-lg');
+    document.getElementById('process-file').innerHTML = '<i class="fas fa-upload me-2"></i>📷 Usar Upload de Imagem';
+}
+
+// Parar scanner
+document.getElementById('stop-scan').addEventListener('click', function() {
+    stopScanner();
+});
+
+function stopScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('start-scan').style.display = 'inline-block';
+            document.getElementById('stop-scan').style.display = 'none';
+            document.getElementById('scanner-placeholder').style.display = 'block';
+            updateCameraStatus('Scanner parado');
+            isScanning = false;
+            hideError();
+        }).catch(err => {
+            console.error('Erro ao parar scanner:', err);
+            updateCameraStatus('Erro ao parar scanner');
+        });
+    }
+}
+
+// Processar arquivo de imagem
+document.getElementById('process-file').addEventListener('click', function() {
+    const fileInput = document.getElementById('qr-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Selecione uma imagem primeiro.');
+        return;
+    }
+    
+    updateCameraStatus('Processando imagem...');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                updateCameraStatus('QR Code encontrado na imagem!');
+                processQRCode(code.data);
+                fileInput.value = ''; // Limpar input
+            } else {
+                updateCameraStatus('Nenhum QR Code encontrado');
+                alert('Nenhum QR Code foi encontrado na imagem. Tente uma imagem mais clara.');
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Processamento manual
+document.getElementById('process-manual').addEventListener('click', function() {
+    const codigo = document.getElementById('manual-qr').value.trim();
+    if (codigo) {
+        processQRCode(codigo);
+    }
+});
+
+// Buscar por nome
+document.getElementById('search-by-name').addEventListener('click', function() {
+    const nome = document.getElementById('search-name').value.trim();
+    if (nome) {
+        searchMorador(nome);
+    }
+});
+
+// Enter nos campos de input
+document.getElementById('manual-qr').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('process-manual').click();
+    }
+});
+
+document.getElementById('search-name').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('search-by-name').click();
+    }
+});
+
+// Processar QR Code
+function processQRCode(codigo) {
+    fetch('/salva_vidas/processar-qr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ codigo_qr: codigo })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMoradorInfo(data.morador);
+            currentMorador = data.morador;
+            document.getElementById('manual-qr').value = '';
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao processar QR Code');
+    });
+}
+
+// Buscar morador
+function searchMorador(nome) {
+    fetch('/salva_vidas/buscar-morador', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ termo: nome })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.moradores.length === 1) {
+                showMoradorInfo(data.moradores[0]);
+                currentMorador = data.moradores[0];
+            } else {
+                showSearchResults(data.moradores);
+            }
+            document.getElementById('search-name').value = '';
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro na busca');
+    });
+}
+
+// Mostrar informações do morador
+function showMoradorInfo(morador) {
+    const statusClass = {
+        'regular': 'success',
+        'a_vencer': 'warning',
+        'vencida': 'danger',
+        'sem_carteirinha': 'secondary'
+    };
+    
+    const statusIcon = {
+        'regular': 'check-circle',
+        'a_vencer': 'exclamation-triangle',
+        'vencida': 'times-circle',
+        'sem_carteirinha': 'question-circle'
+    };
+    
+    const statusText = {
+        'regular': 'Regular',
+        'a_vencer': 'A Vencer',
+        'vencida': 'Vencida',
+        'sem_carteirinha': 'Sem Carteirinha'
+    };
+    
+    const html = `
+        <div class="text-center">
+            <div class="alert alert-${statusClass[morador.status_carteirinha]} mb-3">
+                <i class="fas fa-${statusIcon[morador.status_carteirinha]} me-2"></i>
+                <strong>${statusText[morador.status_carteirinha]}</strong>
+            </div>
+            <h5>${morador.nome}</h5>
+            <p class="text-muted">
+                <i class="fas fa-building me-1"></i>
+                Bloco ${morador.bloco}, Apt ${morador.apartamento}
+            </p>
+            ${morador.data_vencimento ? `<p><small>Vence em: ${morador.data_vencimento}</small></p>` : ''}
+            <hr>
+            <div class="d-grid gap-2">
+                ${morador.esta_dentro ? 
+                    `<button class="btn btn-danger btn-lg" onclick="registrarAcesso(${morador.id}, 'saida')">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Registrar Saída
+                    </button>` :
+                    `<button class="btn btn-success btn-lg" onclick="registrarAcesso(${morador.id}, 'entrada')">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Registrar Entrada
+                    </button>`
+                }
+            </div>
+            <div class="mt-2">
+                <span class="badge ${morador.esta_dentro ? 'bg-success' : 'bg-secondary'}">
+                    ${morador.esta_dentro ? 'Na Piscina' : 'Fora da Piscina'}
+                </span>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('morador-info').innerHTML = html;
+    document.getElementById('search-results').style.display = 'none';
+}
+
+// Mostrar resultados de busca
+function showSearchResults(moradores) {
+    let html = '<div class="row">';
+    
+    moradores.forEach(morador => {
+        const statusClass = {
+            'regular': 'success',
+            'a_vencer': 'warning', 
+            'vencida': 'danger',
+            'sem_carteirinha': 'secondary'
+        };
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">${morador.nome}</h6>
+                        <p class="card-text">
+                            <i class="fas fa-building me-1"></i>
+                            Bloco ${morador.bloco}, Apt ${morador.apartamento}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-${statusClass[morador.status_carteirinha]}">
+                                ${morador.status_carteirinha.replace('_', ' ')}
+                            </span>
+                            <button class="btn btn-primary btn-sm" onclick="selectMorador(${JSON.stringify(morador).replace(/"/g, '&quot;')})">
+                                Selecionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    document.getElementById('search-results-content').innerHTML = html;
+    document.getElementById('search-results').style.display = 'block';
+}
+
+// Selecionar morador dos resultados
+function selectMorador(morador) {
+    showMoradorInfo(morador);
+    currentMorador = morador;
+}
+
+// Registrar acesso
+function registrarAcesso(moradorId, tipo) {
+    fetch(`/salva_vidas/registrar-acesso/${moradorId}/${tipo}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // Atualizar status do morador
+            if (currentMorador && currentMorador.id === moradorId) {
+                currentMorador.esta_dentro = (tipo === 'entrada');
+                showMoradorInfo(currentMorador);
+            }
+        } else if (data.warning) {
+            if (confirm(data.message + '\n\nDeseja continuar mesmo assim?')) {
+                // Registrar mesmo com warning
+                registrarAcessoForcado(moradorId, tipo);
+            }
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao registrar acesso');
+    });
+}
+
+// Registrar acesso forçado (com warning)
+function registrarAcessoForcado(moradorId, tipo) {
+    // Implementar se necessário
+    alert('Funcionalidade não implementada ainda');
+}
+
+// Inicialização da página
+window.addEventListener('load', function() {
+    // Ocultar alerta informativo após 5 segundos
+    setTimeout(function() {
+        const infoAlert = document.getElementById('info-alert');
+        if (infoAlert) {
+            infoAlert.style.display = 'none';
+        }
+    }, 5000);
+});
+</script>
+{% endblock %} 

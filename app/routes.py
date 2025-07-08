@@ -13,12 +13,14 @@ import plotly.graph_objs as go
 import plotly.utils
 import json
 from sqlalchemy import func
+from flask_login import login_required
 
 # Criar blueprint para as rotas
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 @bp.route('/index')
+@login_required
 def index():
     """Dashboard principal com estatísticas"""
     # Estatísticas de moradores
@@ -120,18 +122,20 @@ def listar_moradores():
     if form.busca.data:
         query = query.filter(Morador.nome_completo.contains(form.busca.data))
     
+    # Aplicar filtro de status usando a mesma lógica da property
     if form.status.data:
         hoje = datetime.now().date()
-        if form.status.data == 'regular':
-            query = query.filter(Morador.data_vencimento > hoje + timedelta(days=30))
-        elif form.status.data == 'a_vencer':
-            query = query.filter(
-                Morador.data_vencimento.between(hoje, hoje + timedelta(days=30))
-            )
+        if form.status.data == 'sem_carteirinha':
+            query = query.filter(Morador.data_vencimento.is_(None))
         elif form.status.data == 'vencida':
             query = query.filter(Morador.data_vencimento < hoje)
-        elif form.status.data == 'sem_carteirinha':
-            query = query.filter(Morador.data_vencimento.is_(None))
+        elif form.status.data == 'a_vencer':
+            query = query.filter(
+                Morador.data_vencimento >= hoje,
+                Morador.data_vencimento <= hoje + timedelta(days=30)
+            )
+        elif form.status.data == 'regular':
+            query = query.filter(Morador.data_vencimento > hoje + timedelta(days=30))
     
     # Paginação
     page = request.args.get('page', 1, type=int)
@@ -174,15 +178,19 @@ def novo_morador():
         db.session.add(morador)
         db.session.commit()
         
-        # Salvar anexo se fornecido
-        if form.anexo.data:
-            salvar_anexo(morador, form.anexo.data)
+        # Salvar anexos se fornecidos
+        if form.foto_carteirinha.data:
+            salvar_anexo(morador, form.foto_carteirinha.data, 'foto_carteirinha')
+        
+        # Processar documentos de forma mais robusta
+        if form.documentos.data and hasattr(form.documentos.data, 'filename') and form.documentos.data.filename:
+            salvar_anexo(morador, form.documentos.data, 'documento')
         
         # Enviar email de boas-vindas
         enviar_email_boas_vindas(morador)
         
         flash('Morador cadastrado com sucesso!', 'success')
-        return redirect(url_for('listar_moradores'))
+        return redirect(url_for('main.listar_moradores'))
     
     return render_template('moradores/form.html',
                          title='Novo Morador',
@@ -195,11 +203,24 @@ def editar_morador(id):
     form = MoradorForm(obj=morador)
     
     if form.validate_on_submit():
-        form.populate_obj(morador)
+        # Atualizar campos manualmente em vez de usar populate_obj
+        morador.nome_completo = form.nome_completo.data
+        morador.bloco = form.bloco.data
+        morador.apartamento = form.apartamento.data
+        morador.email = form.email.data
+        morador.celular = form.celular.data
+        morador.eh_titular = form.eh_titular.data
+        morador.observacoes = form.observacoes.data
+        
+        # Processar data de última validação se fornecida
+        if form.data_ultima_validacao.data:
+            morador.data_ultima_validacao = form.data_ultima_validacao.data
         
         # Ajustar email do titular
         if morador.eh_titular:
             morador.email_titular = None
+        else:
+            morador.email_titular = form.email_titular.data
         
         # Permitir edição da data de vencimento
         if form.data_vencimento.data:
@@ -210,13 +231,17 @@ def editar_morador(id):
         
         morador.data_atualizacao = datetime.utcnow()
         
-        # Salvar anexo se fornecido
-        if form.anexo.data:
-            salvar_anexo(morador, form.anexo.data)
+        # Salvar anexos se fornecidos
+        if form.foto_carteirinha.data:
+            salvar_anexo(morador, form.foto_carteirinha.data, 'foto_carteirinha')
+        
+        # Processar documentos de forma mais robusta
+        if form.documentos.data and hasattr(form.documentos.data, 'filename') and form.documentos.data.filename:
+            salvar_anexo(morador, form.documentos.data, 'documento')
         
         db.session.commit()
         flash('Dados atualizados com sucesso!', 'success')
-        return redirect(url_for('ver_morador', id=id))
+        return redirect(url_for('main.ver_morador', id=id))
     
     return render_template('moradores/form.html',
                          title='Editar Morador',
@@ -249,7 +274,7 @@ def validar_carteirinha(id):
         
         db.session.commit()
         flash(f'Carteirinha validada por {meses} meses!', 'success')
-        return redirect(url_for('ver_morador', id=id))
+        return redirect(url_for('main.ver_morador', id=id))
     
     return render_template('moradores/validar.html',
                          title='Validar Carteirinha',
@@ -466,7 +491,7 @@ def configuracoes_email():
         mail.init_app(current_app)
         
         flash('Configurações de email salvas com sucesso!', 'success')
-        return redirect(url_for('configuracoes_email'))
+        return redirect(url_for('main.configuracoes_email'))
     
     # Carregar configurações existentes
     form.mail_server.data = ConfiguracaoSistema.get_valor('MAIL_SERVER', 'smtp.gmail.com')
@@ -515,7 +540,7 @@ def configuracoes_condominio():
         
         db.session.commit()
         flash('Configurações do condomínio salvas com sucesso!', 'success')
-        return redirect(url_for('configuracoes_condominio'))
+        return redirect(url_for('main.configuracoes_condominio'))
     
     # Carregar dados existentes
     form.nome.data = condominio.nome
@@ -559,7 +584,7 @@ def configuracoes_geral():
                                      'Horário das notificações automáticas', 'texto', 'notificacoes')
         
         flash('Configurações gerais salvas com sucesso!', 'success')
-        return redirect(url_for('configuracoes_geral'))
+        return redirect(url_for('main.configuracoes_geral'))
     
     # Carregar configurações existentes
     form.nome_sistema.data = ConfiguracaoSistema.get_valor('NOME_SISTEMA', 'Sistema de Carteirinhas')
@@ -607,7 +632,7 @@ def teste_email_configurado():
         
         if not mail_server or not mail_username or not mail_password:
             flash('❌ Configurações de email incompletas! Verifique servidor, usuário e senha.', 'danger')
-            return redirect(url_for('configuracoes_email'))
+            return redirect(url_for('main.configuracoes_email'))
         
         # Limpar espaços da senha (comum em senhas de app do Gmail)
         mail_password = mail_password.strip().replace(' ', '')
@@ -653,7 +678,7 @@ def teste_email_configurado():
         else:
             flash(f'❌ Erro ao enviar email de teste: {erro_msg}', 'danger')
     
-    return redirect(url_for('configuracoes_email'))
+    return redirect(url_for('main.configuracoes_email'))
 
 # ===== ROTAS PARA SALVA-VIDAS =====
 
@@ -740,7 +765,7 @@ def novo_salva_vidas():
         db.session.commit()
         
         flash('Salva-vidas cadastrado com sucesso!', 'success')
-        return redirect(url_for('listar_salva_vidas'))
+        return redirect(url_for('main.listar_salva_vidas'))
     
     return render_template('salva_vidas/form.html',
                          title='Novo Salva-vidas',
@@ -762,7 +787,7 @@ def editar_salva_vidas(id):
         
         db.session.commit()
         flash('Dados atualizados com sucesso!', 'success')
-        return redirect(url_for('ver_salva_vidas', id=id))
+        return redirect(url_for('main.ver_salva_vidas', id=id))
     
     return render_template('salva_vidas/form.html',
                          title='Editar Salva-vidas',
@@ -786,7 +811,7 @@ def inativar_salva_vidas(id):
     db.session.commit()
     
     flash(f'Salva-vidas {salva_vidas.nome_completo} foi inativado.', 'warning')
-    return redirect(url_for('ver_salva_vidas', id=id))
+    return redirect(url_for('main.ver_salva_vidas', id=id))
 
 @bp.route('/salva-vidas/<int:id>/reativar', methods=['POST'])
 def reativar_salva_vidas(id):
@@ -797,11 +822,11 @@ def reativar_salva_vidas(id):
     db.session.commit()
     
     flash(f'Salva-vidas {salva_vidas.nome_completo} foi reativado.', 'success')
-    return redirect(url_for('ver_salva_vidas', id=id))
+    return redirect(url_for('main.ver_salva_vidas', id=id))
 
 def salvar_foto_salva_vidas(salva_vidas, arquivo):
     """Salvar foto do salva-vidas"""
-    if arquivo:
+    if arquivo and hasattr(arquivo, 'filename') and arquivo.filename:
         filename = secure_filename(arquivo.filename)
         # Gerar nome único
         nome_unico = f"salva_vidas_{salva_vidas.id}_{uuid.uuid4().hex[:8]}.{filename.rsplit('.', 1)[1].lower()}"
@@ -909,7 +934,7 @@ def download_carteirinha_pdf(id):
         
     except Exception as e:
         flash(f'Erro ao gerar PDF: {str(e)}', 'danger')
-        return redirect(url_for('ver_morador', id=id))
+        return redirect(url_for('main.ver_morador', id=id))
 
 @bp.route('/carteirinhas/selecionar')
 def selecionar_morador_carteirinha():
@@ -960,7 +985,7 @@ def gerar_carteirinhas_lote():
         
         if not ids_moradores:
             flash('Selecione pelo menos um morador.', 'warning')
-            return redirect(url_for('gerar_carteirinhas_lote'))
+            return redirect(url_for('main.gerar_carteirinhas_lote'))
         
         try:
             # Buscar moradores selecionados
@@ -980,7 +1005,7 @@ def gerar_carteirinhas_lote():
             
         except Exception as e:
             flash(f'Erro ao gerar carteirinhas em lote: {str(e)}', 'danger')
-            return redirect(url_for('gerar_carteirinhas_lote'))
+            return redirect(url_for('main.gerar_carteirinhas_lote'))
     
     # GET - mostrar formulário de seleção
     moradores = Morador.query.filter(
@@ -1056,7 +1081,7 @@ def notificacoes_manual():
         if erros:
             flash(f'❌ Erros em {len(erros)} envios. Verifique os logs.', 'warning')
         
-        return redirect(url_for('notificacoes_resultado', 
+        return redirect(url_for('main.notificacoes_resultado', 
                                enviadas=total_enviadas, 
                                erros=len(erros)))
     
@@ -1105,7 +1130,7 @@ def ajustar_vencimento(id):
         db.session.commit()
         
         flash(f'✅ Data de vencimento ajustada para {morador.data_vencimento.strftime("%d/%m/%Y")}!', 'success')
-        return redirect(url_for('ver_morador', id=id))
+        return redirect(url_for('main.ver_morador', id=id))
     
     # Pré-definir com a data atual de vencimento ou uma data futura
     if not form.nova_data_vencimento.data:
@@ -1129,7 +1154,7 @@ def notificar_morador(id, tipo):
     
     if not mail_server or not mail_username or not mail_password:
         flash('❌ Configurações de email não encontradas! Configure primeiro em Configurações → Email.', 'danger')
-        return redirect(url_for('configuracoes_email'))
+        return redirect(url_for('main.configuracoes_email'))
     
     # Atualizar configurações da aplicação
     current_app.config.update({
@@ -1157,7 +1182,7 @@ def notificar_morador(id, tipo):
             tipo_msg = "notificação de vencimento"
         else:
             flash('❌ Tipo de notificação inválido!', 'danger')
-            return redirect(url_for('ver_morador', id=id))
+            return redirect(url_for('main.ver_morador', id=id))
         
         if sucesso:
             flash(f'✅ {tipo_msg.title()} enviada para {morador.nome_completo}!', 'success')
@@ -1167,11 +1192,26 @@ def notificar_morador(id, tipo):
     except Exception as e:
         flash(f'❌ Erro ao enviar notificação: {str(e)}', 'danger')
     
-    return redirect(url_for('ver_morador', id=id))
+    return redirect(url_for('main.ver_morador', id=id))
 
-def salvar_anexo(morador, arquivo):
+def salvar_anexo(morador, arquivo, tipo_anexo='documento'):
     """Salva anexo do morador"""
-    if arquivo and arquivo.filename:
+    if arquivo and hasattr(arquivo, 'filename') and arquivo.filename:
+        # Se for foto da carteirinha, remover a foto anterior
+        if tipo_anexo == 'foto_carteirinha':
+            # Buscar foto anterior baseada no tipo de arquivo
+            foto_anterior = morador.anexos.filter(
+                AnexoMorador.tipo_arquivo.in_(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])
+            ).first()
+            if foto_anterior:
+                # Remover arquivo físico
+                try:
+                    os.remove(foto_anterior.caminho_arquivo)
+                except:
+                    pass
+                # Remover registro do banco
+                db.session.delete(foto_anterior)
+        
         # Criar diretório se não existir
         upload_dir = current_app.config['UPLOAD_FOLDER']
         morador_dir = os.path.join(upload_dir, f'morador_{morador.id}')
@@ -1186,7 +1226,7 @@ def salvar_anexo(morador, arquivo):
         # Salvar arquivo
         arquivo.save(caminho_arquivo)
         
-        # Salvar registro no banco
+        # Salvar registro no banco (sem tipo_anexo por enquanto)
         anexo = AnexoMorador(
             morador_id=morador.id,
             nome_arquivo=nome_arquivo,
@@ -1370,7 +1410,7 @@ def registrar_acesso():
         acao = 'entrou na' if form.tipo.data == 'entrada' else 'saiu da'
         flash(f'✅ {morador.nome_completo} {acao} piscina às {registro.data_hora.strftime("%H:%M")}', 'success')
         
-        return redirect(url_for('controle_acesso'))
+        return redirect(url_for('main.controle_acesso'))
     
     return render_template('acesso/registrar.html', form=form)
 
@@ -1435,25 +1475,25 @@ def processar_acesso_rapido(morador_id, tipo):
     
     if tipo not in ['entrada', 'saida']:
         flash('Tipo de acesso inválido!', 'danger')
-        return redirect(url_for('acesso_qrcode'))
+        return redirect(url_for('main.acesso_qrcode'))
     
     morador = Morador.query.get_or_404(morador_id)
     
     # Verificar carteirinha válida
     if not morador.carteirinha_ativa:
         flash(f'Carteirinha de {morador.nome_completo} não está ativa!', 'danger')
-        return redirect(url_for('acesso_qrcode'))
+        return redirect(url_for('main.acesso_qrcode'))
     
     # Verificar status atual
     esta_dentro = RegistroAcesso.morador_esta_na_piscina(morador.id)
     
     if tipo == 'entrada' and esta_dentro:
         flash(f'{morador.nome_completo} já está na piscina!', 'warning')
-        return redirect(url_for('acesso_qrcode'))
+        return redirect(url_for('main.acesso_qrcode'))
     
     if tipo == 'saida' and not esta_dentro:
         flash(f'{morador.nome_completo} não está na piscina!', 'warning')
-        return redirect(url_for('acesso_qrcode'))
+        return redirect(url_for('main.acesso_qrcode'))
     
     # Registrar acesso
     registro = RegistroAcesso(
@@ -1470,7 +1510,7 @@ def processar_acesso_rapido(morador_id, tipo):
     acao = 'entrou na' if tipo == 'entrada' else 'saiu da'
     flash(f'✅ {morador.nome_completo} {acao} piscina às {registro.data_hora.strftime("%H:%M")}', 'success')
     
-    return redirect(url_for('acesso_qrcode'))
+    return redirect(url_for('main.acesso_qrcode'))
 
 @bp.route('/acesso-piscina/historico')
 def historico_acesso():

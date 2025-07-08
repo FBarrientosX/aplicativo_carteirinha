@@ -148,19 +148,98 @@
                     </div>
                     
                     <div class="row">
-                        <div class="col-12 mb-3">
-                            {{ form.anexo.label(class="form-label") }}
-                            {{ form.anexo(class="form-control") }}
-                            <small class="form-text text-muted">
-                                Documentos, fotos, etc. (opcional)
-                            </small>
-                            {% if form.anexo.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.anexo.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
+                        <div class="col-12 mb-4">
+                            <div class="card border-info foto-carteirinha-section">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-camera me-2"></i>
+                                        Foto para a Carteirinha
+                                    </h6>
                                 </div>
-                            {% endif %}
+                                <div class="card-body">
+                                    {{ form.foto_carteirinha.label(class="form-label fw-bold") }}
+                                    {{ form.foto_carteirinha(class="form-control form-control-lg", accept="image/*") }}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle text-info me-1"></i>
+                                        <strong>Importante:</strong> Faça upload de uma foto do morador que será usada na carteirinha da piscina.
+                                        <br>
+                                        <small class="text-muted">
+                                            • Formatos aceitos: JPG, PNG, GIF, BMP, WEBP<br>
+                                            • Recomendado: foto tipo 3x4 com fundo claro<br>
+                                            • A foto será redimensionada automaticamente<br>
+                                            • <strong>Apenas uma foto por morador</strong>
+                                        </small>
+                                    </div>
+                                    {% if form.foto_carteirinha.errors %}
+                                        <div class="text-danger mt-2">
+                                            {% for error in form.foto_carteirinha.errors %}
+                                                <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if morador and morador.foto_carteirinha %}
+                                        <div class="mt-3">
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                <strong>Foto atual:</strong> {{ morador.foto_carteirinha.nome_original }}
+                                                <br>
+                                                <small>Selecione um novo arquivo acima para substituir a foto atual</small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card border-warning documentos-section">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-file-medical me-2"></i>
+                                        Documentos e Atestados Médicos
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {{ form.documentos.label(class="form-label fw-bold") }}
+                                    {{ form.documentos(class="form-control form-control-lg") }}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle text-warning me-1"></i>
+                                        <strong>Opcional:</strong> Faça upload de documentos como atestados médicos, laudos, etc.
+                                        <br>
+                                        <small class="text-muted">
+                                            • Formatos aceitos: PDF, JPG, PNG, DOC, DOCX, TXT<br>
+                                            • Você pode selecionar múltiplos arquivos<br>
+                                            • Cada arquivo deve ter no máximo 10MB<br>
+                                            • <strong>Múltiplos documentos permitidos</strong>
+                                        </small>
+                                    </div>
+                                    {% if form.documentos.errors %}
+                                        <div class="text-danger mt-2">
+                                            {% for error in form.documentos.errors %}
+                                                <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if morador and morador.documentos %}
+                                        <div class="mt-3">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Documentos atuais:</strong>
+                                                <ul class="mb-0 mt-2">
+                                                    {% for doc in morador.documentos %}
+                                                        <li>{{ doc.nome_original }} <small class="text-muted">({{ doc.data_upload.strftime('%d/%m/%Y') }})</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <small>Selecione novos arquivos acima para adicionar mais documentos</small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -213,6 +292,32 @@
                 
                 <hr>
                 
+                <h6><i class="fas fa-camera text-info me-1"></i> Foto da Carteirinha:</h6>
+                <p class="small text-muted">
+                    <strong>Recomendado:</strong> Faça upload de uma foto do morador para que apareça na carteirinha da piscina.
+                    <br><br>
+                    <strong>Dicas:</strong>
+                    <br>• Use foto tipo 3x4 com fundo claro
+                    <br>• Evite fotos muito escuras ou desfocadas
+                    <br>• A foto será redimensionada automaticamente
+                    <br>• <strong>Apenas uma foto por morador</strong>
+                </p>
+                
+                <hr>
+                
+                <h6><i class="fas fa-file-medical text-warning me-1"></i> Documentos:</h6>
+                <p class="small text-muted">
+                    <strong>Opcional:</strong> Faça upload de documentos como atestados médicos, laudos, etc.
+                    <br><br>
+                    <strong>Características:</strong>
+                    <br>• Múltiplos arquivos permitidos
+                    <br>• Formatos: PDF, DOC, imagens
+                    <br>• Máximo 10MB por arquivo
+                    <br>• Organizados separadamente da foto
+                </p>
+                
+                <hr>
+                
                 <h6>Sobre titular:</h6>
                 <p class="small text-muted">
                     Marque "É Titular" se o morador é o responsável pelo apartamento. 
@@ -229,26 +334,63 @@
             </div>
         </div>
         
-        {% if morador and morador.anexos.count() > 0 %}
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-paperclip me-2"></i>
-                        Anexos Existentes
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% for anexo in morador.anexos %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small">{{ anexo.nome_original }}</span>
-                            <a href="{{ url_for('main.baixar_anexo', id=anexo.id) }}" 
-                               class="btn btn-sm btn-outline-primary">
+        {% if morador and (morador.foto_carteirinha or morador.documentos) %}
+            {% if morador.foto_carteirinha %}
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-camera me-2"></i>
+                            Foto Atual
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ morador.foto_carteirinha.nome_original }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Enviado em {{ morador.foto_carteirinha.data_upload.strftime('%d/%m/%Y às %H:%M') }}
+                                </small>
+                            </div>
+                            <a href="{{ url_for('main.baixar_anexo', id=morador.foto_carteirinha.id) }}" 
+                               class="btn btn-sm btn-outline-info">
                                 <i class="fas fa-download"></i>
                             </a>
                         </div>
-                    {% endfor %}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
+            
+            {% if morador.documentos %}
+                <div class="card mt-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-file-medical me-2"></i>
+                            Documentos ({{ morador.documentos|length }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for doc in morador.documentos %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>{{ doc.nome_original }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ doc.data_upload.strftime('%d/%m/%Y às %H:%M') }}
+                                    </small>
+                                </div>
+                                <a href="{{ url_for('main.baixar_anexo', id=doc.id) }}" 
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            {% if not loop.last %}
+                                <hr class="my-2">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         {% endif %}
     </div>
 </div>

@@ -20,32 +20,71 @@ def gerar_qr_code_simples(morador):
         'id': morador.id,
         'nome': morador.nome_completo,
         'apartamento': f"{morador.bloco}-{morador.apartamento}",
-        'validade': morador.data_vencimento.strftime('%d/%m/%Y') if morador.data_vencimento else 'Não definida',
         'status': morador.status_carteirinha,
         'gerada_em': datetime.now().strftime('%d/%m/%Y %H:%M')
     }
     
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.ERROR_CORRECT_M,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(json.dumps(dados_qr, ensure_ascii=False))
-    qr.make(fit=True)
-    
-    # Criar imagem do QR code
-    qr_img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Converter para PIL Image padrão
-    if hasattr(qr_img, 'convert'):
-        return qr_img.convert('RGB')
-    else:
-        # Se não for PIL Image, salvar e reabrir
-        temp_buffer = io.BytesIO()
-        qr_img.save(temp_buffer, format='PNG')
-        temp_buffer.seek(0)
-        return Image.open(temp_buffer).convert('RGB')
+    try:
+        # Configurar QR Code com parâmetros otimizados
+        qr = qrcode.QRCode(
+            version=2,  # Versão maior para mais dados
+            error_correction=qrcode.ERROR_CORRECT_M,
+            box_size=8,  # Tamanho menor dos quadrados
+            border=2,    # Borda menor
+        )
+        
+        # Adicionar dados como string simples
+        dados_string = f"ID:{morador.id}|NOME:{morador.nome_completo}|APT:{morador.bloco}-{morador.apartamento}|STATUS:{morador.status_carteirinha}"
+        qr.add_data(dados_string)
+        qr.make(fit=True)
+        
+        # Criar imagem do QR code
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Salvar em buffer e reabrir como PIL Image
+        buffer = io.BytesIO()
+        qr_img.save(buffer, 'PNG')
+        buffer.seek(0)
+        
+        # Carregar como PIL Image RGB
+        pil_img = Image.open(buffer)
+        if pil_img.mode != 'RGB':
+            pil_img = pil_img.convert('RGB')
+        
+        # Redimensionar para tamanho padrão
+        qr_final = pil_img.resize((200, 200), Image.Resampling.LANCZOS)
+        
+        return qr_final
+        
+    except Exception as e:
+        print(f"Erro ao gerar QR code: {e}")
+        # Fallback: criar QR code visual simples
+        fallback_img = Image.new('RGB', (200, 200), 'white')
+        draw = ImageDraw.Draw(fallback_img)
+        
+        # Desenhar padrão de QR code simples
+        cell_size = 8
+        for i in range(0, 200, cell_size):
+            for j in range(0, 200, cell_size):
+                # Criar padrão pseudo-aleatório baseado na posição
+                if (i + j) % 16 == 0 or (i * j) % 24 == 0:
+                    draw.rectangle([i, j, i + cell_size, j + cell_size], fill='black')
+        
+        # Adicionar cantos de referência do QR code
+        corner_size = 40
+        # Canto superior esquerdo
+        draw.rectangle([10, 10, 10 + corner_size, 10 + corner_size], outline='black', width=3)
+        draw.rectangle([20, 20, 20 + corner_size - 20, 20 + corner_size - 20], fill='black')
+        
+        # Canto superior direito
+        draw.rectangle([200 - 10 - corner_size, 10, 200 - 10, 10 + corner_size], outline='black', width=3)
+        draw.rectangle([200 - 30, 20, 200 - 20, 30], fill='black')
+        
+        # Canto inferior esquerdo
+        draw.rectangle([10, 200 - 10 - corner_size, 10 + corner_size, 200 - 10], outline='black', width=3)
+        draw.rectangle([20, 200 - 30, 30, 200 - 20], fill='black')
+        
+        return fallback_img
 
 def obter_fonte_sistema(tamanho=12, negrito=False):
     """Obter fonte do sistema com fallback"""
@@ -67,19 +106,14 @@ def processar_foto_morador(morador, tamanho=(180, 220)):
     """Processar foto do morador ou criar placeholder"""
     foto_path = None
     
-    # Tentar encontrar foto anexada (apenas arquivos de imagem)
-    if hasattr(morador, 'anexos') and morador.anexos.first():
-        anexo = morador.anexos.first()
-        # Verificar se é um arquivo de imagem
-        extensoes_imagem = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
-        nome_arquivo = anexo.nome_arquivo.lower()
-        
-        if any(nome_arquivo.endswith(ext) for ext in extensoes_imagem):
-            foto_path = os.path.join(
-                current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads'), 
-                f'morador_{morador.id}', 
-                anexo.nome_arquivo
-            )
+    # Buscar especificamente a foto da carteirinha
+    if hasattr(morador, 'foto_carteirinha') and morador.foto_carteirinha:
+        foto_carteirinha = morador.foto_carteirinha
+        foto_path = os.path.join(
+            current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads'), 
+            f'morador_{morador.id}', 
+            foto_carteirinha.nome_arquivo
+        )
     
     if foto_path and os.path.exists(foto_path):
         try:
@@ -103,7 +137,7 @@ def processar_foto_morador(morador, tamanho=(180, 220)):
         except Exception as e:
             print(f"Erro ao processar foto: {e}")
     
-    # Criar placeholder
+    # Criar placeholder se não houver foto
     img = Image.new('RGB', tamanho, '#f8f9fa')
     draw = ImageDraw.Draw(img)
     
@@ -122,140 +156,221 @@ def processar_foto_morador(morador, tamanho=(180, 220)):
     return img
 
 def gerar_carteirinha_completa(morador, condominio=None):
-    """Gerar carteirinha do morador"""
+    """Gerar carteirinha com design simples e limpo baseado na imagem de referência"""
     # Dimensões da carteirinha
     CARD_WIDTH = 1012  # 85.6mm em 300 DPI
     CARD_HEIGHT = 638  # 53.98mm em 300 DPI
     
     # Cores
-    COR_PRIMARIA = "#007bff"
-    COR_SECUNDARIA = "#6c757d"
-    COR_TEXTO = "#2c3e50"
-    
     if condominio:
-        COR_PRIMARIA = getattr(condominio, 'cor_primaria', COR_PRIMARIA) or COR_PRIMARIA
-        COR_SECUNDARIA = getattr(condominio, 'cor_secundaria', COR_SECUNDARIA) or COR_SECUNDARIA
+        cor_primaria = getattr(condominio, 'cor_primaria', "#1e3a8a") or "#1e3a8a"
+        cor_secundaria = getattr(condominio, 'cor_secundaria', "#3b82f6") or "#3b82f6"
+    else:
+        cor_primaria = "#1e3a8a"  # Azul escuro
+        cor_secundaria = "#3b82f6"  # Azul médio
     
     # Criar imagem base
-    img = Image.new('RGB', (CARD_WIDTH, CARD_HEIGHT), 'white')
+    img = Image.new('RGB', (CARD_WIDTH, CARD_HEIGHT), '#ffffff')
     draw = ImageDraw.Draw(img)
     
     # Fontes
     fonte_titulo = obter_fonte_sistema(24, True)
+    fonte_subtitulo = obter_fonte_sistema(16, True)
     fonte_nome = obter_fonte_sistema(20, True)
     fonte_dados = obter_fonte_sistema(14)
-    fonte_pequena = obter_fonte_sistema(10)
+    fonte_pequena = obter_fonte_sistema(12)
     
-    # === HEADER ===
-    header_height = 80
-    draw.rectangle([0, 0, CARD_WIDTH, header_height], fill=COR_PRIMARIA)
+    # === HEADER AZUL SUPERIOR ===
+    header_height = 120
     
-    # Título
-    titulo = "CARTEIRINHA DA PISCINA"
+    # Fundo azul sólido no header
+    draw.rectangle([0, 0, CARD_WIDTH, header_height], fill=cor_primaria)
+    
+    # === LOGO/ÍCONE NO HEADER ===
+    logo_x, logo_y = 30, 25
+    logo_size = 70
+    
+    # Círculo branco para o logo
+    draw.ellipse([logo_x, logo_y, logo_x + logo_size, logo_y + logo_size], 
+                fill='white', outline='white', width=2)
+    
+    # Ícone de piscina no centro do círculo
+    center_x, center_y = logo_x + logo_size//2, logo_y + logo_size//2
+    
+    # Desenhar ondas estilizadas (representando piscina)
+    for i in range(3):
+        wave_y = center_y - 15 + (i * 10)
+        draw.ellipse([center_x - 25, wave_y, center_x + 25, wave_y + 6], 
+                    fill=cor_primaria, outline=cor_primaria)
+    
+    # === TÍTULO DO CONDOMÍNIO ===
     if condominio and hasattr(condominio, 'nome') and condominio.nome:
-        nome_cond = condominio.nome.upper()
-        if len(nome_cond) > 25:
-            nome_cond = nome_cond[:25] + "..."
-        titulo = nome_cond
+        titulo = condominio.nome.upper()
+    else:
+        titulo = "CONDOMÍNIO"
     
-    # Centralizar título
-    try:
-        bbox = draw.textbbox((0, 0), titulo, font=fonte_titulo)
-        text_width = bbox[2] - bbox[0]
-    except:
-        text_width = len(titulo) * 12  # Aproximação
+    # Posicionar título ao lado do logo
+    titulo_x = logo_x + logo_size + 20
+    titulo_y = logo_y + 5
     
-    x = (CARD_WIDTH - text_width) // 2
-    draw.text((x, 25), titulo, fill='white', font=fonte_titulo)
+    # Quebrar título em linhas se necessário
+    palavras = titulo.split()
+    linhas = []
+    linha_atual = ""
     
-    # === FOTO ===
-    foto_size = (180, 220)
-    foto_x, foto_y = 50, header_height + 30
+    for palavra in palavras:
+        teste_linha = linha_atual + (" " if linha_atual else "") + palavra
+        try:
+            bbox = draw.textbbox((0, 0), teste_linha, font=fonte_titulo)
+            largura_teste = bbox[2] - bbox[0]
+        except:
+            largura_teste = len(teste_linha) * 12
+        
+        if largura_teste <= (CARD_WIDTH - titulo_x - 20):
+            linha_atual = teste_linha
+        else:
+            if linha_atual:
+                linhas.append(linha_atual)
+                linha_atual = palavra
+            else:
+                linhas.append(palavra)
+    
+    if linha_atual:
+        linhas.append(linha_atual)
+    
+    # Renderizar título
+    for i, linha in enumerate(linhas):
+        draw.text((titulo_x, titulo_y + (i * 28)), linha, fill='white', font=fonte_titulo)
+    
+    # === SUBTÍTULO ===
+    subtitulo_y = titulo_y + (len(linhas) * 28) + 5
+    draw.text((titulo_x, subtitulo_y), "CARTEIRINHA DA PISCINA", fill='white', font=fonte_subtitulo)
+    
+    # === ÁREA PRINCIPAL ===
+    main_y = header_height + 30
+    
+    # === FOTO DO MORADOR ===
+    foto_size = (140, 170)
+    foto_x, foto_y = 40, main_y
     
     foto = processar_foto_morador(morador, foto_size)
+    
+    # Moldura simples da foto
+    draw.rectangle([foto_x - 3, foto_y - 3, 
+                   foto_x + foto_size[0] + 3, foto_y + foto_size[1] + 3], 
+                  fill='white', outline='#cccccc', width=2)
+    
     img.paste(foto, (foto_x, foto_y))
     
-    # Borda na foto
-    draw.rectangle([foto_x-2, foto_y-2, foto_x+foto_size[0]+2, foto_y+foto_size[1]+2], 
-                  outline=COR_SECUNDARIA, width=3)
+    # === INFORMAÇÕES DO MORADOR ===
+    info_x = foto_x + foto_size[0] + 30
+    info_y = main_y
     
-    # === DADOS DO MORADOR ===
-    dados_x = foto_x + foto_size[0] + 40
-    dados_y = header_height + 50
-    
-    # Nome
+    # Nome do morador
     nome = morador.nome_completo.upper()
-    if len(nome) > 20:
+    draw.text((info_x, info_y), "NOME:", fill='#333333', font=fonte_dados)
+    
+    # Quebrar nome em linhas se necessário
+    nome_y = info_y + 20
+    if len(nome) > 25:
         palavras = nome.split()
-        linha1 = ' '.join(palavras[:len(palavras)//2])
-        linha2 = ' '.join(palavras[len(palavras)//2:])
-        draw.text((dados_x, dados_y), linha1, fill=COR_TEXTO, font=fonte_nome)
-        draw.text((dados_x, dados_y + 25), linha2, fill=COR_TEXTO, font=fonte_nome)
-        dados_y += 60
+        meio = len(palavras) // 2
+        linha1 = ' '.join(palavras[:meio])
+        linha2 = ' '.join(palavras[meio:])
+        
+        draw.text((info_x, nome_y), linha1, fill='black', font=fonte_nome)
+        draw.text((info_x, nome_y + 25), linha2, fill='black', font=fonte_nome)
+        info_y = nome_y + 55
     else:
-        draw.text((dados_x, dados_y), nome, fill=COR_TEXTO, font=fonte_nome)
-        dados_y += 35
+        draw.text((info_x, nome_y), nome, fill='black', font=fonte_nome)
+        info_y = nome_y + 35
     
-    # Apartamento
-    apt_text = f"BLOCO {morador.bloco} - APT {morador.apartamento}"
-    draw.text((dados_x, dados_y), apt_text, fill=COR_PRIMARIA, font=fonte_dados)
-    dados_y += 30
+    # Email
+    draw.text((info_x, info_y), "EMAIL:", fill='#333333', font=fonte_dados)
+    draw.text((info_x, info_y + 18), morador.email, fill='black', font=fonte_dados)
+    info_y += 45
     
-    # Validade
-    if morador.data_vencimento:
-        validade_text = f"VÁLIDA ATÉ: {morador.data_vencimento.strftime('%d/%m/%Y')}"
-        cor_validade = '#e74c3c' if morador.status_carteirinha == 'vencida' else '#27ae60'
-    else:
-        validade_text = "VALIDADE: NÃO DEFINIDA"
-        cor_validade = '#f39c12'
+    # Celular
+    draw.text((info_x, info_y), "CELULAR:", fill='#333333', font=fonte_dados)
+    draw.text((info_x, info_y + 18), morador.celular, fill='black', font=fonte_dados)
+    info_y += 45
     
-    draw.text((dados_x, dados_y), validade_text, fill=cor_validade, font=fonte_dados)
-    dados_y += 30
+    # Bloco e Apartamento
+    draw.text((info_x, info_y), "BLOCO/APARTAMENTO:", fill='#333333', font=fonte_dados)
+    bloco_apto = f"BLOCO {morador.bloco} - APTO {morador.apartamento}"
+    draw.text((info_x, info_y + 18), bloco_apto, fill='black', font=fonte_dados)
+    info_y += 45
     
-    # Status
-    status_map = {
-        'regular': '✓ REGULAR',
-        'a_vencer': '⚠ A VENCER',
-        'vencida': '✗ VENCIDA',
-        'sem_carteirinha': '⚠ SEM CARTEIRINHA'
-    }
-    status_text = status_map.get(morador.status_carteirinha, '? INDEFINIDO')
-    draw.text((dados_x, dados_y), status_text, fill=cor_validade, font=fonte_dados)
+    # Tipo (Titular ou Dependente)
+    draw.text((info_x, info_y), "TIPO:", fill='#333333', font=fonte_dados)
+    tipo = "TITULAR" if morador.eh_titular else "DEPENDENTE"
+    draw.text((info_x, info_y + 18), tipo, fill='black', font=fonte_dados)
     
     # === QR CODE ===
     try:
         qr_img = gerar_qr_code_simples(morador)
         qr_size = 120
-        qr_resized = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
-        
         qr_x = CARD_WIDTH - qr_size - 40
-        qr_y = header_height + 40
+        qr_y = main_y + 20
+        
+        # Moldura do QR Code
+        draw.rectangle([qr_x - 5, qr_y - 5, qr_x + qr_size + 5, qr_y + qr_size + 5], 
+                      fill='white', outline='#cccccc', width=2)
+        
+        # Redimensionar e colar QR Code
+        qr_resized = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
         img.paste(qr_resized, (qr_x, qr_y))
         
-        # Label QR Code
-        draw.text((qr_x, qr_y + qr_size + 10), "VERIFICAÇÃO", 
-                 fill=COR_TEXTO, font=fonte_pequena)
+        # Label do QR Code
+        qr_label = "CÓDIGO DE VERIFICAÇÃO"
+        try:
+            bbox = draw.textbbox((0, 0), qr_label, font=fonte_pequena)
+            text_width = bbox[2] - bbox[0]
+        except:
+            text_width = len(qr_label) * 8
+        
+        label_x = qr_x + (qr_size - text_width) // 2
+        label_y = qr_y + qr_size + 10
+        draw.text((label_x, label_y), qr_label, fill='#666666', font=fonte_pequena)
+        
     except Exception as e:
         print(f"Erro ao gerar QR code: {e}")
     
     # === FOOTER ===
-    footer_y = CARD_HEIGHT - 60
-    draw.rectangle([0, footer_y, CARD_WIDTH, CARD_HEIGHT], fill=COR_SECUNDARIA)
+    footer_height = 50
+    footer_y = CARD_HEIGHT - footer_height
+    
+    # Linha separadora
+    draw.line([(20, footer_y), (CARD_WIDTH - 20, footer_y)], fill='#cccccc', width=2)
     
     # ID da carteirinha
-    id_text = f"ID: {morador.id:04d}"
-    draw.text((20, footer_y + 15), id_text, fill='white', font=fonte_pequena)
+    id_text = f"ID: {morador.id:05d}"
+    draw.text((30, footer_y + 15), id_text, fill='#666666', font=fonte_pequena)
     
-    # Data de emissão
-    emissao_text = f"EMITIDA EM: {datetime.now().strftime('%d/%m/%Y')}"
+    # Data de emissão centralizada
+    emissao_text = f"Emitida em {datetime.now().strftime('%d/%m/%Y')}"
     try:
         bbox = draw.textbbox((0, 0), emissao_text, font=fonte_pequena)
         text_width = bbox[2] - bbox[0]
     except:
         text_width = len(emissao_text) * 8
     
-    draw.text((CARD_WIDTH - text_width - 20, footer_y + 15), 
-             emissao_text, fill='white', font=fonte_pequena)
+    center_x = (CARD_WIDTH - text_width) // 2
+    draw.text((center_x, footer_y + 15), emissao_text, fill='#666666', font=fonte_pequena)
+    
+    # Texto "DOCUMENTO OFICIAL"
+    oficial_text = "DOCUMENTO OFICIAL"
+    try:
+        bbox = draw.textbbox((0, 0), oficial_text, font=fonte_pequena)
+        text_width = bbox[2] - bbox[0]
+    except:
+        text_width = len(oficial_text) * 8
+    
+    draw.text((CARD_WIDTH - text_width - 30, footer_y + 15), oficial_text, fill='#666666', font=fonte_pequena)
+    
+    # === BORDA FINAL ===
+    draw.rectangle([0, 0, CARD_WIDTH-1, CARD_HEIGHT-1], 
+                  outline='#cccccc', width=2)
     
     return img
 

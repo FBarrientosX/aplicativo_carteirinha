@@ -13,8 +13,11 @@ from flask_migrate import Migrate, init as migrate_init, migrate as migrate_migr
 # Adicionar o diretório da aplicação ao path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from app import app, db
-from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio
+from app import create_app, db
+from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, Usuario, SalvaVidas
+
+# Criar instância da aplicação
+app = create_app()
 
 def init_migrations():
     """Inicializar o sistema de migrações"""
