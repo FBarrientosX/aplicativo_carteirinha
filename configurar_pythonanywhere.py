@@ -36,18 +36,15 @@ def configurar_pythonanywhere():
             
             # Criar tenant padrão
             tenant = Tenant(
-                id=1,
                 nome='Condomínio Demo',
                 subdominio='demo',
-                email='admin@demo.com',
+                email_responsavel='admin@demo.com',
                 telefone='(11) 99999-9999',
                 endereco='Rua Demo, 123',
-                cidade='São Paulo',
-                estado='SP',
-                cep='01234-567',
                 plano_id=plano.id,
-                ativo=True,
-                data_criacao=datetime.utcnow()
+                data_inicio=datetime.utcnow().date(),
+                data_vencimento=datetime.utcnow().date() + timedelta(days=365),
+                status='ativo'
             )
             
             db.session.add(tenant)
@@ -86,20 +83,21 @@ def configurar_pythonanywhere():
         if not config:
             print("⚠️  Configurações não encontradas, criando...")
             
-            config = ConfiguracaoTenant(
-                tenant_id=1,
-                nome_sistema='Sistema Carteirinha Demo',
-                email_remetente='admin@demo.com',
-                mensagem_boas_vindas='Bem-vindo ao sistema de carteirinhas!',
-                dias_aviso_vencimento=7,
-                permitir_auto_cadastro=True,
-                requerer_aprovacao=False,
-                logo_url='',
-                cor_primaria='#007bff',
-                cor_secundaria='#6c757d'
-            )
+            # Criar configurações usando o modelo correto
+            configs = [
+                ConfiguracaoTenant(tenant_id=1, categoria='sistema', chave='nome_sistema', valor='Sistema Carteirinha Demo'),
+                ConfiguracaoTenant(tenant_id=1, categoria='email', chave='email_remetente', valor='admin@demo.com'),
+                ConfiguracaoTenant(tenant_id=1, categoria='sistema', chave='mensagem_boas_vindas', valor='Bem-vindo ao sistema de carteirinhas!'),
+                ConfiguracaoTenant(tenant_id=1, categoria='sistema', chave='dias_aviso_vencimento', valor='7', tipo='numero'),
+                ConfiguracaoTenant(tenant_id=1, categoria='sistema', chave='permitir_auto_cadastro', valor='true', tipo='booleano'),
+                ConfiguracaoTenant(tenant_id=1, categoria='sistema', chave='requerer_aprovacao', valor='false', tipo='booleano'),
+                ConfiguracaoTenant(tenant_id=1, categoria='visual', chave='cor_primaria', valor='#007bff'),
+                ConfiguracaoTenant(tenant_id=1, categoria='visual', chave='cor_secundaria', valor='#6c757d')
+            ]
             
-            db.session.add(config)
+            for config in configs:
+                db.session.add(config)
+            
             db.session.commit()
             
             print("✅ Configurações criadas!")
