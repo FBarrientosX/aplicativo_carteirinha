@@ -126,7 +126,8 @@ def is_local_development():
         host.startswith('127.0.0.1'),
         host.startswith('0.0.0.0'),
         'localhost' in host,
-        ':5000' in host
+        ':5000' in host,
+        'pythonanywhere.com' in host  # Reconhecer PythonAnywhere como desenvolvimento
     ])
 
 
@@ -144,31 +145,18 @@ def create_default_tenant():
         # Verificar se existe plano padrão
         plano = Plano.query.filter_by(id=1).first()
         if not plano:
-            # Criar plano padrão
-            from datetime import datetime
-            plano = Plano(
-                id=1,
-                nome='Desenvolvimento',
-                descricao='Plano para desenvolvimento',
-                preco_mensal=0,
-                limite_moradores=1000,
-                limite_usuarios=10,
-                limite_anexos_mb=5000,
-                funcionalidades={},
-                ativo=True,
-                publico=False
-            )
-            db.session.add(plano)
-            db.session.commit()
+            # Buscar qualquer plano disponível como fallback
+            plano = Plano.query.first()
+            if not plano:
+                return None
         
         # Criar tenant padrão
         from datetime import datetime, timedelta
         tenant = Tenant(
-            id=1,
             nome='Condomínio de Desenvolvimento',
             subdominio='dev',
             email_responsavel='admin@dev.local',
-            plano_id=1,
+            plano_id=plano.id,
             data_inicio=datetime.now().date(),
             data_vencimento=datetime.now().date() + timedelta(days=365),
             status='ativo'
