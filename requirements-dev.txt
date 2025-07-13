@@ -20,10 +20,10 @@ email-validator==2.1.1
 Pillow==10.4.0
 plotly==5.24.1
 pandas==2.2.3
-psycopg2-binary==2.9.9
-gunicorn==21.2.0
+# psycopg2-binary==2.9.9 - Removido para desenvolvimento local (Windows)
 qrcode==7.4.2
 reportlab==4.2.5
 PyPDF2==3.0.1
+gunicorn==21.2.0
 alembic==1.13.2
-requests==2.31.0
+requests==2.31.0 

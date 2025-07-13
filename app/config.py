@@ -8,9 +8,12 @@ load_dotenv(os.path.join(basedir, '..', '.env')) # Aponta para o .env na raiz do
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback_secret_key_if_not_set'
 
-    # Configuração SQLAlchemy - usando SQLite por padrão para desenvolvimento
+    # Configuração SQLAlchemy
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if DATABASE_URL:
+        # Heroku PostgreSQL
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
         # SQLite para desenvolvimento local

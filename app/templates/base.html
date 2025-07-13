@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    
+
     <!-- Meta tags para suporte a câmera em PWA -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -44,21 +44,21 @@
                 {% if current_user.is_authenticated %}
                     {% if current_user.is_admin() %}
                         <!-- Menu completo para administradores -->
-                        <ul class="navbar-nav me-auto">
-                            <li class="nav-item">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('main.index') }}">
-                                    <i class="fas fa-tachometer-alt me-1"></i>
+                            <i class="fas fa-tachometer-alt me-1"></i>
                                     <span class="d-xl-inline d-none">Dashboard</span>
                                     <span class="d-xl-none">Home</span>
-                                </a>
-                            </li>
+                        </a>
+                    </li>
                             
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-users me-1"></i>
-                                    Moradores
-                                </a>
-                                <ul class="dropdown-menu">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users me-1"></i>
+                            Moradores
+                        </a>
+                        <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="{{ url_for('main.listar_moradores') }}">
                                         <i class="fas fa-list me-2"></i>Listar Moradores
                                     </a></li>
@@ -191,19 +191,19 @@
                                 <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
                                     <i class="fas fa-sign-out-alt me-2"></i>Sair
                                 </a></li>
-                            </ul>
-                        </li>
+                        </ul>
+                    </li>
                     </ul>
                 {% else %}
                     <!-- Menu para usuários não logados -->
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
+                    <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('auth.login') }}">
                                 <i class="fas fa-sign-in-alt me-1"></i>
                                 Entrar
-                            </a>
-                        </li>
-                    </ul>
+                        </a>
+                    </li>
+                </ul>
                 {% endif %}
             </div>
         </div>

@@ -72,6 +72,14 @@ def create_app(config_class=Config):
     from app.auth import auth_bp
     from app.salva_vidas_routes import salva_vidas_bp
     
+    # NOVO: Inicializar middleware de multi-tenancy
+    try:
+        from app.middleware import init_tenant_middleware
+        init_tenant_middleware(app)
+        print("✅ Middleware de multi-tenancy inicializado")
+    except Exception as e:
+        print(f"⚠️ Aviso: Middleware de multi-tenancy não pôde ser inicializado: {e}")
+    
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(salva_vidas_bp, url_prefix='/salva_vidas')
