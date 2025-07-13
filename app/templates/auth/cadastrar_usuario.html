@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-plus"></i> Cadastrar Novo Usuário
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.cadastrar_usuario') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.nome_completo.label(class="form-label") }}
+                                    {{ form.nome_completo(class="form-control") }}
+                                    {% if form.nome_completo.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.nome_completo.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.email.label(class="form-label") }}
+                                    {{ form.email(class="form-control") }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.email.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.username.label(class="form-label") }}
+                                    {{ form.username(class="form-control") }}
+                                    {% if form.username.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.username.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.tipo_usuario.label(class="form-label") }}
+                                    {{ form.tipo_usuario(class="form-control") }}
+                                    {% if form.tipo_usuario.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.tipo_usuario.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.password.label(class="form-label") }}
+                                    {{ form.password(class="form-control") }}
+                                    {% if form.password.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.password2.label(class="form-label") }}
+                                    {{ form.password2(class="form-control") }}
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password2.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo condicional para salva-vidas -->
+                        <div class="mb-3" id="salva-vidas-field" style="display: none;">
+                            {{ form.salva_vidas_id.label(class="form-label") }}
+                            {{ form.salva_vidas_id(class="form-control") }}
+                            {% if form.salva_vidas_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.salva_vidas_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Selecione o salva-vidas para associar a este usuário (opcional)
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('auth.listar_usuarios') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Informações sobre Tipos de Usuário
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><span class="badge bg-primary">Administrador</span></h6>
+                            <ul class="list-unstyled small">
+                                <li>✅ Gerenciar moradores</li>
+                                <li>✅ Gerar carteirinhas</li>
+                                <li>✅ Configurar sistema</li>
+                                <li>✅ Gerenciar usuários</li>
+                                <li>✅ Acessar relatórios</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><span class="badge bg-success">Salva-vidas</span></h6>
+                            <ul class="list-unstyled small">
+                                <li>✅ Registrar entrada/saída</li>
+                                <li>✅ Validar carteirinhas</li>
+                                <li>✅ Ver moradores na piscina</li>
+                                <li>✅ Histórico de acessos</li>
+                                <li>❌ Configurações do sistema</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar campo de salva-vidas baseado no tipo selecionado
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoUsuario = document.getElementById('tipo_usuario');
+    const salvaVidasField = document.getElementById('salva-vidas-field');
+    
+    function toggleSalvaVidasField() {
+        if (tipoUsuario.value === 'salva_vidas') {
+            salvaVidasField.style.display = 'block';
+        } else {
+            salvaVidasField.style.display = 'none';
+        }
+    }
+    
+    // Configurar inicialmente
+    toggleSalvaVidasField();
+    
+    // Monitorar mudanças
+    tipoUsuario.addEventListener('change', toggleSalvaVidasField);
+});
+</script>
+{% endblock %} 

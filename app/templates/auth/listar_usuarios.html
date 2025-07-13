@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> Gerenciar Usuários
+                    </h5>
+                    <a href="{{ url_for('auth.cadastrar_usuario') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Novo Usuário
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    {% if usuarios %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Último Login</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for usuario in usuarios %}
+                                    <tr>
+                                        <td>{{ usuario.id }}</td>
+                                        <td>{{ usuario.nome_completo }}</td>
+                                        <td>{{ usuario.username }}</td>
+                                        <td>{{ usuario.email }}</td>
+                                        <td>
+                                            {% if usuario.tipo_usuario == 'admin' %}
+                                                <span class="badge bg-primary">Admin</span>
+                                            {% elif usuario.tipo_usuario == 'salva_vidas' %}
+                                                <span class="badge bg-success">Salva-vidas</span>
+                                            {% elif usuario.tipo_usuario == 'super_admin' %}
+                                                <span class="badge bg-danger">Super Admin</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ usuario.tipo_usuario }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if usuario.ativo %}
+                                                <span class="badge bg-success">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inativo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if usuario.data_ultimo_login %}
+                                                {{ usuario.data_ultimo_login.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                <span class="text-muted">Nunca</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if usuario.id != current_user.id %}
+                                                    <form method="POST" action="{{ url_for('auth.toggle_usuario_status', id=usuario.id) }}" style="display: inline;">
+                                                        {% if usuario.ativo %}
+                                                            <button type="submit" class="btn btn-outline-warning" 
+                                                                    onclick="return confirm('Tem certeza que deseja desativar este usuário?')">
+                                                                <i class="fas fa-ban"></i> Desativar
+                                                            </button>
+                                                        {% else %}
+                                                            <button type="submit" class="btn btn-outline-success">
+                                                                <i class="fas fa-check"></i> Ativar
+                                                            </button>
+                                                        {% endif %}
+                                                    </form>
+                                                {% else %}
+                                                    <span class="badge bg-info">Você</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Nenhum usuário encontrado.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Informações
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Total de usuários:</strong> {{ usuarios|length }}</li>
+                        <li><strong>Usuários ativos:</strong> {{ usuarios|selectattr('ativo')|list|length }}</li>
+                        <li><strong>Administradores:</strong> {{ usuarios|selectattr('tipo_usuario', 'equalto', 'admin')|list|length }}</li>
+                        <li><strong>Salva-vidas:</strong> {{ usuarios|selectattr('tipo_usuario', 'equalto', 'salva_vidas')|list|length }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
