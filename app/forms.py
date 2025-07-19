@@ -274,3 +274,27 @@ class CadastroUsuarioForm(FlaskForm):
     def validate_password2(self, password2):
         if self.password.data != password2.data:
             raise ValidationError('As senhas devem ser iguais.') 
+
+# Forms para o módulo de Manutenção & Chamados
+class ChamadoManutencaoForm(FlaskForm):
+    """Formulário para criar/editar chamados de manutenção"""
+    titulo = StringField('Título', validators=[DataRequired(), Length(max=200)])
+    descricao = TextAreaField('Descrição', validators=[DataRequired()])
+    local = StringField('Local', validators=[DataRequired(), Length(max=200)])
+    categoria_id = SelectField('Categoria', validators=[DataRequired()], coerce=int)
+    prioridade = SelectField('Prioridade', 
+                           choices=[('baixa', 'Baixa'), ('media', 'Média'), 
+                                   ('alta', 'Alta'), ('urgente', 'Urgente')],
+                           validators=[DataRequired()])
+    status = SelectField('Status',
+                        choices=[('aberto', 'Aberto'), ('em_andamento', 'Em Andamento'),
+                                ('aguardando', 'Aguardando'), ('concluido', 'Concluído'),
+                                ('cancelado', 'Cancelado')])
+    responsavel_id = SelectField('Responsável', coerce=int)
+
+class FiltrosChamadosForm(FlaskForm):
+    """Formulário para filtros de chamados"""
+    status = SelectField('Status', choices=[('', 'Todos')])
+    categoria = SelectField('Categoria', choices=[('', 'Todas')])
+    prioridade = SelectField('Prioridade', choices=[('', 'Todas')])
+    busca = StringField('Buscar') 
