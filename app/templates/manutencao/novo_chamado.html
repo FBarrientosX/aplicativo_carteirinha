@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus-circle"></i> Novo Chamado de Manutenção
+                        </h4>
+                        <a href="{{ url_for('manutencao.dashboard') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Preencha os dados abaixo para abrir um novo chamado de manutenção. 
+                        Nossa equipe será notificada automaticamente.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('manutencao.novo_chamado') }}">
+                        <div class="row">
+                            <!-- Título -->
+                            <div class="col-md-12 mb-3">
+                                <label for="titulo" class="form-label">
+                                    <i class="fas fa-heading"></i> Título do Chamado *
+                                </label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" 
+                                       placeholder="Ex: Vazamento no apartamento 101" required maxlength="200">
+                                <div class="form-text">
+                                    Descreva brevemente o problema (máximo 200 caracteres)
+                                </div>
+                            </div>
+
+                            <!-- Local -->
+                            <div class="col-md-6 mb-3">
+                                <label for="local" class="form-label">
+                                    <i class="fas fa-map-marker-alt"></i> Local *
+                                </label>
+                                <input type="text" class="form-control" id="local" name="local" 
+                                       placeholder="Ex: Apartamento 101, Área da piscina" required maxlength="200">
+                                <div class="form-text">
+                                    Onde está o problema?
+                                </div>
+                            </div>
+
+                            <!-- Categoria -->
+                            <div class="col-md-6 mb-3">
+                                <label for="categoria_id" class="form-label">
+                                    <i class="fas fa-tags"></i> Categoria *
+                                </label>
+                                <select class="form-select" id="categoria_id" name="categoria_id" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}" data-icone="{{ categoria.icone }}" data-cor="{{ categoria.cor }}">
+                                        {{ categoria.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">
+                                    Tipo de problema para direcionamento correto
+                                </div>
+                            </div>
+
+                            <!-- Prioridade -->
+                            <div class="col-md-6 mb-3">
+                                <label for="prioridade" class="form-label">
+                                    <i class="fas fa-exclamation-circle"></i> Prioridade *
+                                </label>
+                                <select class="form-select" id="prioridade" name="prioridade" required>
+                                    <option value="baixa">🟢 Baixa - Pode aguardar alguns dias</option>
+                                    <option value="media" selected>🟡 Média - Resolver em alguns dias</option>
+                                    <option value="alta">🟠 Alta - Resolver hoje/amanhã</option>
+                                    <option value="urgente">🔴 Urgente - Resolver imediatamente</option>
+                                </select>
+                                <div class="form-text">
+                                    Urgência do problema
+                                </div>
+                            </div>
+
+                            <!-- Preview da Categoria -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-eye"></i> Preview da Categoria
+                                </label>
+                                <div id="categoria-preview" class="border rounded p-3 text-center text-muted">
+                                    <i class="fas fa-tag fa-2x mb-2"></i>
+                                    <div>Selecione uma categoria para ver o preview</div>
+                                </div>
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="col-12 mb-4">
+                                <label for="descricao" class="form-label">
+                                    <i class="fas fa-comment-alt"></i> Descrição Detalhada *
+                                </label>
+                                <textarea class="form-control" id="descricao" name="descricao" rows="5" 
+                                          placeholder="Descreva o problema com o máximo de detalhes possível. 
+Exemplo: 
+- O que aconteceu?
+- Quando foi notado?
+- Há quanto tempo persiste?
+- Já tentou alguma solução?" required></textarea>
+                                <div class="form-text">
+                                    Quanto mais detalhes, melhor será o atendimento
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('manutencao.dashboard') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-paper-plane"></i> Abrir Chamado
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações Úteis -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Dicas para um Atendimento Mais Rápido
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-check-circle"></i> Faça
+                            </h6>
+                            <ul class="list-unstyled small">
+                                <li class="mb-1">✅ Seja específico na descrição</li>
+                                <li class="mb-1">✅ Informe quando o problema começou</li>
+                                <li class="mb-1">✅ Descreva tentativas de solução</li>
+                                <li class="mb-1">✅ Escolha a categoria correta</li>
+                                <li class="mb-1">✅ Defina a prioridade adequada</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger">
+                                <i class="fas fa-times-circle"></i> Evite
+                            </h6>
+                            <ul class="list-unstyled small">
+                                <li class="mb-1">❌ Descrições vagas como "está quebrado"</li>
+                                <li class="mb-1">❌ Marcar tudo como urgente</li>
+                                <li class="mb-1">❌ Esquecer de informar o local exato</li>
+                                <li class="mb-1">❌ Abrir múltiplos chamados para o mesmo problema</li>
+                                <li class="mb-1">❌ Categoria incorreta</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tempos de Resposta -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock"></i> Tempos de Resposta por Prioridade
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-secondary mb-1">🟢</div>
+                                <small class="text-muted">Baixa</small>
+                                <div class="fw-bold">3-5 dias</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-primary mb-1">🟡</div>
+                                <small class="text-muted">Média</small>
+                                <div class="fw-bold">1-2 dias</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-warning mb-1">🟠</div>
+                                <small class="text-muted">Alta</small>
+                                <div class="fw-bold">4-8 horas</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-danger mb-1">🔴</div>
+                                <small class="text-muted">Urgente</small>
+                                <div class="fw-bold">1-2 horas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview da categoria selecionada
+document.addEventListener('DOMContentLoaded', function() {
+    const categoriaSelect = document.getElementById('categoria_id');
+    const preview = document.getElementById('categoria-preview');
+    
+    categoriaSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            const icone = selectedOption.dataset.icone || 'fas fa-tag';
+            const cor = selectedOption.dataset.cor || '#007bff';
+            const nome = selectedOption.text;
+            
+            preview.innerHTML = `
+                <i class="${icone} fa-2x mb-2" style="color: ${cor};"></i>
+                <div class="fw-bold" style="color: ${cor};">${nome}</div>
+                <small class="text-muted">Categoria selecionada</small>
+            `;
+            preview.className = 'border rounded p-3 text-center';
+        } else {
+            preview.innerHTML = `
+                <i class="fas fa-tag fa-2x mb-2"></i>
+                <div>Selecione uma categoria para ver o preview</div>
+            `;
+            preview.className = 'border rounded p-3 text-center text-muted';
+        }
+    });
+});
+
+// Contador de caracteres do título
+document.getElementById('titulo').addEventListener('input', function() {
+    const maxLength = 200;
+    const currentLength = this.value.length;
+    const formText = this.nextElementSibling;
+    
+    if (currentLength > maxLength - 50) {
+        formText.innerHTML = `Restam ${maxLength - currentLength} caracteres`;
+        formText.className = currentLength >= maxLength ? 'form-text text-danger' : 'form-text text-warning';
+    } else {
+        formText.innerHTML = 'Descreva brevemente o problema (máximo 200 caracteres)';
+        formText.className = 'form-text';
+    }
+});
+</script>
+{% endblock %} 

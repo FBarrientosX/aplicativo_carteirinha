@@ -737,3 +737,203 @@ class ConfiguracaoTenant(db.Model):
         
         db.session.commit()
         return config
+
+# Módulos do Sistema CondoTech Solutions
+class Modulo(db.Model):
+    """Módulos disponíveis no sistema CondoTech"""
+    __tablename__ = 'modulos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    slug = db.Column(db.String(50), nullable=False, unique=True)
+    descricao = db.Column(db.Text, nullable=True)
+    icone = db.Column(db.String(50), default='fas fa-cog')
+    cor = db.Column(db.String(20), default='#007bff')
+    ordem = db.Column(db.Integer, default=0)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Configurações do módulo
+    config_json = db.Column(db.JSON, default={})
+    
+    # Timestamps
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ModuloTenant(db.Model):
+    """Módulos habilitados por tenant"""
+    __tablename__ = 'modulos_tenant'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    modulo_id = db.Column(db.Integer, db.ForeignKey('modulos.id'), nullable=False)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Configurações específicas do tenant para este módulo
+    configuracoes = db.Column(db.JSON, default={})
+    
+    # Timestamps
+    data_ativacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_desativacao = db.Column(db.DateTime, nullable=True)
+    
+    # Relacionamentos
+    tenant = db.relationship('Tenant', backref='modulos_ativos')
+    modulo = db.relationship('Modulo', backref='tenants_ativos')
+    
+    # Índices
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'modulo_id', name='uq_tenant_modulo'),
+    )
+
+
+# Sistema de Manutenção & Chamados
+class CategoriaManutencao(db.Model):
+    """Categorias de manutenção"""
+    __tablename__ = 'categorias_manutencao'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    cor = db.Column(db.String(20), default='#007bff')
+    icone = db.Column(db.String(50), default='fas fa-tools')
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Configurações
+    tempo_resposta_horas = db.Column(db.Integer, default=24)
+    prioridade_default = db.Column(db.String(20), default='media')
+    
+    # Timestamps
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ChamadoManutencao(db.Model):
+    """Chamados de manutenção"""
+    __tablename__ = 'chamados_manutencao'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(20), nullable=False, unique=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    # Informações básicas
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=False)
+    local = db.Column(db.String(200), nullable=False)  # Apartamento, área comum, etc.
+    
+    # Relacionamentos
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categorias_manutencao.id'), nullable=False)
+    solicitante_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    responsavel_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    
+    # Status e prioridade
+    status = db.Column(db.String(20), default='aberto')  # aberto, em_andamento, aguardando, concluido, cancelado
+    prioridade = db.Column(db.String(20), default='media')  # baixa, media, alta, urgente
+    
+    # Controle de tempo
+    data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
+    data_inicio = db.Column(db.DateTime, nullable=True)
+    data_conclusao = db.Column(db.DateTime, nullable=True)
+    prazo_estimado = db.Column(db.DateTime, nullable=True)
+    
+    # Informações técnicas
+    diagnostico = db.Column(db.Text, nullable=True)
+    solucao = db.Column(db.Text, nullable=True)
+    observacoes_internas = db.Column(db.Text, nullable=True)
+    
+    # Avaliação
+    avaliacao_atendimento = db.Column(db.Integer, nullable=True)  # 1-5
+    comentario_avaliacao = db.Column(db.Text, nullable=True)
+    
+    # Custos
+    custo_estimado = db.Column(db.Numeric(10, 2), nullable=True)
+    custo_real = db.Column(db.Numeric(10, 2), nullable=True)
+    aprovado_custo = db.Column(db.Boolean, default=False)
+    
+    # Relacionamentos
+    categoria = db.relationship('CategoriaManutencao', backref='chamados')
+    solicitante = db.relationship('Usuario', foreign_keys=[solicitante_id], backref='chamados_solicitados')
+    responsavel = db.relationship('Usuario', foreign_keys=[responsavel_id], backref='chamados_responsavel')
+    
+    def gerar_numero(self):
+        """Gera número único do chamado"""
+        import random
+        import string
+        year = datetime.now().year
+        random_str = ''.join(random.choices(string.digits, k=4))
+        return f"CH{year}{random_str}"
+    
+    @property
+    def status_cor(self):
+        cores = {
+            'aberto': 'danger',
+            'em_andamento': 'warning', 
+            'aguardando': 'info',
+            'concluido': 'success',
+            'cancelado': 'secondary'
+        }
+        return cores.get(self.status, 'secondary')
+    
+    @property
+    def prioridade_cor(self):
+        cores = {
+            'baixa': 'secondary',
+            'media': 'primary',
+            'alta': 'warning',
+            'urgente': 'danger'
+        }
+        return cores.get(self.prioridade, 'secondary')
+    
+    @property
+    def tempo_aberto(self):
+        """Tempo desde abertura em horas"""
+        if self.data_conclusao:
+            return (self.data_conclusao - self.data_abertura).total_seconds() / 3600
+        return (datetime.utcnow() - self.data_abertura).total_seconds() / 3600
+
+
+class AnexoChamado(db.Model):
+    """Anexos dos chamados"""
+    __tablename__ = 'anexos_chamados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    chamado_id = db.Column(db.Integer, db.ForeignKey('chamados_manutencao.id'), nullable=False)
+    
+    # Informações do arquivo
+    nome_original = db.Column(db.String(255), nullable=False)
+    nome_arquivo = db.Column(db.String(255), nullable=False)
+    caminho = db.Column(db.String(500), nullable=False)
+    tipo_mime = db.Column(db.String(100), nullable=True)
+    tamanho = db.Column(db.Integer, nullable=True)
+    
+    # Metadados
+    tipo = db.Column(db.String(20), default='foto')  # foto, documento, video
+    descricao = db.Column(db.String(255), nullable=True)
+    
+    # Timestamps
+    data_upload = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relacionamento
+    chamado = db.relationship('ChamadoManutencao', backref='anexos')
+
+
+class HistoricoChamado(db.Model):
+    """Histórico de mudanças nos chamados"""
+    __tablename__ = 'historico_chamados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    chamado_id = db.Column(db.Integer, db.ForeignKey('chamados_manutencao.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    
+    # Informações da mudança
+    acao = db.Column(db.String(50), nullable=False)  # criado, atualizado, comentario, etc
+    campo_alterado = db.Column(db.String(50), nullable=True)
+    valor_anterior = db.Column(db.Text, nullable=True)
+    valor_novo = db.Column(db.Text, nullable=True)
+    comentario = db.Column(db.Text, nullable=True)
+    
+    # Timestamp
+    data_acao = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relacionamentos
+    chamado = db.relationship('ChamadoManutencao', backref='historico')
+    usuario = db.relationship('Usuario', backref='acoes_chamados')

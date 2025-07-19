@@ -71,6 +71,7 @@ def create_app(config_class=Config):
     from app.routes import bp as main_bp
     from app.auth import auth_bp
     from app.salva_vidas_routes import salva_vidas_bp
+    from app.manutencao_routes import manutencao_bp  # Novo módulo
     
     # NOVO: Inicializar middleware de multi-tenancy
     try:
@@ -83,6 +84,7 @@ def create_app(config_class=Config):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(salva_vidas_bp, url_prefix='/salva_vidas')
+    app.register_blueprint(manutencao_bp, url_prefix='/manutencao')  # Registrar módulo
     
     return app
 
