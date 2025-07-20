@@ -28,7 +28,7 @@ def index():
     tenant_id = getattr(g, 'tenant_id', 1)
     
     # Estatísticas de moradores
-    total_moradores = Morador.query# .filter_by(tenant_id=tenant_id)  # DESABILITADO TEMPORARIAMENTE.count()
+    total_moradores = Morador.query# # .filter_by(tenant_id=tenant_id)  # DESABILITADO TEMPORARIAMENTE  # DESABILITADO TEMPORARIAMENTE.count()
     
     # Contadores por status
     regulares = Morador.query.filter(
@@ -77,9 +77,9 @@ def index():
             entradas_hoje = RegistroAcesso.query.filter(
                 db.func.date(RegistroAcesso.data_hora) == hoje,
                 RegistroAcesso.tipo == 'entrada',
-                # RegistroAcesso.tenant_id == tenant_id  # DESABILITADO TEMPORARIAMENTE
+                # # RegistroAcesso.tenant_id == tenant_id  # DESABILITADO TEMPORARIAMENTE  # DESABILITADO TEMPORARIAMENTE
             ).count()
-            total_registros_acesso = RegistroAcesso.query# .filter_by(tenant_id=tenant_id)  # DESABILITADO TEMPORARIAMENTE.count()
+            total_registros_acesso = RegistroAcesso.query# # .filter_by(tenant_id=tenant_id)  # DESABILITADO TEMPORARIAMENTE  # DESABILITADO TEMPORARIAMENTE.count()
         else:
             entradas_hoje = RegistroAcesso.query.filter(
                 db.func.date(RegistroAcesso.data_hora) == hoje,

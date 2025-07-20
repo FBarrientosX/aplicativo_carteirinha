@@ -408,12 +408,12 @@ class RegistroAcesso(db.Model):
     observacoes = db.Column(db.Text)
     ip_origem = db.Column(db.String(45))  # IP de onde foi registrado
     
-    # NOVO: Multi-tenancy (COMENTADO ATÉ MIGRAÇÃO)
-    # tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1, index=True)
+    # NOVO: Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1, index=True)
     
     # Relacionamento
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
-    # tenant = db.relationship('Tenant', backref='registros_acesso')  # COMENTADO ATÉ MIGRAÇÃO
+    tenant = db.relationship('Tenant', backref='registros_acesso')
     
     def __repr__(self):
         return f'<RegistroAcesso {self.morador.nome_completo} - {self.tipo} em {self.data_hora}>'
@@ -438,14 +438,29 @@ class RegistroAcesso(db.Model):
     def morador_esta_na_piscina(morador_id, tenant_id=None):
         """Verifica se o morador está atualmente na piscina"""
         from flask import g
+        from sqlalchemy import text
+        
+        # Verificar se tenant_id existe na tabela (PATCH EMERGÊNCIA)
+        try:
+            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+            has_tenant_id = True
+        except Exception:
+            has_tenant_id = False
+        
+        if not has_tenant_id:
+            # Versão sem tenant_id
+            ultimo_registro = RegistroAcesso.query.filter_by(
+                morador_id=morador_id
+            ).order_by(RegistroAcesso.data_hora.desc()).first()
+            return ultimo_registro and ultimo_registro.tipo == 'entrada'
         
         # Usar tenant_id do contexto se não fornecido
         if tenant_id is None:
             tenant_id = getattr(g, 'tenant_id', 1)
         
         ultimo_registro = RegistroAcesso.query.filter_by(
-            morador_id=morador_id
-            # tenant_id=tenant_id  # TEMPORARIAMENTE DESABILITADO
+            morador_id=morador_id,
+            tenant_id=tenant_id
         ).order_by(RegistroAcesso.data_hora.desc()).first()
         
         return ultimo_registro and ultimo_registro.tipo == 'entrada' 
@@ -454,18 +469,44 @@ class RegistroAcesso(db.Model):
     def obter_moradores_na_piscina(tenant_id=None):
         """Retorna lista de moradores que estão atualmente na piscina"""
         from flask import g
+        from sqlalchemy import text
+        
+        # Verificar se tenant_id existe na tabela (PATCH EMERGÊNCIA)
+        try:
+            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+            has_tenant_id = True
+        except Exception:
+            has_tenant_id = False
+        
+        if not has_tenant_id:
+            # Versão sem tenant_id (compatibilidade)
+            subq = db.session.query(
+                RegistroAcesso.morador_id,
+                db.func.max(RegistroAcesso.data_hora).label('ultima_data')
+            ).group_by(RegistroAcesso.morador_id).subquery()
+            
+            moradores_dentro = db.session.query(Morador).join(
+                RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+            ).join(
+                subq, db.and_(
+                    RegistroAcesso.morador_id == subq.c.morador_id,
+                    RegistroAcesso.data_hora == subq.c.ultima_data
+                )
+            ).filter(RegistroAcesso.tipo == 'entrada').all()
+            
+            return moradores_dentro
         
         # Usar tenant_id do contexto se não fornecido
         if tenant_id is None:
             tenant_id = getattr(g, 'tenant_id', 1)
         
-        # Subconsulta para obter o último registro de cada morador (SEM TENANT TEMPORÁRIO)
+        # Subconsulta para obter o último registro de cada morador do tenant
         subq = db.session.query(
             RegistroAcesso.morador_id,
             db.func.max(RegistroAcesso.data_hora).label('ultima_data')
-        ).group_by(RegistroAcesso.morador_id).subquery()
+        ).filter(RegistroAcesso.tenant_id == tenant_id).group_by(RegistroAcesso.morador_id).subquery()
         
-        # Buscar registros que são entradas (SEM FILTRO TENANT TEMPORÁRIO)
+        # Buscar registros que são entradas no tenant específico
         moradores_dentro = db.session.query(Morador).join(
             RegistroAcesso, Morador.id == RegistroAcesso.morador_id
         ).join(
@@ -474,9 +515,9 @@ class RegistroAcesso(db.Model):
                 RegistroAcesso.data_hora == subq.c.ultima_data
             )
         ).filter(
-            RegistroAcesso.tipo == 'entrada'
-            # RegistroAcesso.tenant_id == tenant_id,  # TEMPORARIAMENTE DESABILITADO
-            # Morador.tenant_id == tenant_id  # TEMPORARIAMENTE DESABILITADO
+            RegistroAcesso.tipo == 'entrada',
+            RegistroAcesso.tenant_id == tenant_id,
+            Morador.tenant_id == tenant_id
         ).all()
         
         return moradores_dentro
