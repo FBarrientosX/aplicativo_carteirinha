@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - CondoTech Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Gerenciar Módulos</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-puzzle-piece me-2"></i>
+                        Configure quais módulos estão disponíveis no sistema
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-primary">{{ modulos_com_stats|length }}</div>
+                            <small class="text-muted">Total de Módulos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-success">{{ modulos_com_stats|selectattr('modulo.ativo', 'equalto', true)|list|length }}</div>
+                            <small class="text-muted">Módulos Ativos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-info">{{ modulos_com_stats|sum(attribute='total_tenants') }}</div>
+                            <small class="text-muted">Total Instalações</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-warning">{{ modulos_com_stats|sum(attribute='tenants_ativos') }}</div>
+                            <small class="text-muted">Instalações Ativas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Módulos -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-puzzle-piece me-2"></i>Módulos do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if modulos_com_stats %}
+                        <div class="row">
+                            {% for item in modulos_com_stats %}
+                            {% set modulo = item.modulo %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 {% if modulo.ativo %}border-success{% else %}border-secondary{% endif %}">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas {{ modulo.icone or 'fa-puzzle-piece' }} me-2" 
+                                               style="color: {{ modulo.cor or '#6c757d' }}"></i>
+                                            <h6 class="mb-0">{{ modulo.nome }}</h6>
+                                        </div>
+                                        <span class="badge {% if modulo.ativo %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if modulo.ativo %}Ativo{% else %}Inativo{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text text-muted small">
+                                            {{ modulo.descricao or 'Sem descrição disponível' }}
+                                        </p>
+                                        
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <div class="text-center p-2 border rounded">
+                                                    <div class="fw-bold text-primary">{{ item.total_tenants }}</div>
+                                                    <small class="text-muted">Instalações</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center p-2 border rounded">
+                                                    <div class="fw-bold text-success">{{ item.tenants_ativos }}</div>
+                                                    <small class="text-muted">Ativas</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if modulo.slug %}
+                                        <p class="small mb-2">
+                                            <strong>Slug:</strong> <code>{{ modulo.slug }}</code>
+                                        </p>
+                                        {% endif %}
+                                        
+                                        {% if modulo.versao %}
+                                        <p class="small mb-2">
+                                            <strong>Versão:</strong> {{ modulo.versao }}
+                                        </p>
+                                        {% endif %}
+                                        
+                                        {% if modulo.ordem %}
+                                        <p class="small mb-2">
+                                            <strong>Ordem:</strong> {{ modulo.ordem }}
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="btn-group w-100" role="group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    onclick="editarModulo({{ modulo.id }})"
+                                                    data-bs-toggle="modal" data-bs-target="#editarModuloModal">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </button>
+                                            
+                                            <form method="POST" action="/admin/modulo/{{ modulo.id }}/toggle" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-{% if modulo.ativo %}warning{% else %}success{% endif %} btn-sm"
+                                                        title="{% if modulo.ativo %}Desativar{% else %}Ativar{% endif %}">
+                                                    <i class="fas fa-{% if modulo.ativo %}pause{% else %}play{% endif %}"></i>
+                                                    {% if modulo.ativo %}Desativar{% else %}Ativar{% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-puzzle-piece fa-3x text-muted mb-3"></i>
+                            <h5>Nenhum módulo encontrado</h5>
+                            <p class="text-muted">O sistema não possui módulos cadastrados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Módulo -->
+<div class="modal fade" id="editarModuloModal" tabindex="-1" aria-labelledby="editarModuloModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditarModulo">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarModuloModalLabel">
+                        <i class="fas fa-edit me-2"></i>Editar Módulo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Atenção:</strong> Editar informações do módulo pode afetar sua funcionalidade.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label">Nome do Módulo</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="edit_icone" class="form-label">Ícone</label>
+                            <input type="text" class="form-control" id="edit_icone" name="icone" placeholder="fa-puzzle-piece">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_cor" class="form-label">Cor</label>
+                            <input type="color" class="form-control form-control-color" id="edit_cor" name="cor">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="edit_ordem" class="form-label">Ordem</label>
+                            <input type="number" class="form-control" id="edit_ordem" name="ordem" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_versao" class="form-label">Versão</label>
+                            <input type="text" class="form-control" id="edit_versao" name="versao" placeholder="1.0.0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="edit_ativo" name="ativo" value="1">
+                        <label class="form-check-label" for="edit_ativo">
+                            Módulo ativo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    color: #e83e8c;
+    font-size: 0.875em;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editarModulo(id) {
+    // Aqui você pode implementar a lógica para carregar os dados do módulo
+    // e preencher o formulário de edição
+    console.log('Editando módulo ID:', id);
+    
+    // Por enquanto, apenas atualizamos o action do formulário
+    document.getElementById('formEditarModulo').action = `/admin/modulo/${id}/editar`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação antes de ativar/desativar módulos
+    const toggleForms = document.querySelectorAll('form[action*="toggle"]');
+    
+    toggleForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = form.querySelector('button');
+            const moduloNome = form.closest('.card').querySelector('.card-header h6').textContent;
+            const acao = button.textContent.trim().includes('Ativar') ? 'ativar' : 'desativar';
+            
+            if (!confirm(`Tem certeza que deseja ${acao} o módulo "${moduloNome}"?\n\nIsto pode afetar todos os condomínios que utilizam este módulo.`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

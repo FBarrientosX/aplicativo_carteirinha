@@ -357,3 +357,134 @@ def categorias():
     return render_template('manutencao/categorias.html',
                          title='Categorias de Manutenção',
                          categorias=categorias) 
+
+# ===== ROTAS DE CATEGORIAS =====
+
+@manutencao_bp.route('/categoria/nova', methods=['POST'])
+@login_required
+def nova_categoria():
+    """Criar nova categoria de manutenção"""
+    
+    if not current_user.is_admin():
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('manutencao.categorias'))
+    
+    try:
+        # Inserir nova categoria
+        db.session.execute(text("""
+            INSERT INTO categorias_manutencao 
+            (tenant_id, nome, descricao, icone, cor, ativo, data_criacao)
+            VALUES (:tenant_id, :nome, :descricao, :icone, :cor, 1, :data_criacao)
+        """), {
+            'tenant_id': current_user.tenant_id,
+            'nome': request.form['nome'],
+            'descricao': request.form.get('descricao', ''),
+            'icone': request.form.get('icone', 'fa-wrench'),
+            'cor': request.form.get('cor', '#6c757d'),
+            'data_criacao': datetime.now()
+        })
+        
+        db.session.commit()
+        flash(f'Categoria "{request.form["nome"]}" criada com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao criar categoria: {str(e)}', 'danger')
+    
+    return redirect(url_for('manutencao.categorias'))
+
+@manutencao_bp.route('/categoria/<int:id>/editar', methods=['POST'])
+@login_required
+def editar_categoria(id):
+    """Editar categoria de manutenção"""
+    
+    if not current_user.is_admin():
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('manutencao.categorias'))
+    
+    try:
+        # Atualizar categoria
+        db.session.execute(text("""
+            UPDATE categorias_manutencao 
+            SET nome = :nome, descricao = :descricao, icone = :icone, 
+                cor = :cor, ativo = :ativo
+            WHERE id = :id AND tenant_id = :tenant_id
+        """), {
+            'nome': request.form['nome'],
+            'descricao': request.form.get('descricao', ''),
+            'icone': request.form.get('icone', 'fa-wrench'),
+            'cor': request.form.get('cor', '#6c757d'),
+            'ativo': 1 if request.form.get('ativo') else 0,
+            'id': id,
+            'tenant_id': current_user.tenant_id
+        })
+        
+        db.session.commit()
+        flash(f'Categoria atualizada com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao atualizar categoria: {str(e)}', 'danger')
+    
+    return redirect(url_for('manutencao.categorias'))
+
+@manutencao_bp.route('/categoria/<int:id>/toggle', methods=['POST'])
+@login_required
+def toggle_categoria(id):
+    """Ativar/desativar categoria"""
+    
+    if not current_user.is_admin():
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('manutencao.categorias'))
+    
+    try:
+        # Alternar status da categoria
+        db.session.execute(text("""
+            UPDATE categorias_manutencao 
+            SET ativo = NOT ativo
+            WHERE id = :id AND tenant_id = :tenant_id
+        """), {'id': id, 'tenant_id': current_user.tenant_id})
+        
+        db.session.commit()
+        flash('Status da categoria alterado com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao alterar status da categoria: {str(e)}', 'danger')
+    
+    return redirect(url_for('manutencao.categorias'))
+
+@manutencao_bp.route('/categoria/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_categoria(id):
+    """Excluir categoria (apenas se não tiver chamados)"""
+    
+    if not current_user.is_admin():
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('manutencao.categorias'))
+    
+    try:
+        # Verificar se categoria tem chamados
+        total_chamados = db.session.execute(text("""
+            SELECT COUNT(*) FROM chamados_manutencao 
+            WHERE categoria_id = :id
+        """), {'id': id}).fetchone()[0]
+        
+        if total_chamados > 0:
+            flash('Não é possível excluir categoria que possui chamados associados.', 'warning')
+            return redirect(url_for('manutencao.categorias'))
+        
+        # Excluir categoria
+        db.session.execute(text("""
+            DELETE FROM categorias_manutencao 
+            WHERE id = :id AND tenant_id = :tenant_id
+        """), {'id': id, 'tenant_id': current_user.tenant_id})
+        
+        db.session.commit()
+        flash('Categoria excluída com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir categoria: {str(e)}', 'danger')
+    
+    return redirect(url_for('manutencao.categorias')) 
