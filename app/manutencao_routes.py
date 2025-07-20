@@ -20,22 +20,23 @@ from app.forms import ChamadoManutencaoForm, FiltrosChamadosForm
 # Blueprint do módulo
 manutencao_bp = Blueprint('manutencao', __name__, url_prefix='/manutencao')
 
-@manutencao_bp.before_request
-def verificar_modulo_ativo():
-    """Verifica se o módulo de manutenção está ativo para o tenant"""
-    from flask import g
-    
-    if hasattr(g, 'tenant_id'):
-        # Verificar se o módulo está ativo
-        modulo_ativo = db.session.execute(text("""
-            SELECT mt.ativo FROM modulos_tenant mt
-            JOIN modulos m ON m.id = mt.modulo_id
-            WHERE mt.tenant_id = :tenant_id AND m.slug = 'manutencao' AND mt.ativo = 1
-        """), {'tenant_id': g.tenant_id}).fetchone()
-        
-        if not modulo_ativo:
-            flash('Módulo de Manutenção não está ativo para seu condomínio.', 'warning')
-            return redirect(url_for('main.index'))
+# Comentado temporariamente para permitir acesso
+# @manutencao_bp.before_request
+# def verificar_modulo_ativo():
+#     """Verifica se o módulo de manutenção está ativo para o tenant"""
+#     from flask import g
+#     
+#     if hasattr(g, 'tenant_id'):
+#         # Verificar se o módulo está ativo
+#         modulo_ativo = db.session.execute(text("""
+#             SELECT mt.ativo FROM modulos_tenant mt
+#             JOIN modulos m ON m.id = mt.modulo_id
+#             WHERE mt.tenant_id = :tenant_id AND m.slug = 'manutencao' AND mt.ativo = 1
+#         """), {'tenant_id': g.tenant_id}).fetchone()
+#         
+#         if not modulo_ativo:
+#             flash('Módulo de Manutenção não está ativo para seu condomínio.', 'warning')
+#             return redirect(url_for('main.index'))
 
 @manutencao_bp.route('/')
 @login_required
