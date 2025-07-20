@@ -17,26 +17,34 @@ from app.models import (
 from sqlalchemy import text
 from app.forms import ChamadoManutencaoForm, FiltrosChamadosForm
 
-# Blueprint do módulo
+# Criar blueprint
 manutencao_bp = Blueprint('manutencao', __name__, url_prefix='/manutencao')
 
-# Comentado temporariamente para permitir acesso
-# @manutencao_bp.before_request
-# def verificar_modulo_ativo():
-#     """Verifica se o módulo de manutenção está ativo para o tenant"""
-#     from flask import g
-#     
-#     if hasattr(g, 'tenant_id'):
-#         # Verificar se o módulo está ativo
-#         modulo_ativo = db.session.execute(text("""
-#             SELECT mt.ativo FROM modulos_tenant mt
-#             JOIN modulos m ON m.id = mt.modulo_id
-#             WHERE mt.tenant_id = :tenant_id AND m.slug = 'manutencao' AND mt.ativo = 1
-#         """), {'tenant_id': g.tenant_id}).fetchone()
-#         
-#         if not modulo_ativo:
-#             flash('Módulo de Manutenção não está ativo para seu condomínio.', 'warning')
-#             return redirect(url_for('main.index'))
+@manutencao_bp.before_request
+def verificar_modulo_ativo():
+    """Verifica se o módulo de manutenção está ativo para o tenant"""
+    from flask import g
+    
+    # Pular verificação para rotas estáticas e de erro
+    if request.endpoint and (request.endpoint.startswith('static') or 'error' in request.endpoint):
+        return
+    
+    tenant_id = getattr(g, 'tenant_id', 1)  # Usar tenant_id padrão se não definido
+    
+    try:
+        # Verificar se o módulo está ativo
+        modulo_ativo = db.session.execute(text("""
+            SELECT mt.ativo FROM modulos_tenant mt
+            JOIN modulos m ON m.id = mt.modulo_id
+            WHERE mt.tenant_id = :tenant_id AND m.slug = 'manutencao' AND mt.ativo = 1
+        """), {'tenant_id': tenant_id}).fetchone()
+        
+        if not modulo_ativo:
+            flash('Módulo de Manutenção não está ativo para seu condomínio. Entre em contato com o administrador.', 'warning')
+            return redirect(url_for('main.index'))
+    except Exception as e:
+        # Em caso de erro, permitir acesso (graceful degradation)
+        pass
 
 @manutencao_bp.route('/')
 @login_required
