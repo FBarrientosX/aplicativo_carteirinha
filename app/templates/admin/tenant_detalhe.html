@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - CondoTech Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">{{ tenant.nome }}</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        Tenant ID: {{ tenant.id }} | Criado em: {{ tenant.data_criacao.strftime('%d/%m/%Y às %H:%M') if tenant.data_criacao else 'N/A' }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.listar_tenants') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Informações Básicas -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informações do Condomínio
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nome:</strong> {{ tenant.nome }}</p>
+                                    <p><strong>ID:</strong> {{ tenant.id }}</p>
+                                    <p><strong>Status:</strong> 
+                                        <span class="badge bg-success">Ativo</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Data de Criação:</strong> 
+                                        {{ tenant.data_criacao.strftime('%d/%m/%Y às %H:%M') if tenant.data_criacao else 'N/A' }}
+                                    </p>
+                                    <p><strong>Total de Usuários:</strong> {{ usuarios|length }}</p>
+                                    <p><strong>Módulos Ativos:</strong> 
+                                        {{ modulos_tenant|selectattr('ativo')|list|length }} de {{ modulos_tenant|length }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>Estatísticas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="h4 text-primary">{{ usuarios|length }}</div>
+                                <small class="text-muted">Usuários Cadastrados</small>
+                            </div>
+                            <div class="text-center mb-3">
+                                <div class="h4 text-success">{{ modulos_tenant|selectattr('ativo')|list|length }}</div>
+                                <small class="text-muted">Módulos Ativos</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="h4 text-info">{{ tenant.id }}</div>
+                                <small class="text-muted">ID do Tenant</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulos do Sistema -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-puzzle-piece me-2"></i>Módulos do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if modulos_tenant %}
+                        <div class="row">
+                            {% for modulo in modulos_tenant %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 {% if modulo.ativo %}border-success{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">{{ modulo.nome }}</h6>
+                                            <span class="badge {% if modulo.ativo %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {% if modulo.ativo %}Ativo{% else %}Inativo{% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if modulo.descricao %}
+                                        <p class="card-text text-muted small">{{ modulo.descricao[:80] }}{% if modulo.descricao|length > 80 %}...{% endif %}</p>
+                                        {% endif %}
+                                        
+                                        <div class="mt-auto">
+                                            <form method="POST" action="{{ url_for('admin.toggle_modulo_tenant', tenant_id=tenant.id, modulo_id=modulo.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm {% if modulo.ativo %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                                    <i class="fas {% if modulo.ativo %}fa-toggle-on{% else %}fa-toggle-off{% endif %} me-1"></i>
+                                                    {% if modulo.ativo %}Desativar{% else %}Ativar{% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-puzzle-piece fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhum módulo encontrado no sistema.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Usuários do Condomínio -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Usuários Cadastrados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if usuarios %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Último Acesso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for usuario in usuarios %}
+                                    <tr>
+                                        <td>{{ usuario.id }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                    {{ usuario.nome[0].upper() if usuario.nome else 'U' }}
+                                                </div>
+                                                {{ usuario.nome or 'Sem nome' }}
+                                            </div>
+                                        </td>
+                                        <td>{{ usuario.email }}</td>
+                                        <td>
+                                            {% if usuario.is_admin %}
+                                                <span class="badge bg-danger">Admin</span>
+                                            {% elif usuario.is_sindico %}
+                                                <span class="badge bg-warning">Síndico</span>
+                                            {% elif usuario.is_porteiro %}
+                                                <span class="badge bg-info">Porteiro</span>
+                                            {% elif usuario.is_salva_vidas %}
+                                                <span class="badge bg-primary">Salva Vidas</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Usuário</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">Ativo</span>
+                                        </td>
+                                        <td>
+                                            {{ usuario.ultimo_login.strftime('%d/%m/%Y %H:%M') if usuario.ultimo_login else 'Nunca' }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhum usuário cadastrado neste condomínio.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-sm {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação antes de ativar/desativar módulos
+    const toggleForms = document.querySelectorAll('form[action*="toggle"]');
+    
+    toggleForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = form.querySelector('button');
+            const moduloNome = form.closest('.card').querySelector('.card-title').textContent;
+            const acao = button.textContent.trim().includes('Ativar') ? 'ativar' : 'desativar';
+            
+            if (!confirm(`Tem certeza que deseja ${acao} o módulo "${moduloNome}"?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

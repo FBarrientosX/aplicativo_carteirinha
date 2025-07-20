@@ -154,7 +154,9 @@ def listar_usuarios():
         flash('Acesso negado.', 'danger')
         return redirect(url_for('main.index'))
     
-    usuarios = Usuario.query.all()
+    # Filtrar usuários por tenant_id
+    tenant_id = getattr(current_user, 'tenant_id', 1)
+    usuarios = Usuario.query.filter_by(tenant_id=tenant_id).all()
     return render_template('auth/listar_usuarios.html', title='Usuários', usuarios=usuarios)
 
 @auth_bp.route('/usuario/<int:id>/toggle-status', methods=['POST'])
