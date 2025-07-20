@@ -238,11 +238,19 @@ class RegistroAcessoForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(RegistroAcessoForm, self).__init__(*args, **kwargs)
-        # Carregar moradores ativos
+        # Carregar moradores ativos do tenant atual
         from app.models import Morador
+        from flask import g
+        
+        tenant_id = getattr(g, 'tenant_id', 1)
+        moradores_query = Morador.query.filter(
+            Morador.carteirinha_ativa == True,
+            Morador.tenant_id == tenant_id
+        ).order_by(Morador.nome_completo)
+        
         self.morador_id.choices = [(0, 'Selecione um morador')] + [
             (m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}")
-            for m in Morador.query.filter(Morador.carteirinha_ativa == True).order_by(Morador.nome_completo).all()
+            for m in moradores_query.all()
         ]
 
 class BuscaMoradorForm(FlaskForm):

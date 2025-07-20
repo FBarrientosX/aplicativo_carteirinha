@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, g
 from flask_login import login_required, current_user
 from app import db
 from app.models import Morador, RegistroAcesso
@@ -46,9 +46,13 @@ def processar_qr():
         # Primeiro, tentar como ID direto (mais comum)
         try:
             morador_id = int(codigo_qr)
-            morador = Morador.query.get(morador_id)
+            tenant_id = getattr(g, 'tenant_id', 1)
+            morador = Morador.query.filter_by(
+                id=morador_id,
+                tenant_id=tenant_id
+            ).first()
             if not morador:
-                erro = "Morador não encontrado"
+                erro = "Morador não encontrado neste condomínio"
         except ValueError:
             # Se não for um número, tentar decodificar como JSON
             try:
@@ -138,13 +142,15 @@ def registrar_acesso(morador_id, tipo):
         }), 200
     
     # Criar registro de acesso
+    tenant_id = getattr(g, 'tenant_id', 1)
     registro = RegistroAcesso(
         morador_id=morador.id,
         tipo=tipo,
         metodo='qr_code',
         guardiao=current_user.nome_completo,
         observacoes=f'Registrado por {current_user.nome_completo} via QR Code',
-        ip_origem=request.remote_addr
+        ip_origem=request.remote_addr,
+        tenant_id=tenant_id
     )
     
     db.session.add(registro)
@@ -197,9 +203,11 @@ def buscar_morador():
         except ValueError:
             pass
         
-        # Buscar por nome
+        # Buscar por nome no tenant atual
+        tenant_id = getattr(g, 'tenant_id', 1)
         moradores = Morador.query.filter(
-            Morador.nome_completo.ilike(f"%{termo_busca}%")
+            Morador.nome_completo.ilike(f"%{termo_busca}%"),
+            Morador.tenant_id == tenant_id
         ).limit(10).all()
         
         if not moradores:
@@ -232,8 +240,11 @@ def historico_acesso():
         flash('Acesso negado.', 'danger')
         return redirect(url_for('auth.login'))
     
-    # Últimos 50 registros
-    registros = RegistroAcesso.query.order_by(
+    # Últimos 50 registros do tenant atual
+    tenant_id = getattr(g, 'tenant_id', 1)
+    registros = RegistroAcesso.query.filter_by(
+        tenant_id=tenant_id
+    ).order_by(
         RegistroAcesso.data_hora.desc()
     ).limit(50).all()
     

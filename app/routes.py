@@ -53,21 +53,22 @@ def index():
         Morador.data_vencimento.is_(None)
     ).count()
     
-    # Estatísticas de acesso à piscina (sem filtro tenant por enquanto)
+    # Estatísticas de acesso à piscina com filtro tenant
     try:
-        moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina())
+        moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina(tenant_id))
     except:
         moradores_na_piscina = 0
     
-    # Entradas hoje
+    # Entradas hoje no tenant atual
     hoje = datetime.now().date()
     entradas_hoje = RegistroAcesso.query.filter(
         db.func.date(RegistroAcesso.data_hora) == hoje,
-        RegistroAcesso.tipo == 'entrada'
+        RegistroAcesso.tipo == 'entrada',
+        RegistroAcesso.tenant_id == tenant_id
     ).count()
     
-    # Total de registros de acesso
-    total_registros_acesso = RegistroAcesso.query.count()
+    # Total de registros de acesso do tenant
+    total_registros_acesso = RegistroAcesso.query.filter_by(tenant_id=tenant_id).count()
     
     # Estatísticas de salva-vidas
     total_salva_vidas = SalvaVidas.query.count()
@@ -1411,7 +1412,8 @@ def registrar_acesso():
             metodo='manual',
             guardiao=form.guardiao.data,
             observacoes=form.observacoes.data,
-            ip_origem=request.remote_addr
+            ip_origem=request.remote_addr,
+            tenant_id=tenant_id
         )
         
         db.session.add(registro)

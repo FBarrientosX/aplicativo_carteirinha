@@ -72,17 +72,23 @@ def salva_vidas_dashboard():
     # Estatísticas para o salva-vidas
     hoje = datetime.now().date()
     
-    # Moradores atualmente na piscina
-    moradores_dentro = RegistroAcesso.obter_moradores_na_piscina()
+    # Obter tenant_id do usuário salva-vidas
+    tenant_id = current_user.tenant_id or 1
     
-    # Entradas de hoje
+    # Moradores atualmente na piscina (do tenant específico)
+    moradores_dentro = RegistroAcesso.obter_moradores_na_piscina(tenant_id)
+    
+    # Entradas de hoje no tenant
     entradas_hoje = RegistroAcesso.query.filter(
         db.func.date(RegistroAcesso.data_hora) == hoje,
-        RegistroAcesso.tipo == 'entrada'
+        RegistroAcesso.tipo == 'entrada',
+        RegistroAcesso.tenant_id == tenant_id
     ).count()
     
-    # Últimos 10 registros
-    ultimos_registros = RegistroAcesso.query.order_by(
+    # Últimos 10 registros do tenant
+    ultimos_registros = RegistroAcesso.query.filter_by(
+        tenant_id=tenant_id
+    ).order_by(
         RegistroAcesso.data_hora.desc()
     ).limit(10).all()
     
