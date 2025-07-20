@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - CondoTech Solutions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Categorias de Manutenção</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        Gerencie as categorias para organizar os chamados
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('manutencao.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Dashboard
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaCategoriaModal">
+                        <i class="fas fa-plus me-2"></i>Nova Categoria
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-primary">{{ categorias|length }}</div>
+                            <small class="text-muted">Total de Categorias</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-success">{{ categorias|selectattr('ativo', 'equalto', true)|list|length }}</div>
+                            <small class="text-muted">Categorias Ativas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-info">{{ categorias|sum(attribute='total_chamados') }}</div>
+                            <small class="text-muted">Total de Chamados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h4 text-warning">{{ categorias|selectattr('total_chamados', 'greaterthan', 0)|list|length }}</div>
+                            <small class="text-muted">Com Chamados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Categorias -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Categorias Cadastradas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if categorias %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;"></th>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th style="width: 120px;">Chamados</th>
+                                        <th style="width: 100px;">Status</th>
+                                        <th style="width: 150px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for categoria in categorias %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center justify-content-center" 
+                                                 style="width: 32px; height: 32px; background-color: {{ categoria.cor or '#6c757d' }}; border-radius: 50%;">
+                                                <i class="fas {{ categoria.icone or 'fa-tag' }} text-white" style="font-size: 14px;"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ categoria.nome }}</strong>
+                                                {% if categoria.icone %}
+                                                <i class="fas {{ categoria.icone }} ms-2 text-muted"></i>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ categoria.descricao or 'Sem descrição' }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if categoria.total_chamados > 0 %}bg-info{% else %}bg-secondary{% endif %}">
+                                                {{ categoria.total_chamados }} chamado{{ 's' if categoria.total_chamados != 1 else '' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if categoria.ativo %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if categoria.ativo %}Ativa{% else %}Inativa{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="editarCategoria({{ categoria.id }}, '{{ categoria.nome }}', '{{ categoria.descricao or '' }}', '{{ categoria.icone or '' }}', '{{ categoria.cor or '' }}', {{ categoria.ativo|lower }})"
+                                                        data-bs-toggle="modal" data-bs-target="#editarCategoriaModal">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                
+                                                {% if categoria.total_chamados == 0 %}
+                                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                        onclick="confirmarExclusao({{ categoria.id }}, '{{ categoria.nome }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                                
+                                                <form method="POST" action="/manutencao/categoria/{{ categoria.id }}/toggle" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-{% if categoria.ativo %}warning{% else %}success{% endif %} btn-sm"
+                                                            title="{% if categoria.ativo %}Desativar{% else %}Ativar{% endif %}">
+                                                        <i class="fas fa-{% if categoria.ativo %}pause{% else %}play{% endif %}"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                            <h5>Nenhuma categoria cadastrada</h5>
+                            <p class="text-muted">Crie sua primeira categoria para organizar os chamados de manutenção.</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaCategoriaModal">
+                                <i class="fas fa-plus me-2"></i>Criar Primeira Categoria
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Categoria -->
+<div class="modal fade" id="novaCategoriaModal" tabindex="-1" aria-labelledby="novaCategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/manutencao/categoria/nova">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="novaCategoriaModalLabel">
+                        <i class="fas fa-plus me-2"></i>Nova Categoria
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Categoria *</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required maxlength="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="2" maxlength="255"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="icone" class="form-label">Ícone</label>
+                            <select class="form-select" id="icone" name="icone">
+                                <option value="">Selecione um ícone</option>
+                                <option value="fa-wrench">🔧 Ferramentas</option>
+                                <option value="fa-bolt">⚡ Elétrica</option>
+                                <option value="fa-tint">💧 Hidráulica</option>
+                                <option value="fa-paint-brush">🎨 Pintura</option>
+                                <option value="fa-hammer">🔨 Construção</option>
+                                <option value="fa-cog">⚙️ Mecânica</option>
+                                <option value="fa-leaf">🌿 Jardinagem</option>
+                                <option value="fa-shield-alt">🛡️ Segurança</option>
+                                <option value="fa-thermometer">🌡️ Climatização</option>
+                                <option value="fa-laptop">💻 Tecnologia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cor" class="form-label">Cor</label>
+                            <input type="color" class="form-control form-control-color" id="cor" name="cor" value="#6c757d">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar Categoria
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Categoria -->
+<div class="modal fade" id="editarCategoriaModal" tabindex="-1" aria-labelledby="editarCategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditarCategoria">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarCategoriaModalLabel">
+                        <i class="fas fa-edit me-2"></i>Editar Categoria
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label">Nome da Categoria *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="2" maxlength="255"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="edit_icone" class="form-label">Ícone</label>
+                            <select class="form-select" id="edit_icone" name="icone">
+                                <option value="">Selecione um ícone</option>
+                                <option value="fa-wrench">🔧 Ferramentas</option>
+                                <option value="fa-bolt">⚡ Elétrica</option>
+                                <option value="fa-tint">💧 Hidráulica</option>
+                                <option value="fa-paint-brush">🎨 Pintura</option>
+                                <option value="fa-hammer">🔨 Construção</option>
+                                <option value="fa-cog">⚙️ Mecânica</option>
+                                <option value="fa-leaf">🌿 Jardinagem</option>
+                                <option value="fa-shield-alt">🛡️ Segurança</option>
+                                <option value="fa-thermometer">🌡️ Climatização</option>
+                                <option value="fa-laptop">💻 Tecnologia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_cor" class="form-label">Cor</label>
+                            <input type="color" class="form-control form-control-color" id="edit_cor" name="cor">
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="edit_ativo" name="ativo" value="1">
+                        <label class="form-check-label" for="edit_ativo">
+                            Categoria ativa
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-group-sm > .btn, .btn-sm {
+    font-size: 0.75rem;
+}
+
+.form-control-color {
+    width: 100%;
+    height: calc(2.25rem + 2px);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editarCategoria(id, nome, descricao, icone, cor, ativo) {
+    document.getElementById('edit_nome').value = nome;
+    document.getElementById('edit_descricao').value = descricao;
+    document.getElementById('edit_icone').value = icone;
+    document.getElementById('edit_cor').value = cor || '#6c757d';
+    document.getElementById('edit_ativo').checked = ativo;
+    
+    // Atualizar action do formulário
+    document.getElementById('formEditarCategoria').action = `/manutencao/categoria/${id}/editar`;
+}
+
+function confirmarExclusao(id, nome) {
+    if (confirm(`Tem certeza que deseja excluir a categoria "${nome}"?\n\nEsta ação não pode ser desfeita.`)) {
+        // Criar formulário para enviar DELETE request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/manutencao/categoria/${id}/excluir`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview da cor e ícone ao alterar
+    const iconeSelect = document.getElementById('icone');
+    const corInput = document.getElementById('cor');
+    
+    if (iconeSelect && corInput) {
+        function updatePreview() {
+            // Lógica de preview pode ser adicionada aqui
+        }
+        
+        iconeSelect.addEventListener('change', updatePreview);
+        corInput.addEventListener('change', updatePreview);
+    }
+});
+</script>
+{% endblock %} 

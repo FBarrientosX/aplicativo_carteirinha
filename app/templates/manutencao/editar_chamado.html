@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - CondoTech Solutions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Editar Chamado #{{ chamado.numero }}</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Aberto em {{ chamado.data_abertura.strftime('%d/%m/%Y às %H:%M') if chamado.data_abertura else 'N/A' }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('manutencao.ver_chamado', id=chamado.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Informações Principais -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-edit me-2"></i>Informações do Chamado
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="status" class="form-label">Status *</label>
+                                        <select name="status" id="status" class="form-select" required>
+                                            <option value="aberto" {{ 'selected' if chamado.status == 'aberto' else '' }}>Aberto</option>
+                                            <option value="em_andamento" {{ 'selected' if chamado.status == 'em_andamento' else '' }}>Em Andamento</option>
+                                            <option value="aguardando_peca" {{ 'selected' if chamado.status == 'aguardando_peca' else '' }}>Aguardando Peça</option>
+                                            <option value="aguardando_terceiro" {{ 'selected' if chamado.status == 'aguardando_terceiro' else '' }}>Aguardando Terceiro</option>
+                                            <option value="concluido" {{ 'selected' if chamado.status == 'concluido' else '' }}>Concluído</option>
+                                            <option value="cancelado" {{ 'selected' if chamado.status == 'cancelado' else '' }}>Cancelado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="prioridade" class="form-label">Prioridade *</label>
+                                        <select name="prioridade" id="prioridade" class="form-select" required>
+                                            <option value="baixa" {{ 'selected' if chamado.prioridade == 'baixa' else '' }}>Baixa</option>
+                                            <option value="normal" {{ 'selected' if chamado.prioridade == 'normal' else '' }}>Normal</option>
+                                            <option value="alta" {{ 'selected' if chamado.prioridade == 'alta' else '' }}>Alta</option>
+                                            <option value="urgente" {{ 'selected' if chamado.prioridade == 'urgente' else '' }}>Urgente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="responsavel_id" class="form-label">Responsável</label>
+                                    <select name="responsavel_id" id="responsavel_id" class="form-select">
+                                        <option value="">Selecione um responsável</option>
+                                        {% for usuario in usuarios %}
+                                        <option value="{{ usuario.id }}" {{ 'selected' if chamado.responsavel_id == usuario.id else '' }}>
+                                            {{ usuario.nome_completo }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagnóstico e Solução -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-stethoscope me-2"></i>Diagnóstico e Solução
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="diagnostico" class="form-label">Diagnóstico</label>
+                                    <textarea name="diagnostico" id="diagnostico" class="form-control" rows="4" 
+                                              placeholder="Descreva o diagnóstico do problema...">{{ chamado.diagnostico or '' }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="solucao" class="form-label">Solução</label>
+                                    <textarea name="solucao" id="solucao" class="form-control" rows="4" 
+                                              placeholder="Descreva a solução aplicada...">{{ chamado.solucao or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observações Internas -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-lock me-2"></i>Observações Internas
+                                    <small class="text-muted">(Visível apenas para administradores)</small>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <textarea name="observacoes_internas" id="observacoes_internas" class="form-control" rows="3" 
+                                              placeholder="Observações internas, notas técnicas, etc...">{{ chamado.observacoes_internas or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <!-- Informações Atuais -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Informações Atuais
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Número:</strong> #{{ chamado.numero }}</p>
+                                <p><strong>Título:</strong> {{ chamado.titulo }}</p>
+                                <p><strong>Local:</strong> {{ chamado.local or 'Não informado' }}</p>
+                                <p><strong>Solicitante:</strong> {{ chamado.solicitante_nome or 'N/A' }}</p>
+                                <p><strong>Categoria:</strong> {{ chamado.categoria_nome or 'N/A' }}</p>
+                                <p><strong>Data Abertura:</strong> {{ chamado.data_abertura.strftime('%d/%m/%Y %H:%M') if chamado.data_abertura else 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Status Atual -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-flag me-2"></i>Status Atual
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Status:</strong>
+                                    <span class="badge 
+                                        {% if chamado.status == 'aberto' %}bg-warning
+                                        {% elif chamado.status == 'em_andamento' %}bg-primary
+                                        {% elif chamado.status == 'concluido' %}bg-success
+                                        {% elif chamado.status == 'cancelado' %}bg-secondary
+                                        {% else %}bg-info{% endif %}">
+                                        {{ chamado.status|title }}
+                                    </span>
+                                </p>
+                                
+                                <p><strong>Prioridade:</strong>
+                                    <span class="badge 
+                                        {% if chamado.prioridade == 'baixa' %}bg-success
+                                        {% elif chamado.prioridade == 'normal' %}bg-info
+                                        {% elif chamado.prioridade == 'alta' %}bg-warning
+                                        {% elif chamado.prioridade == 'urgente' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ chamado.prioridade|title }}
+                                    </span>
+                                </p>
+                                
+                                <p><strong>Responsável:</strong> {{ chamado.responsavel_nome or 'Não atribuído' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Ações -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-cogs me-2"></i>Ações
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                                    </button>
+                                    
+                                    <a href="{{ url_for('manutencao.ver_chamado', id=chamado.id) }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-eye me-2"></i>Visualizar
+                                    </a>
+                                    
+                                    <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-info">
+                                        <i class="fas fa-list me-2"></i>Todos os Chamados
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-success:hover {
+    background-color: #157347;
+    border-color: #146c43;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save draft (opcional)
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    // Confirmar antes de sair se houver alterações não salvas
+    let formChanged = false;
+    inputs.forEach(input => {
+        input.addEventListener('change', () => {
+            formChanged = true;
+        });
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    // Marcar como salvo após submit
+    form.addEventListener('submit', () => {
+        formChanged = false;
+    });
+});
+</script>
+{% endblock %} 

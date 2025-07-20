@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - CondoTech Solutions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Chamado #{{ chamado.numero }}</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Aberto em {{ chamado.data_abertura.strftime('%d/%m/%Y às %H:%M') if chamado.data_abertura else 'N/A' }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                    {% if current_user.is_admin() %}
+                    <a href="{{ url_for('manutencao.editar_chamado', id=chamado.id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Editar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status e Informações Principais -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="fas {{ chamado.categoria_icone or 'fa-wrench' }} me-2" 
+                               style="color: {{ chamado.categoria_cor or '#6c757d' }}"></i>
+                            <h5 class="card-title mb-0">{{ chamado.titulo }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Status:</strong>
+                                        <span class="badge 
+                                            {% if chamado.status == 'aberto' %}bg-warning
+                                            {% elif chamado.status == 'em_andamento' %}bg-primary
+                                            {% elif chamado.status == 'concluido' %}bg-success
+                                            {% elif chamado.status == 'cancelado' %}bg-secondary
+                                            {% else %}bg-info{% endif %}">
+                                            {{ chamado.status|title }}
+                                        </span>
+                                    </p>
+                                    
+                                    <p><strong>Prioridade:</strong>
+                                        <span class="badge 
+                                            {% if chamado.prioridade == 'baixa' %}bg-success
+                                            {% elif chamado.prioridade == 'normal' %}bg-info
+                                            {% elif chamado.prioridade == 'alta' %}bg-warning
+                                            {% elif chamado.prioridade == 'urgente' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ chamado.prioridade|title }}
+                                        </span>
+                                    </p>
+                                    
+                                    <p><strong>Categoria:</strong> 
+                                        <span class="badge" style="background-color: {{ chamado.categoria_cor or '#6c757d' }}">
+                                            {{ chamado.categoria }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Local:</strong> {{ chamado.local or 'Não informado' }}</p>
+                                    <p><strong>Solicitante:</strong> {{ chamado.solicitante or 'N/A' }}</p>
+                                    <p><strong>Responsável:</strong> {{ chamado.responsavel or 'Não atribuído' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6><strong>Descrição:</strong></h6>
+                                <div class="border rounded p-3 bg-light">
+                                    {{ chamado.descricao or 'Sem descrição' }}
+                                </div>
+                            </div>
+                            
+                            {% if chamado.diagnostico %}
+                            <div class="mb-3">
+                                <h6><strong>Diagnóstico:</strong></h6>
+                                <div class="border rounded p-3 bg-light">
+                                    {{ chamado.diagnostico }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if chamado.solucao %}
+                            <div class="mb-3">
+                                <h6><strong>Solução:</strong></h6>
+                                <div class="border rounded p-3 bg-light">
+                                    {{ chamado.solucao }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if chamado.observacoes_internas and current_user.is_admin() %}
+                            <div class="mb-3">
+                                <h6><strong>Observações Internas:</strong> <small class="text-muted">(Apenas para administradores)</small></h6>
+                                <div class="border rounded p-3 bg-warning bg-opacity-10">
+                                    {{ chamado.observacoes_internas }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- Informações Rápidas -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informações
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="fw-bold text-primary">#{{ chamado.numero }}</div>
+                                        <small class="text-muted">Número do Chamado</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="fw-bold">{{ chamado.data_abertura.strftime('%d/%m') if chamado.data_abertura else 'N/A' }}</div>
+                                        <small class="text-muted">Abertura</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="fw-bold">{{ chamado.data_conclusao.strftime('%d/%m') if chamado.data_conclusao else '-' }}</div>
+                                        <small class="text-muted">Conclusão</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contatos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-users me-2"></i>Contatos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Solicitante:</strong><br>
+                                <i class="fas fa-user me-2"></i>{{ chamado.solicitante or 'N/A' }}<br>
+                                {% if chamado.solicitante_email %}
+                                <i class="fas fa-envelope me-2"></i>
+                                <a href="mailto:{{ chamado.solicitante_email }}">{{ chamado.solicitante_email }}</a>
+                                {% endif %}
+                            </div>
+                            
+                            {% if chamado.responsavel %}
+                            <div class="mb-3">
+                                <strong>Responsável:</strong><br>
+                                <i class="fas fa-user-tie me-2"></i>{{ chamado.responsavel }}<br>
+                                {% if chamado.responsavel_email %}
+                                <i class="fas fa-envelope me-2"></i>
+                                <a href="mailto:{{ chamado.responsavel_email }}">{{ chamado.responsavel_email }}</a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anexos -->
+            {% if anexos %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-paperclip me-2"></i>Anexos ({{ anexos|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for anexo in anexos %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file fa-2x text-muted me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">{{ anexo.nome_original or anexo.nome_arquivo }}</h6>
+                                            <small class="text-muted">
+                                                {{ anexo.data_upload.strftime('%d/%m/%Y %H:%M') if anexo.data_upload else 'N/A' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Histórico -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Histórico do Chamado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if historico %}
+                        <div class="timeline">
+                            {% for item in historico %}
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <div class="timeline-marker me-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 32px; height: 32px;">
+                                            <i class="fas fa-circle text-white" style="font-size: 8px;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-content flex-grow-1">
+                                        <div class="card">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                                    <strong>{{ item.acao|title }}</strong>
+                                                    <small class="text-muted">
+                                                        {{ item.data_acao.strftime('%d/%m/%Y %H:%M') if item.data_acao else 'N/A' }}
+                                                    </small>
+                                                </div>
+                                                <p class="mb-1">{{ item.comentario or 'Sem comentário' }}</p>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user me-1"></i>{{ item.usuario_nome or 'Usuário desconhecido' }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhum histórico encontrado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    height: 100%;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item:last-child .timeline-content::after {
+    display: none;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar tooltips se necessário
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %} 
