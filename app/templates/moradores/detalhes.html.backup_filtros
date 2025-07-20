@@ -69,10 +69,10 @@
                     </dd>
                     
                     <dt class="col-sm-4">Cadastrado em:</dt>
-                    <dd class="col-sm-8">{{ morador.data_cadastro|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') }}</dd>
+                    <dd class="col-sm-8">{{ morador.data_cadastro|dateformat('%d/%m/%Y às %H:%M') }}</dd>
                     
                     <dt class="col-sm-4">Última atualização:</dt>
-                    <dd class="col-sm-8">{{ morador.data_atualizacao|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') }}</dd>
+                    <dd class="col-sm-8">{{ morador.data_atualizacao|dateformat('%d/%m/%Y às %H:%M') }}</dd>
                 </dl>
             </div>
         </div>
@@ -104,12 +104,12 @@
                 <dl class="row">
                     {% if morador.data_ultima_validacao %}
                         <dt class="col-sm-6">Última validação:</dt>
-                        <dd class="col-sm-6">{{ morador.data_ultima_validacao|strftime("%d/%m/%Y") if value else "" }}</dd>
+                        <dd class="col-sm-6">{{ morador.data_ultima_validacao|dateformat }}</dd>
                     {% endif %}
                     
                     {% if morador.data_vencimento %}
                         <dt class="col-sm-6">Vencimento:</dt>
-                        <dd class="col-sm-6">{{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</dd>
+                        <dd class="col-sm-6">{{ morador.data_vencimento|dateformat }}</dd>
                         
                         {% if morador.dias_para_vencer is not none %}
                             <dt class="col-sm-6">Dias restantes:</dt>
@@ -270,7 +270,7 @@
                                             {{ anexo.nome_original }}
                                         </td>
                                         <td>{{ "%.1f"|format(anexo.tamanho_arquivo / 1024) }} KB</td>
-                                        <td>{{ anexo.data_upload|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y %H:%M') }}</td>
+                                        <td>{{ anexo.data_upload|dateformat('%d/%m/%Y %H:%M') }}</td>
                                         <td>
                                             <a href="{{ url_for('main.baixar_anexo', id=anexo.id) }}" 
                                                class="btn btn-sm btn-outline-primary">

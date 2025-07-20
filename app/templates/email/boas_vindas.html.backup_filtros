@@ -34,7 +34,7 @@
                     <li><strong>Nome:</strong> {{ morador.nome_completo }}</li>
                     <li><strong>Bloco/Apartamento:</strong> {{ morador.bloco }}/{{ morador.apartamento }}</li>
                     <li><strong>Email:</strong> {{ morador.email }}</li>
-                    <li><strong>Cadastrado em:</strong> {{ morador.data_cadastro|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') }}</li>
+                    <li><strong>Cadastrado em:</strong> {{ morador.data_cadastro|dateformat('%d/%m/%Y às %H:%M') }}</li>
                     {% if not morador.eh_titular %}
                         <li><strong>Titular:</strong> {{ morador.email_titular }}</li>
                     {% endif %}
@@ -45,7 +45,7 @@
             <div class="info">
                 <h3>✅ Status da Carteirinha:</h3>
                 <ul>
-                    <li><strong>Vencimento:</strong> {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</li>
+                    <li><strong>Vencimento:</strong> {{ morador.data_vencimento|dateformat }}</li>
                     <li><strong>Status:</strong> 
                         {% if morador.carteirinha_ativa %}
                             <span style="color: #28a745;">✅ ATIVA</span>

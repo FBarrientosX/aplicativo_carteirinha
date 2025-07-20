@@ -77,7 +77,7 @@
             <ul>
                 <li><strong>Nome:</strong> {{ morador.nome_completo }}</li>
                 <li><strong>Bloco/Apartamento:</strong> {{ morador.bloco }}/{{ morador.apartamento }}</li>
-                                    <li><strong>Data de Vencimento:</strong> {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</li>
+                                    <li><strong>Data de Vencimento:</strong> {{ morador.data_vencimento|dateformat }}</li>
                 <li><strong>Status:</strong> <span style="color: #dc3545;">❌ VENCIDA</span></li>
             </ul>
         </div>

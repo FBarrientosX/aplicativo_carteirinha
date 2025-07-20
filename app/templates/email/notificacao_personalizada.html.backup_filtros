@@ -87,7 +87,7 @@
                 <p><strong>Apartamento:</strong> {{ morador.bloco }} - {{ morador.apartamento }}</p>
                 <p><strong>Email:</strong> {{ morador.email }}</p>
                 {% if morador.data_vencimento %}
-                    <p><strong>Vencimento da Carteirinha:</strong> {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</p>
+                    <p><strong>Vencimento da Carteirinha:</strong> {{ morador.data_vencimento|dateformat }}</p>
                     <p><strong>Status:</strong> 
                         {% if morador.dias_para_vencer <= 0 %}
                             <span style="color: #dc3545;">⚠️ Vencida</span>
@@ -103,7 +103,7 @@
         
         <div class="footer">
             <p>Este email foi enviado automaticamente pelo Sistema de Carteirinhas da Piscina.</p>
-                            <p>Data de envio: {{ data_atual|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') if data_atual else 'Agora' }}</p>
+                            <p>Data de envio: {{ data_atual|dateformat('%d/%m/%Y às %H:%M') if data_atual else 'Agora' }}</p>
             <p>Em caso de dúvidas, entre em contato com a administração.</p>
         </div>
     </div>

@@ -83,7 +83,7 @@
                     </div>
                     <div class="col-md-6">
                         {% if morador.data_vencimento %}
-                            <p class="mb-1"><strong>Validade:</strong> {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</p>
+                            <p class="mb-1"><strong>Validade:</strong> {{ morador.data_vencimento|dateformat }}</p>
                             <p class="mb-1"><strong>Status:</strong> 
                                 <span class="badge bg-{% if morador.status_carteirinha == 'regular' %}success{% elif morador.status_carteirinha == 'a_vencer' %}warning{% else %}danger{% endif %}">
                                     {{ morador.status_carteirinha.replace('_', ' ').title() }}

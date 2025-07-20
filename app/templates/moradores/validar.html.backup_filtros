@@ -72,12 +72,12 @@
                 <dl class="row">
                     {% if morador.data_ultima_validacao %}
                         <dt class="col-sm-6">Última validação:</dt>
-                        <dd class="col-sm-6">{{ morador.data_ultima_validacao|strftime("%d/%m/%Y") if value else "" }}</dd>
+                        <dd class="col-sm-6">{{ morador.data_ultima_validacao|dateformat }}</dd>
                     {% endif %}
                     
                     {% if morador.data_vencimento %}
                         <dt class="col-sm-6">Vencimento atual:</dt>
-                        <dd class="col-sm-6">{{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</dd>
+                        <dd class="col-sm-6">{{ morador.data_vencimento|dateformat }}</dd>
                         
                         {% if morador.dias_para_vencer is not none %}
                             <dt class="col-sm-6">Dias restantes:</dt>

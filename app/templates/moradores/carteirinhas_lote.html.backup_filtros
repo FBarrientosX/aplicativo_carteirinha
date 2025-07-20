@@ -101,7 +101,7 @@
                                             </td>
                                             <td>
                                                 {% if morador.data_vencimento %}
-                                                    {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}
+                                                    {{ morador.data_vencimento|dateformat }}
                                                 {% else %}
                                                     <span class="text-muted">Não definida</span>
                                                 {% endif %}

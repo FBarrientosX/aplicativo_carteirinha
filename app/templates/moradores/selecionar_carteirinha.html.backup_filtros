@@ -111,7 +111,7 @@
                                                 <!-- Vencimento -->
                                                 {% if morador.data_vencimento %}
                                                     <small class="text-muted d-block">
-                                                        Vence: {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}
+                                                        Vence: {{ morador.data_vencimento|dateformat }}
                                                     </small>
                                                 {% endif %}
                                                 

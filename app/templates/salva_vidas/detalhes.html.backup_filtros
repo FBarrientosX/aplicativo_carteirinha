@@ -118,7 +118,7 @@
                         <div class="mt-3">
                             <small class="text-muted">
                                 <i class="fas fa-calendar me-1"></i>
-                                Válido até: {{ salva_vidas.data_vencimento_certificacao|strftime("%d/%m/%Y") if value else "" }}
+                                Válido até: {{ salva_vidas.data_vencimento_certificacao|dateformat }}
                                 {% if salva_vidas.certificacao_valida == False %}
                                     <span class="text-danger">(Vencido)</span>
                                 {% elif salva_vidas.certificacao_valida == True %}
@@ -159,7 +159,7 @@
                             {% endif %}
                             <tr>
                                 <td><strong>Data de Nascimento:</strong></td>
-                                <td>{{ salva_vidas.data_nascimento|strftime("%d/%m/%Y") if value else "" }}</td>
+                                <td>{{ salva_vidas.data_nascimento|dateformat }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Telefone:</strong></td>
@@ -209,12 +209,12 @@
                         <table class="table table-borderless">
                             <tr>
                                 <td><strong>Data de Contratação:</strong></td>
-                                <td>{{ salva_vidas.data_contratacao|strftime("%d/%m/%Y") if value else "" }}</td>
+                                <td>{{ salva_vidas.data_contratacao|dateformat }}</td>
                             </tr>
                             {% if salva_vidas.data_demissao %}
                             <tr>
                                 <td><strong>Data de Demissão:</strong></td>
-                                <td>{{ salva_vidas.data_demissao|strftime("%d/%m/%Y") if value else "" }}</td>
+                                <td>{{ salva_vidas.data_demissao|dateformat }}</td>
                             </tr>
                             {% endif %}
                             <tr>
@@ -307,13 +307,13 @@
                     <div class="col-md-6">
                         <small class="text-muted">
                             <strong>Cadastrado em:</strong><br>
-                            {{ salva_vidas.data_cadastro|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') }}
+                            {{ salva_vidas.data_cadastro|dateformat('%d/%m/%Y às %H:%M') }}
                         </small>
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted">
                             <strong>Última atualização:</strong><br>
-                            {{ salva_vidas.data_atualizacao|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M') }}
+                            {{ salva_vidas.data_atualizacao|dateformat('%d/%m/%Y às %H:%M') }}
                         </small>
                     </div>
                 </div>

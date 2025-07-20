@@ -28,7 +28,7 @@
             <div class="warning">
                 <h3>⚠️ Sua carteirinha da piscina vence em breve!</h3>
                 <p>Sua carteirinha da piscina vencerá em <strong>{{ morador.dias_para_vencer }} dias</strong>, 
-                no dia <strong>{{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</strong>.</p>
+                no dia <strong>{{ morador.data_vencimento|dateformat }}</strong>.</p>
             </div>
             
             <div class="info">
@@ -36,7 +36,7 @@
                 <ul>
                     <li><strong>Nome:</strong> {{ morador.nome_completo }}</li>
                     <li><strong>Bloco/Apartamento:</strong> {{ morador.bloco }}/{{ morador.apartamento }}</li>
-                    <li><strong>Data de Vencimento:</strong> {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}</li>
+                    <li><strong>Data de Vencimento:</strong> {{ morador.data_vencimento|dateformat }}</li>
                     {% if not morador.eh_titular %}
                         <li><strong>Titular:</strong> {{ morador.email_titular }}</li>
                     {% endif %}

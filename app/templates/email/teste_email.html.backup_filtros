@@ -80,7 +80,7 @@
         
         <h3>📊 Informações do Teste:</h3>
         <ul>
-                                <li><strong>Data/Hora:</strong> {{ data_atual|strftime("%d/%m/%Y") if value else ""('%d/%m/%Y às %H:%M:%S') }}</li>
+                                <li><strong>Data/Hora:</strong> {{ data_atual|dateformat('%d/%m/%Y às %H:%M:%S') }}</li>
             <li><strong>Servidor SMTP:</strong> Funcionando corretamente</li>
             <li><strong>Sistema:</strong> Sistema de Carteirinhas da Piscina</li>
         </ul>

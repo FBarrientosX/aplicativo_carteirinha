@@ -104,7 +104,7 @@
                                         </td>
                                         <td>
                                             {% if morador.data_vencimento %}
-                                                {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}
+                                                {{ morador.data_vencimento|dateformat }}
                                                 {% if morador.dias_para_vencer is not none %}
                                                     <br><small class="text-muted">
                                                         {% if morador.dias_para_vencer < 0 %}

@@ -36,7 +36,7 @@
                         <p><strong>Vencimento Atual:</strong> 
                             {% if morador.data_vencimento %}
                                 <span class="badge bg-{{ 'danger' if morador.dias_para_vencer <= 0 else ('warning' if morador.dias_para_vencer <= 30 else 'success') }}">
-                                    {{ morador.data_vencimento|strftime("%d/%m/%Y") if value else "" }}
+                                    {{ morador.data_vencimento|dateformat }}
                                 </span>
                             {% else %}
                                 <span class="badge bg-secondary">Sem vencimento</span>
