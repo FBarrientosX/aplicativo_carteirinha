@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request, send_from_directory, jsonify, current_app, Blueprint
+from flask import render_template, flash, redirect, url_for, request, send_from_directory, jsonify, current_app, Blueprint, g
 from werkzeug.utils import secure_filename
 import io
 from app import db
@@ -23,15 +23,20 @@ bp = Blueprint('main', __name__)
 @login_required
 def index():
     """Dashboard principal com estatísticas"""
+    # Obter tenant_id atual
+    tenant_id = getattr(g, 'tenant_id', 1)
+    
     # Estatísticas de moradores
-    total_moradores = Morador.query.count()
+    total_moradores = Morador.query.filter_by(tenant_id=tenant_id).count()
     
     # Contadores por status
     regulares = Morador.query.filter(
+        Morador.tenant_id == tenant_id,
         Morador.data_vencimento > datetime.now().date() + timedelta(days=30)
     ).count()
     
     a_vencer = Morador.query.filter(
+        Morador.tenant_id == tenant_id,
         Morador.data_vencimento.between(
             datetime.now().date(),
             datetime.now().date() + timedelta(days=30)
@@ -39,15 +44,20 @@ def index():
     ).count()
     
     vencidas = Morador.query.filter(
+        Morador.tenant_id == tenant_id,
         Morador.data_vencimento < datetime.now().date()
     ).count()
     
     sem_carteirinha = Morador.query.filter(
+        Morador.tenant_id == tenant_id,
         Morador.data_vencimento.is_(None)
     ).count()
     
-    # Estatísticas de acesso à piscina
-    moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina())
+    # Estatísticas de acesso à piscina (sem filtro tenant por enquanto)
+    try:
+        moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina())
+    except:
+        moradores_na_piscina = 0
     
     # Entradas hoje
     hoje = datetime.now().date()
