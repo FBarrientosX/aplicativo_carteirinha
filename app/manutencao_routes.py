@@ -29,6 +29,10 @@ def verificar_modulo_ativo():
     if request.endpoint and (request.endpoint.startswith('static') or 'error' in request.endpoint):
         return
     
+    # ADMIN SEMPRE TEM ACESSO - bypass completo para administradores
+    if current_user.is_authenticated and current_user.is_admin():
+        return  # Admin pode acessar todos os módulos sempre
+    
     tenant_id = getattr(g, 'tenant_id', 1)  # Usar tenant_id padrão se não definido
     
     try:
