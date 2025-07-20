@@ -8,6 +8,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_mail import Mail
 from app.config import Config
 import logging
 from logging.handlers import RotatingFileHandler
@@ -16,6 +17,7 @@ from logging.handlers import RotatingFileHandler
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
+mail = Mail()
 
 def create_app(config_class=Config):
     """Factory function para criar a aplicação Flask"""
@@ -25,8 +27,9 @@ def create_app(config_class=Config):
     
     # Inicializar plugins
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app)
     login.init_app(app)
+    mail.init_app(app)
     
     # Configurar login
     login.login_view = 'auth.login'
