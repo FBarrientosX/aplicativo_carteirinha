@@ -122,38 +122,37 @@ def listar_chamados():
         JOIN categorias_manutencao cat ON cat.id = c.categoria_id
         JOIN usuarios sol ON sol.id = c.solicitante_id
         LEFT JOIN usuarios resp ON resp.id = c.responsavel_id
-        WHERE c.tenant_id = ?
+        WHERE c.tenant_id = :tenant_id
     """
-    params = [current_user.tenant_id]
+    params = {'tenant_id': current_user.tenant_id}
     
     # Aplicar filtros
     if status:
-        query += " AND c.status = ?"
-        params.append(status)
+        query += " AND c.status = :status"
+        params['status'] = status
     
     if categoria:
-        query += " AND c.categoria_id = ?"
-        params.append(categoria)
+        query += " AND c.categoria_id = :categoria"
+        params['categoria'] = categoria
     
     if prioridade:
-        query += " AND c.prioridade = ?"
-        params.append(prioridade)
+        query += " AND c.prioridade = :prioridade"
+        params['prioridade'] = prioridade
     
     if busca:
-        query += " AND (c.titulo LIKE ? OR c.descricao LIKE ? OR c.numero LIKE ?)"
-        busca_term = f"%{busca}%"
-        params.extend([busca_term, busca_term, busca_term])
+        query += " AND (c.titulo LIKE :busca OR c.descricao LIKE :busca OR c.numero LIKE :busca)"
+        params['busca'] = f"%{busca}%"
     
     query += " ORDER BY c.data_abertura DESC"
     
-    chamados = db.session.execute(query, params).fetchall()
+    chamados = db.session.execute(text(query), params).fetchall()
     
     # Buscar categorias para filtro
-    categorias = db.session.execute("""
+    categorias = db.session.execute(text("""
         SELECT id, nome FROM categorias_manutencao 
-        WHERE tenant_id = ? AND ativo = 1
+        WHERE tenant_id = :tenant_id AND ativo = 1
         ORDER BY nome
-    """, (current_user.tenant_id,)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     return render_template('manutencao/listar_chamados.html',
                          title='Chamados de Manutenção',
@@ -177,39 +176,39 @@ def novo_chamado():
             numero = f"CH{year}{random_str}"
             
             # Verificar se número já existe
-            while db.session.execute("SELECT id FROM chamados_manutencao WHERE numero = ?", (numero,)).fetchone():
+            while db.session.execute(text("SELECT id FROM chamados_manutencao WHERE numero = :numero"), {'numero': numero}).fetchone():
                 random_str = ''.join(random.choices(string.digits, k=4))
                 numero = f"CH{year}{random_str}"
             
             # Inserir chamado
-            db.session.execute("""
+            db.session.execute(text("""
                 INSERT INTO chamados_manutencao 
                 (numero, tenant_id, titulo, descricao, local, categoria_id, 
                  solicitante_id, prioridade, data_abertura)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                numero,
-                current_user.tenant_id,
-                request.form['titulo'],
-                request.form['descricao'],
-                request.form['local'],
-                request.form['categoria_id'],
-                current_user.id,
-                request.form['prioridade'],
-                datetime.now()
-            ))
+                VALUES (:numero, :tenant_id, :titulo, :descricao, :local, :categoria_id, :solicitante_id, :prioridade, :data_abertura)
+            """), {
+                'numero': numero,
+                'tenant_id': current_user.tenant_id,
+                'titulo': request.form['titulo'],
+                'descricao': request.form['descricao'],
+                'local': request.form['local'],
+                'categoria_id': request.form['categoria_id'],
+                'solicitante_id': current_user.id,
+                'prioridade': request.form['prioridade'],
+                'data_abertura': datetime.now()
+            })
             
             # Buscar ID do chamado criado
-            chamado_id = db.session.execute("""
-                SELECT id FROM chamados_manutencao WHERE numero = ?
-            """, (numero,)).fetchone()[0]
+            chamado_id = db.session.execute(text("""
+                SELECT id FROM chamados_manutencao WHERE numero = :numero
+            """), {'numero': numero}).fetchone()[0]
             
             # Adicionar ao histórico
-            db.session.execute("""
+            db.session.execute(text("""
                 INSERT INTO historico_chamados 
                 (chamado_id, usuario_id, acao, comentario, data_acao)
-                VALUES (?, ?, 'criado', 'Chamado criado', ?)
-            """, (chamado_id, current_user.id, datetime.now()))
+                VALUES (:chamado_id, :usuario_id, 'criado', 'Chamado criado', :data_acao)
+            """), {'chamado_id': chamado_id, 'usuario_id': current_user.id, 'data_acao': datetime.now()})
             
             db.session.commit()
             
@@ -221,11 +220,11 @@ def novo_chamado():
             flash(f'Erro ao criar chamado: {str(e)}', 'danger')
     
     # Buscar categorias
-    categorias = db.session.execute("""
+    categorias = db.session.execute(text("""
         SELECT id, nome, icone, cor FROM categorias_manutencao 
-        WHERE tenant_id = ? AND ativo = 1
+        WHERE tenant_id = :tenant_id AND ativo = 1
         ORDER BY nome
-    """, (current_user.tenant_id,)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     return render_template('manutencao/novo_chamado.html',
                          title='Novo Chamado',
@@ -237,7 +236,7 @@ def ver_chamado(id):
     """Visualizar chamado específico"""
     
     # Buscar chamado
-    chamado = db.session.execute("""
+    chamado = db.session.execute(text("""
         SELECT c.*, cat.nome as categoria, cat.icone as categoria_icone, cat.cor as categoria_cor,
                sol.nome_completo as solicitante, sol.email as solicitante_email,
                resp.nome_completo as responsavel, resp.email as responsavel_email
@@ -245,27 +244,27 @@ def ver_chamado(id):
         JOIN categorias_manutencao cat ON cat.id = c.categoria_id
         JOIN usuarios sol ON sol.id = c.solicitante_id
         LEFT JOIN usuarios resp ON resp.id = c.responsavel_id
-        WHERE c.id = ? AND c.tenant_id = ?
-    """, (id, current_user.tenant_id)).fetchone()
+        WHERE c.id = :id AND c.tenant_id = :tenant_id
+    """), {'id': id, 'tenant_id': current_user.tenant_id}).fetchone()
     
     if not chamado:
         abort(404)
     
     # Buscar histórico
-    historico = db.session.execute("""
+    historico = db.session.execute(text("""
         SELECT h.*, u.nome_completo as usuario_nome
         FROM historico_chamados h
         JOIN usuarios u ON u.id = h.usuario_id
-        WHERE h.chamado_id = ?
+        WHERE h.chamado_id = :chamado_id
         ORDER BY h.data_acao DESC
-    """, (id,)).fetchall()
+    """), {'chamado_id': id}).fetchall()
     
     # Buscar anexos
-    anexos = db.session.execute("""
+    anexos = db.session.execute(text("""
         SELECT * FROM anexos_chamados 
-        WHERE chamado_id = ?
+        WHERE chamado_id = :chamado_id
         ORDER BY data_upload DESC
-    """, (id,)).fetchall()
+    """), {'chamado_id': id}).fetchall()
     
     return render_template('manutencao/ver_chamado.html',
                          title=f'Chamado {chamado.numero}',
@@ -283,10 +282,10 @@ def editar_chamado(id):
         return redirect(url_for('manutencao.ver_chamado', id=id))
     
     # Buscar chamado
-    chamado = db.session.execute("""
+    chamado = db.session.execute(text("""
         SELECT * FROM chamados_manutencao 
-        WHERE id = ? AND tenant_id = ?
-    """, (id, current_user.tenant_id)).fetchone()
+        WHERE id = :id AND tenant_id = :tenant_id
+    """), {'id': id, 'tenant_id': current_user.tenant_id}).fetchone()
     
     if not chamado:
         abort(404)
@@ -294,27 +293,27 @@ def editar_chamado(id):
     if request.method == 'POST':
         try:
             # Atualizar chamado
-            db.session.execute("""
+            db.session.execute(text("""
                 UPDATE chamados_manutencao 
-                SET status = ?, prioridade = ?, responsavel_id = ?,
-                    diagnostico = ?, solucao = ?, observacoes_internas = ?
-                WHERE id = ?
-            """, (
-                request.form['status'],
-                request.form['prioridade'],
-                request.form.get('responsavel_id') or None,
-                request.form.get('diagnostico', ''),
-                request.form.get('solucao', ''),
-                request.form.get('observacoes_internas', ''),
-                id
-            ))
+                SET status = :status, prioridade = :prioridade, responsavel_id = :responsavel_id,
+                    diagnostico = :diagnostico, solucao = :solucao, observacoes_internas = :observacoes_internas
+                WHERE id = :id
+            """), {
+                'status': request.form['status'],
+                'prioridade': request.form['prioridade'],
+                'responsavel_id': request.form.get('responsavel_id') or None,
+                'diagnostico': request.form.get('diagnostico', ''),
+                'solucao': request.form.get('solucao', ''),
+                'observacoes_internas': request.form.get('observacoes_internas', ''),
+                'id': id
+            })
             
             # Adicionar ao histórico
-            db.session.execute("""
+            db.session.execute(text("""
                 INSERT INTO historico_chamados 
                 (chamado_id, usuario_id, acao, comentario, data_acao)
-                VALUES (?, ?, 'atualizado', ?, ?)
-            """, (id, current_user.id, 'Chamado atualizado', datetime.now()))
+                VALUES (:chamado_id, :usuario_id, 'atualizado', :comentario, :data_acao)
+            """), {'chamado_id': id, 'usuario_id': current_user.id, 'comentario': 'Chamado atualizado', 'data_acao': datetime.now()})
             
             db.session.commit()
             
@@ -326,11 +325,11 @@ def editar_chamado(id):
             flash(f'Erro ao atualizar chamado: {str(e)}', 'danger')
     
     # Buscar usuários para responsável
-    usuarios = db.session.execute("""
+    usuarios = db.session.execute(text("""
         SELECT id, nome_completo FROM usuarios 
-        WHERE tenant_id = ? AND ativo = 1
+        WHERE tenant_id = :tenant_id AND ativo = 1
         ORDER BY nome_completo
-    """, (current_user.tenant_id,)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     return render_template('manutencao/editar_chamado.html',
                          title='Editar Chamado',
@@ -346,14 +345,14 @@ def categorias():
         flash('Acesso negado.', 'danger')
         return redirect(url_for('manutencao.dashboard'))
     
-    categorias = db.session.execute("""
+    categorias = db.session.execute(text("""
         SELECT *, 
                (SELECT COUNT(*) FROM chamados_manutencao 
                 WHERE categoria_id = categorias_manutencao.id) as total_chamados
         FROM categorias_manutencao 
-        WHERE tenant_id = ?
+        WHERE tenant_id = :tenant_id
         ORDER BY nome
-    """, (current_user.tenant_id,)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     return render_template('manutencao/categorias.html',
                          title='Categorias de Manutenção',
