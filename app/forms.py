@@ -4,6 +4,15 @@ from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitF
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange, ValidationError
 from datetime import datetime
 
+def coerce_int_or_none(value):
+    """Converte valor para int ou None se for string vazia"""
+    if value == '' or value is None:
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
 class MoradorForm(FlaskForm):
     nome_completo = StringField('Nome Completo', validators=[DataRequired(), Length(min=2, max=200)])
     bloco = StringField('Bloco', validators=[DataRequired(), Length(min=1, max=10)])
@@ -268,7 +277,7 @@ class CadastroUsuarioForm(FlaskForm):
     tipo_usuario = SelectField('Tipo de Usuário', 
                               choices=[('admin', 'Administrador'), ('salva_vidas', 'Salva-vidas')],
                               validators=[DataRequired()])
-    salva_vidas_id = SelectField('Salva-vidas Associado', coerce=int, validators=[Optional()])
+    salva_vidas_id = SelectField('Salva-vidas Associado', coerce=coerce_int_or_none, validators=[Optional()])
     submit = SubmitField('Cadastrar')
     
     def validate_password2(self, password2):
