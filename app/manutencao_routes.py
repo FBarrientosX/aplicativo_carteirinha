@@ -14,6 +14,7 @@ from app.models import (
     ChamadoManutencao, CategoriaManutencao, AnexoChamado, 
     HistoricoChamado, Usuario, ModuloTenant
 )
+from sqlalchemy import text
 from app.forms import ChamadoManutencaoForm, FiltrosChamadosForm
 
 # Blueprint do módulo
@@ -26,11 +27,11 @@ def verificar_modulo_ativo():
     
     if hasattr(g, 'tenant_id'):
         # Verificar se o módulo está ativo
-        modulo_ativo = db.session.execute("""
+        modulo_ativo = db.session.execute(text("""
             SELECT mt.ativo FROM modulos_tenant mt
             JOIN modulos m ON m.id = mt.modulo_id
-            WHERE mt.tenant_id = ? AND m.slug = 'manutencao' AND mt.ativo = 1
-        """, (g.tenant_id,)).fetchone()
+            WHERE mt.tenant_id = :tenant_id AND m.slug = 'manutencao' AND mt.ativo = 1
+        """), {'tenant_id': g.tenant_id}).fetchone()
         
         if not modulo_ativo:
             flash('Módulo de Manutenção não está ativo para seu condomínio.', 'warning')
@@ -42,43 +43,43 @@ def dashboard():
     """Dashboard do módulo de manutenção"""
     
     # Estatísticas gerais
-    total_chamados = db.session.execute("""
+    total_chamados = db.session.execute(text("""
         SELECT COUNT(*) FROM chamados_manutencao 
-        WHERE tenant_id = ?
-    """, (current_user.tenant_id,)).fetchone()[0]
+        WHERE tenant_id = :tenant_id
+    """), {'tenant_id': current_user.tenant_id}).fetchone()[0]
     
-    chamados_abertos = db.session.execute("""
+    chamados_abertos = db.session.execute(text("""
         SELECT COUNT(*) FROM chamados_manutencao 
-        WHERE tenant_id = ? AND status IN ('aberto', 'em_andamento')
-    """, (current_user.tenant_id,)).fetchone()[0]
+        WHERE tenant_id = :tenant_id AND status IN ('aberto', 'em_andamento')
+    """), {'tenant_id': current_user.tenant_id}).fetchone()[0]
     
-    chamados_urgentes = db.session.execute("""
+    chamados_urgentes = db.session.execute(text("""
         SELECT COUNT(*) FROM chamados_manutencao 
-        WHERE tenant_id = ? AND prioridade = 'urgente' AND status != 'concluido'
-    """, (current_user.tenant_id,)).fetchone()[0]
+        WHERE tenant_id = :tenant_id AND prioridade = 'urgente' AND status != 'concluido'
+    """), {'tenant_id': current_user.tenant_id}).fetchone()[0]
     
     # Chamados recentes
-    chamados_recentes = db.session.execute("""
+    chamados_recentes = db.session.execute(text("""
         SELECT c.id, c.numero, c.titulo, c.status, c.prioridade, c.data_abertura, 
                cat.nome as categoria, u.nome_completo as solicitante
         FROM chamados_manutencao c
         JOIN categorias_manutencao cat ON cat.id = c.categoria_id
         JOIN usuarios u ON u.id = c.solicitante_id
-        WHERE c.tenant_id = ?
+        WHERE c.tenant_id = :tenant_id
         ORDER BY c.data_abertura DESC
         LIMIT 10
-    """, (current_user.tenant_id,)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     # Estatísticas por categoria
-    stats_categoria = db.session.execute("""
+    stats_categoria = db.session.execute(text("""
         SELECT cat.nome, COUNT(c.id) as total,
                SUM(CASE WHEN c.status IN ('aberto', 'em_andamento') THEN 1 ELSE 0 END) as abertos
         FROM categorias_manutencao cat
-        LEFT JOIN chamados_manutencao c ON c.categoria_id = cat.id AND c.tenant_id = ?
-        WHERE cat.tenant_id = ?
+        LEFT JOIN chamados_manutencao c ON c.categoria_id = cat.id AND c.tenant_id = :tenant_id
+        WHERE cat.tenant_id = :tenant_id
         GROUP BY cat.id, cat.nome
         ORDER BY total DESC
-    """, (current_user.tenant_id, current_user.tenant_id)).fetchall()
+    """), {'tenant_id': current_user.tenant_id}).fetchall()
     
     return render_template('manutencao/dashboard.html',
                          title='Manutenção & Chamados',
