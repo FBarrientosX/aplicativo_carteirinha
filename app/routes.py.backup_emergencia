@@ -2,7 +2,6 @@ from flask import render_template, flash, redirect, url_for, request, send_from_
 from werkzeug.utils import secure_filename
 import io
 from app import db
-from sqlalchemy import text
 from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas, RegistroAcesso
 from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm, RegistroAcessoForm, BuscaMoradorForm
 from app.carteirinha_service import gerar_carteirinha_completa, gerar_pdf_carteirinha, gerar_lote_pdf
@@ -54,42 +53,22 @@ def index():
         Morador.data_vencimento.is_(None)
     ).count()
     
-    # Estatísticas de acesso à piscina (PATCH EMERGÊNCIA)
+    # Estatísticas de acesso à piscina com filtro tenant
     try:
-        # Verificar se tenant_id existe na tabela
-        test_query = db.session.execute(db.text("SELECT 1 FROM registro_acesso WHERE tenant_id = 1 LIMIT 1"))
-        has_tenant_id = True
-    except Exception:
-        has_tenant_id = False
-    
-    try:
-        if has_tenant_id:
-            moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina(tenant_id))
-        else:
-            moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina())
+        moradores_na_piscina = len(RegistroAcesso.obter_moradores_na_piscina(tenant_id))
     except:
         moradores_na_piscina = 0
     
-    # Entradas hoje (com/sem tenant dependendo da existência da coluna)
+    # Entradas hoje no tenant atual
     hoje = datetime.now().date()
-    try:
-        if has_tenant_id:
-            entradas_hoje = RegistroAcesso.query.filter(
-                db.func.date(RegistroAcesso.data_hora) == hoje,
-                RegistroAcesso.tipo == 'entrada',
-                RegistroAcesso.tenant_id == tenant_id
-            ).count()
-            total_registros_acesso = RegistroAcesso.query.filter_by(tenant_id=tenant_id).count()
-        else:
-            entradas_hoje = RegistroAcesso.query.filter(
-                db.func.date(RegistroAcesso.data_hora) == hoje,
-                RegistroAcesso.tipo == 'entrada'
-            ).count()
-            total_registros_acesso = RegistroAcesso.query.count()
-    except Exception as e:
-        print(f"Erro nas estatísticas: {e}")
-        entradas_hoje = 0
-        total_registros_acesso = 0
+    entradas_hoje = RegistroAcesso.query.filter(
+        db.func.date(RegistroAcesso.data_hora) == hoje,
+        RegistroAcesso.tipo == 'entrada',
+        RegistroAcesso.tenant_id == tenant_id
+    ).count()
+    
+    # Total de registros de acesso do tenant
+    total_registros_acesso = RegistroAcesso.query.filter_by(tenant_id=tenant_id).count()
     
     # Estatísticas de salva-vidas
     total_salva_vidas = SalvaVidas.query.count()
