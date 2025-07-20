@@ -120,12 +120,21 @@ def cadastrar_usuario():
             return render_template('auth/cadastrar_usuario.html', form=form)
         
         # Criar novo usuário
+        # Tratar salva_vidas_id - converter string vazia para None
+        salva_vidas_id = None
+        if form.salva_vidas_id.data and form.salva_vidas_id.data != '':
+            try:
+                salva_vidas_id = int(form.salva_vidas_id.data)
+            except (ValueError, TypeError):
+                salva_vidas_id = None
+        
         user = Usuario(
             username=form.username.data,
             email=form.email.data,
             nome_completo=form.nome_completo.data,
             tipo_usuario=form.tipo_usuario.data,
-            salva_vidas_id=form.salva_vidas_id.data if form.salva_vidas_id.data else None
+            salva_vidas_id=salva_vidas_id,
+            tenant_id=getattr(current_user, 'tenant_id', 1)  # Adicionar tenant_id
         )
         user.set_password(form.password.data)
         
