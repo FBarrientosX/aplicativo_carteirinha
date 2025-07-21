@@ -408,38 +408,12 @@ class RegistroAcesso(db.Model):
     observacoes = db.Column(db.Text)
     ip_origem = db.Column(db.String(45))  # IP de onde foi registrado
     
+    # NOVO: Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1, index=True)
+    
     # Relacionamento
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
-    
-    def __init__(self, **kwargs):
-        """Construtor adaptativo que lida com tenant_id opcionalmente"""
-        # Verificar se tenant_id existe na tabela
-        try:
-            from sqlalchemy import text
-            result = db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-            has_tenant_id = True
-        except Exception:
-            has_tenant_id = False
-        
-        # Se tenant_id existe, usar. Se não, ignorar
-        if has_tenant_id and 'tenant_id' in kwargs:
-            self.tenant_id = kwargs.pop('tenant_id')
-        elif has_tenant_id:
-            # Obter tenant_id do contexto
-            from flask import g
-            tenant_id = getattr(g, 'tenant_id', 1)
-            self.tenant_id = tenant_id
-        
-        # Chamar construtor pai com argumentos restantes
-        super().__init__(**kwargs)
-    
-    @property
-    def tenant_id_safe(self):
-        """Propriedade segura para tenant_id"""
-        try:
-            return getattr(self, 'tenant_id', 1)
-        except Exception:
-            return 1
+    tenant = db.relationship('Tenant', backref='registros_acesso')
     
     def __repr__(self):
         return f'<RegistroAcesso {self.morador.nome_completo} - {self.tipo} em {self.data_hora}>'
