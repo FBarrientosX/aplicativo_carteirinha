@@ -92,6 +92,148 @@ def detalhe_tenant(tenant_id):
                          modulos_tenant=modulos_tenant,
                          usuarios=usuarios)
 
+@admin_bp.route('/tenants/novo', methods=['GET', 'POST'])
+@login_required
+def novo_condominio():
+    """Cadastrar novo condomínio"""
+    from app.forms_admin import NovoCondominioForm
+    from app.services.onboarding_service import OnboardingService
+    
+    form = NovoCondominioForm()
+    
+    if form.validate_on_submit():
+        try:
+            # Preparar dados do cliente
+            dados_cliente = {
+                'nome': form.nome.data.strip(),
+                'subdominio': form.subdominio.data.lower().strip(),
+                'email': form.email_responsavel.data.strip(),
+                'nome_responsavel': form.nome_responsavel.data.strip(),
+                'telefone': form.telefone.data.strip() if form.telefone.data else None,
+                'cnpj': form.cnpj.data.strip() if form.cnpj.data else None,
+                'endereco': form.endereco.data.strip() if form.endereco.data else None,
+                'senha': form.senha_inicial.data,
+                'plano_id': form.plano_id.data
+            }
+            
+            # Criar tenant usando o OnboardingService
+            tenant, admin_user, mensagem = OnboardingService.criar_novo_tenant(dados_cliente)
+            
+            # Criar dados de exemplo se solicitado
+            if form.criar_dados_exemplo.data:
+                OnboardingService.criar_dados_exemplo(tenant.id)
+            
+            # Configurar módulos básicos
+            configurar_modulos_inicial(tenant.id)
+            
+            flash(f'✅ Condomínio "{tenant.nome}" criado com sucesso!', 'success')
+            flash(f'🔑 Login: {admin_user.email}', 'info')
+            flash(f'🌐 Acesso: {tenant.get_url_sistema()}', 'info')
+            
+            if form.enviar_email_boas_vindas.data:
+                flash('📧 Email de boas-vindas enviado!', 'info')
+            
+            return redirect(url_for('admin.detalhe_tenant', tenant_id=tenant.id))
+            
+        except ValueError as e:
+            flash(f'❌ Erro: {str(e)}', 'danger')
+        except Exception as e:
+            flash(f'❌ Erro inesperado: {str(e)}', 'danger')
+    
+    return render_template('admin/novo_condominio.html',
+                         title='Novo Condomínio',
+                         form=form)
+
+@admin_bp.route('/tenants/<int:tenant_id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_condominio(tenant_id):
+    """Editar condomínio existente"""
+    from app.forms_admin import EditarCondominioForm
+    
+    tenant = Tenant.query.get_or_404(tenant_id)
+    form = EditarCondominioForm(tenant=tenant, obj=tenant)
+    
+    if form.validate_on_submit():
+        try:
+            # Atualizar dados do tenant
+            tenant.nome = form.nome.data.strip()
+            tenant.email_responsavel = form.email_responsavel.data.strip()
+            tenant.telefone = form.telefone.data.strip() if form.telefone.data else None
+            tenant.cnpj = form.cnpj.data.strip() if form.cnpj.data else None
+            tenant.endereco = form.endereco.data.strip() if form.endereco.data else None
+            tenant.plano_id = form.plano_id.data
+            tenant.status = form.status.data
+            tenant.dominio_personalizado = form.dominio_personalizado.data.strip() if form.dominio_personalizado.data else None
+            
+            db.session.commit()
+            
+            flash(f'✅ Condomínio "{tenant.nome}" atualizado com sucesso!', 'success')
+            return redirect(url_for('admin.detalhe_tenant', tenant_id=tenant.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'❌ Erro ao atualizar: {str(e)}', 'danger')
+    
+    return render_template('admin/editar_condominio.html',
+                         title=f'Editar: {tenant.nome}',
+                         form=form,
+                         tenant=tenant)
+
+@admin_bp.route('/api/verificar-subdominio')
+@login_required
+def verificar_subdominio():
+    """API para verificar disponibilidade de subdomínio em tempo real"""
+    subdominio = request.args.get('subdominio', '').lower().strip()
+    
+    if not subdominio:
+        return jsonify({'error': 'Subdomínio não fornecido'}), 400
+    
+    # Verificar disponibilidade
+    from app.services.onboarding_service import OnboardingService
+    disponivel, mensagem = OnboardingService.verificar_disponibilidade_subdominio(subdominio)
+    
+    # Gerar sugestões se não estiver disponível
+    sugestoes = []
+    if not disponivel:
+        sugestoes = OnboardingService.gerar_subdominio_sugerido(subdominio)
+    
+    return jsonify({
+        'disponivel': disponivel,
+        'mensagem': mensagem,
+        'sugestoes': sugestoes
+    })
+
+@admin_bp.route('/api/sugerir-subdominio')
+@login_required
+def sugerir_subdominio():
+    """API para gerar sugestões de subdomínio baseado no nome"""
+    nome = request.args.get('nome', '').strip()
+    
+    if not nome:
+        return jsonify({'sugestoes': []})
+    
+    from app.services.onboarding_service import OnboardingService
+    sugestoes = OnboardingService.gerar_subdominio_sugerido(nome)
+    
+    return jsonify({'sugestoes': sugestoes})
+
+def configurar_modulos_inicial(tenant_id):
+    """Configurar módulos iniciais para novo tenant"""
+    from app.models import Modulo, ModuloTenant
+    
+    # Buscar módulos básicos
+    modulo_piscina = Modulo.query.filter_by(slug='piscina').first()
+    
+    if modulo_piscina:
+        # Ativar módulo piscina por padrão
+        modulo_tenant = ModuloTenant(
+            tenant_id=tenant_id,
+            modulo_id=modulo_piscina.id,
+            ativo=True
+        )
+        db.session.add(modulo_tenant)
+        db.session.commit()
+
 @admin_bp.route('/tenants/<int:tenant_id>/modulo/<int:modulo_id>/toggle', methods=['POST'])
 @login_required
 def toggle_modulo_tenant(tenant_id, modulo_id):

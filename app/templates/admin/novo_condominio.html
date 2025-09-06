@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 text-success">
+                        <i class="fas fa-plus-circle"></i> Novo Condomínio
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Administração</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('admin.listar_tenants') }}">Condomínios</a></li>
+                            <li class="breadcrumb-item active">Novo</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.listar_tenants') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <form method="POST" id="formNovoCondominio">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Coluna Principal -->
+            <div class="col-lg-8">
+                <!-- Dados Básicos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-building text-primary"></i> Dados Básicos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    {{ form.nome.label(class="form-label fw-bold") }}
+                                    {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else ""), 
+                                                 placeholder="Ex: Residencial Jardim das Flores") }}
+                                    {% if form.nome.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.nome.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Sugestões</label>
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100" id="btnSugerirSubdominio">
+                                        <i class="fas fa-lightbulb"></i> Gerar Sugestões
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.subdominio.label(class="form-label fw-bold") }}
+                                    <div class="input-group">
+                                        {{ form.subdominio(class="form-control" + (" is-invalid" if form.subdominio.errors else ""), 
+                                                          id="inputSubdominio") }}
+                                        <span class="input-group-text">.condotech.com.br</span>
+                                    </div>
+                                    <div id="subdominioFeedback" class="mt-1"></div>
+                                    {% if form.subdominio.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.subdominio.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Apenas letras minúsculas e números. Será o endereço do sistema.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.plano_id.label(class="form-label fw-bold") }}
+                                    {{ form.plano_id(class="form-select" + (" is-invalid" if form.plano_id.errors else "")) }}
+                                    {% if form.plano_id.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.plano_id.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados do Responsável -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-tie text-info"></i> Responsável/Administrador
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.nome_responsavel.label(class="form-label fw-bold") }}
+                                    {{ form.nome_responsavel(class="form-control" + (" is-invalid" if form.nome_responsavel.errors else ""), 
+                                                           placeholder="Nome completo") }}
+                                    {% if form.nome_responsavel.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.nome_responsavel.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.email_responsavel.label(class="form-label fw-bold") }}
+                                    {{ form.email_responsavel(class="form-control" + (" is-invalid" if form.email_responsavel.errors else ""), 
+                                                            placeholder="email@exemplo.com") }}
+                                    {% if form.email_responsavel.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.email_responsavel.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Será usado como login do administrador
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.senha_inicial.label(class="form-label fw-bold") }}
+                                    <div class="input-group">
+                                        {{ form.senha_inicial(class="form-control" + (" is-invalid" if form.senha_inicial.errors else ""), 
+                                                            type="password", id="inputSenha") }}
+                                        <button type="button" class="btn btn-outline-secondary" id="btnMostrarSenha">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    {% if form.senha_inicial.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.senha_inicial.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.confirmar_senha.label(class="form-label fw-bold") }}
+                                    {{ form.confirmar_senha(class="form-control" + (" is-invalid" if form.confirmar_senha.errors else ""), 
+                                                          type="password") }}
+                                    {% if form.confirmar_senha.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.confirmar_senha.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.telefone.label(class="form-label") }}
+                                    {{ form.telefone(class="form-control" + (" is-invalid" if form.telefone.errors else "")) }}
+                                    {% if form.telefone.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.telefone.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.cnpj.label(class="form-label") }}
+                                    {{ form.cnpj(class="form-control" + (" is-invalid" if form.cnpj.errors else ""), 
+                                                id="inputCNPJ") }}
+                                    {% if form.cnpj.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.cnpj.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.endereco.label(class="form-label") }}
+                            {{ form.endereco(class="form-control" + (" is-invalid" if form.endereco.errors else "")) }}
+                            {% if form.endereco.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.endereco.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Preview -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-eye text-primary"></i> Preview
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="previewCard" class="border rounded p-3 text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-building fa-2x text-muted"></i>
+                            </div>
+                            <h6 id="previewNome" class="text-muted">Nome do Condomínio</h6>
+                            <p id="previewUrl" class="small text-muted mb-2">
+                                <i class="fas fa-link"></i> subdominio.condotech.com.br
+                            </p>
+                            <p id="previewResponsavel" class="small text-muted mb-1">
+                                <i class="fas fa-user"></i> Responsável
+                            </p>
+                            <p id="previewEmail" class="small text-muted">
+                                <i class="fas fa-envelope"></i> email@exemplo.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cog text-warning"></i> Configurações Iniciais
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            {{ form.criar_dados_exemplo(class="form-check-input") }}
+                            {{ form.criar_dados_exemplo.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">
+                                Cria moradores de exemplo para demonstração
+                            </small>
+                        </div>
+                        
+                        <div class="form-check">
+                            {{ form.enviar_email_boas_vindas(class="form-check-input") }}
+                            {{ form.enviar_email_boas_vindas.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">
+                                Envia instruções de acesso por email
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-2" id="btnSalvar">
+                            <i class="fas fa-save"></i> Criar Condomínio
+                        </button>
+                        <a href="{{ url_for('admin.listar_tenants') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do formulário
+    const inputNome = document.getElementById('{{ form.nome.id }}');
+    const inputSubdominio = document.getElementById('inputSubdominio');
+    const inputResponsavel = document.getElementById('{{ form.nome_responsavel.id }}');
+    const inputEmail = document.getElementById('{{ form.email_responsavel.id }}');
+    const btnSugerir = document.getElementById('btnSugerirSubdominio');
+    const btnMostrarSenha = document.getElementById('btnMostrarSenha');
+    const inputSenha = document.getElementById('inputSenha');
+    const inputCNPJ = document.getElementById('inputCNPJ');
+    const subdominioFeedback = document.getElementById('subdominioFeedback');
+    
+    // Elementos do preview
+    const previewNome = document.getElementById('previewNome');
+    const previewUrl = document.getElementById('previewUrl');
+    const previewResponsavel = document.getElementById('previewResponsavel');
+    const previewEmail = document.getElementById('previewEmail');
+    
+    // Timeout para verificação de subdomínio
+    let subdominioTimeout;
+    
+    // Atualizar preview em tempo real
+    function atualizarPreview() {
+        previewNome.textContent = inputNome.value || 'Nome do Condomínio';
+        previewUrl.innerHTML = '<i class="fas fa-link"></i> ' + 
+            (inputSubdominio.value || 'subdominio') + '.condotech.com.br';
+        previewResponsavel.innerHTML = '<i class="fas fa-user"></i> ' + 
+            (inputResponsavel.value || 'Responsável');
+        previewEmail.innerHTML = '<i class="fas fa-envelope"></i> ' + 
+            (inputEmail.value || 'email@exemplo.com');
+    }
+    
+    // Event listeners para preview
+    inputNome.addEventListener('input', atualizarPreview);
+    inputSubdominio.addEventListener('input', atualizarPreview);
+    inputResponsavel.addEventListener('input', atualizarPreview);
+    inputEmail.addEventListener('input', atualizarPreview);
+    
+    // Verificar disponibilidade do subdomínio
+    inputSubdominio.addEventListener('input', function() {
+        clearTimeout(subdominioTimeout);
+        const subdominio = this.value.toLowerCase().trim();
+        
+        if (subdominio.length >= 3) {
+            subdominioTimeout = setTimeout(() => {
+                verificarSubdominio(subdominio);
+            }, 500);
+        } else {
+            subdominioFeedback.innerHTML = '';
+        }
+    });
+    
+    function verificarSubdominio(subdominio) {
+        fetch(`/admin/api/verificar-subdominio?subdominio=${encodeURIComponent(subdominio)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.disponivel) {
+                    subdominioFeedback.innerHTML = 
+                        '<small class="text-success"><i class="fas fa-check"></i> ' + data.mensagem + '</small>';
+                } else {
+                    let html = '<small class="text-danger"><i class="fas fa-times"></i> ' + data.mensagem + '</small>';
+                    
+                    if (data.sugestoes && data.sugestoes.length > 0) {
+                        html += '<div class="mt-1">';
+                        html += '<small class="text-muted">Sugestões: </small>';
+                        data.sugestoes.forEach(sugestao => {
+                            html += `<button type="button" class="btn btn-outline-primary btn-sm me-1 mb-1 btn-sugestao" 
+                                           data-sugestao="${sugestao}">${sugestao}</button>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    subdominioFeedback.innerHTML = html;
+                    
+                    // Event listeners para sugestões
+                    document.querySelectorAll('.btn-sugestao').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            inputSubdominio.value = this.dataset.sugestao;
+                            atualizarPreview();
+                            verificarSubdominio(this.dataset.sugestao);
+                        });
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao verificar subdomínio:', error);
+            });
+    }
+    
+    // Gerar sugestões baseadas no nome
+    btnSugerir.addEventListener('click', function() {
+        const nome = inputNome.value.trim();
+        if (!nome) {
+            alert('Digite o nome do condomínio primeiro');
+            return;
+        }
+        
+        fetch(`/admin/api/sugerir-subdominio?nome=${encodeURIComponent(nome)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.sugestoes && data.sugestoes.length > 0) {
+                    let html = '<div class="mt-2">';
+                    html += '<small class="text-primary fw-bold">Sugestões baseadas no nome:</small><br>';
+                    data.sugestoes.forEach(sugestao => {
+                        html += `<button type="button" class="btn btn-outline-success btn-sm me-1 mb-1 btn-sugestao" 
+                                       data-sugestao="${sugestao}">${sugestao}</button>`;
+                    });
+                    html += '</div>';
+                    
+                    subdominioFeedback.innerHTML = html;
+                    
+                    // Event listeners para sugestões
+                    document.querySelectorAll('.btn-sugestao').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            inputSubdominio.value = this.dataset.sugestao;
+                            atualizarPreview();
+                            verificarSubdominio(this.dataset.sugestao);
+                        });
+                    });
+                } else {
+                    subdominioFeedback.innerHTML = 
+                        '<small class="text-warning">Nenhuma sugestão disponível</small>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao gerar sugestões:', error);
+            });
+    });
+    
+    // Mostrar/ocultar senha
+    btnMostrarSenha.addEventListener('click', function() {
+        const tipo = inputSenha.type === 'password' ? 'text' : 'password';
+        inputSenha.type = tipo;
+        
+        const icon = this.querySelector('i');
+        icon.className = tipo === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+    
+    // Máscara para CNPJ
+    if (inputCNPJ) {
+        inputCNPJ.addEventListener('input', function() {
+            let valor = this.value.replace(/\D/g, '');
+            valor = valor.replace(/^(\d{2})(\d)/, '$1.$2');
+            valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            valor = valor.replace(/(\d{4})(\d)/, '$1-$2');
+            this.value = valor;
+        });
+    }
+    
+    // Inicializar preview
+    atualizarPreview();
+});
+</script>
+{% endblock %}
