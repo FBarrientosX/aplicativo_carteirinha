@@ -3,7 +3,7 @@ Rotas Administrativas do CondoTech Solutions
 Área exclusiva para administradores do sistema
 """
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, date
 from app import db
@@ -96,10 +96,25 @@ def detalhe_tenant(tenant_id):
 @login_required
 def novo_condominio():
     """Cadastrar novo condomínio"""
-    from app.forms_admin import NovoCondominioForm
-    from app.services.onboarding_service import OnboardingService
-    
-    form = NovoCondominioForm()
+    try:
+        from app.forms_admin import NovoCondominioForm
+        from app.services.onboarding_service import OnboardingService
+        
+        # Log de debug
+        # current_app.logger.info(f"Usuário {current_user.email} acessando novo condomínio")  # Debug temporário
+        
+        form = NovoCondominioForm()
+        
+        # Log de debug do formulário
+        # current_app.logger.info(f"Formulário criado com {len(form.plano_id.choices)} opções de plano")  # Temporário
+        
+    except Exception as e:
+        # Capturar erro específico
+        from flask import current_app, flash, redirect, url_for
+        current_app.logger.error(f"Erro ao criar formulário de novo condomínio: {str(e)}")
+        current_app.logger.error(f"Traceback: ", exc_info=True)
+        flash(f'Erro interno: {str(e)}', 'danger')
+        return redirect(url_for('admin.listar_tenants'))
     
     if form.validate_on_submit():
         try:

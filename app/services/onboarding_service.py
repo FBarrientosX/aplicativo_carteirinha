@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from flask import current_app
 from app import db
-from app.email_service import EmailService
+from app.email_service import enviar_email
 import secrets
 import string
 
@@ -175,10 +175,14 @@ class OnboardingService:
             """
             
             # Enviar email
-            EmailService.enviar_email(
-                destinatario=admin.email,
+            enviar_email(
                 assunto=assunto,
-                corpo=corpo_email
+                destinatario=admin.email,
+                template_html='email/boas_vindas.html',
+                template_text='email/boas_vindas.txt',
+                nome=admin.nome_completo,
+                tenant=tenant,
+                senha_inicial=dados_cliente.get('senha', 'admin123')
             )
             
         except Exception as e:
