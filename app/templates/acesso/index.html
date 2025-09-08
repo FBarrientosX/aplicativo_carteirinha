@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
 
 {% block content %}
+<!-- Navegação contextual do módulo -->
+{{ render_module_nav('piscina', 'controle') }}
+{{ render_breadcrumb('piscina', 'controle', 'Controle de Acesso') }}
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">

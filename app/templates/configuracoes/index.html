@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
 
 {% block content %}
+<!-- Navegação contextual do módulo -->
+{{ render_module_nav('configuracoes', 'sistema') }}
+{{ render_breadcrumb('configuracoes', 'sistema', 'Configurações do Sistema') }}
+
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">

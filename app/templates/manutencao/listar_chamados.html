@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
 
 {% block content %}
+<!-- Navegação contextual do módulo -->
+{{ render_module_nav('manutencao', 'chamados') }}
+{{ render_breadcrumb('manutencao', 'chamados', 'Lista de Chamados') }}
+
 <div class="container-fluid mt-4">
     <!-- Header -->
     <div class="row mb-4">

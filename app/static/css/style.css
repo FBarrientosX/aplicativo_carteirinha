@@ -1,3 +1,128 @@
+/* Custom CSS para CondoTech Solutions */
+
+/* ===== NAVEGAÇÃO CONTEXTUAL POR MÓDULOS ===== */
+.module-nav-container {
+    margin-bottom: 1.5rem;
+}
+
+.module-nav-container .card-header {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+}
+
+.module-nav-container .nav-pills {
+    --bs-nav-pills-border-radius: 0;
+    --bs-nav-pills-link-active-color: #fff;
+    --bs-nav-pills-link-active-bg: rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.module-nav-container .nav-pills .nav-link {
+    color: #495057;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+}
+
+.module-nav-container .nav-pills .nav-link:hover {
+    background-color: rgba(0,0,0,0.05);
+    color: #212529;
+}
+
+.module-nav-container .nav-pills .nav-link.active {
+    background-color: rgba(255,255,255,0.2);
+    color: #fff;
+    border-bottom-color: rgba(255,255,255,0.5);
+}
+
+/* Cores específicas por módulo */
+.module-nav-container .border-info .nav-pills .nav-link.active {
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+    border-bottom-color: #0dcaf0;
+}
+
+.module-nav-container .border-success .nav-pills .nav-link.active {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #198754;
+    border-bottom-color: #198754;
+}
+
+.module-nav-container .border-danger .nav-pills .nav-link.active {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border-bottom-color: #dc3545;
+}
+
+.module-nav-container .border-warning .nav-pills .nav-link.active {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-bottom-color: #ffc107;
+}
+
+.module-nav-container .border-secondary .nav-pills .nav-link.active {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+    border-bottom-color: #6c757d;
+}
+
+.module-nav-container .border-primary .nav-pills .nav-link.active {
+    background-color: rgba(13, 110, 253, 0.2);
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+}
+
+/* Breadcrumb personalizado */
+.breadcrumb {
+    background-color: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    font-weight: 600;
+    color: #6c757d;
+}
+
+/* Responsividade da navegação contextual */
+@media (max-width: 768px) {
+    .module-nav-container .nav-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .module-nav-container .nav-pills .nav-link {
+        white-space: nowrap;
+        min-width: auto;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .module-nav-container .card-header .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .module-nav-container .card-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .module-nav-container .card-header .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
 /* Estilos básicos para demonstração */
 body {
     font-family: Arial, sans-serif;
