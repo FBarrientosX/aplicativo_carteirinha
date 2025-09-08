@@ -26,447 +26,277 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="sidebar-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-brand">
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-xl navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-building me-2"></i>
-                <span class="brand-text">CondoTech Solutions</span>
-            </div>
-            <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
-                <i class="fas fa-times"></i>
+                <span class="d-none d-md-inline">CondoTech Solutions</span>
+                <span class="d-md-none">CondoTech</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </div>
-
-        <div class="sidebar-content">
-            {% if current_user.is_authenticated %}
-                <!-- Perfil do usuário -->
-                <div class="sidebar-user">
-                    <div class="user-avatar">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">{{ current_user.nome_completo or current_user.username }}</div>
-                        <div class="user-role">
-                            {% if current_user.is_admin() %}
-                                <i class="fas fa-crown text-warning"></i> Administrador
-                            {% elif current_user.is_salva_vidas() %}
-                                <i class="fas fa-life-ring text-info"></i> Salva-vidas
-                            {% else %}
-                                <i class="fas fa-user text-secondary"></i> Usuário
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Navegação principal -->
-                <nav class="sidebar-nav">
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
                     {% if current_user.is_admin() %}
-                        <!-- Dashboard -->
-                        <div class="nav-section">
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.index') }}" class="nav-link nav-link-primary">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-home"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Dashboard</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Módulo Piscina -->
-                        <div class="nav-section">
-                            <div class="nav-section-header">
-                                <div class="nav-section-title">Controle de Piscina</div>
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.listar_moradores') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Moradores</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.gerar_carteirinhas_lote') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-id-card"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Carteirinhas</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.acesso_qrcode') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-qrcode"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Scanner QR</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.controle_acesso') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-eye"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Controle de Acesso</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.listar_salva_vidas') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-life-ring"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Salva-vidas</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Módulo Manutenção -->
-                        <div class="nav-section">
-                            <div class="nav-section-header">
-                                <div class="nav-section-title">Manutenção & Chamados</div>
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('manutencao.dashboard') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Dashboard</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('manutencao.listar_chamados') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-list"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Listar Chamados</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('manutencao.novo_chamado') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-plus"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Novo Chamado</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('manutencao.categorias') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-tags"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Categorias</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Gestão de Usuários -->
-                        <div class="nav-section">
-                            <div class="nav-section-header">
-                                <div class="nav-section-title">Gestão de Usuários</div>
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('auth.listar_usuarios') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-list"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Listar Usuários</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('auth.cadastrar_usuario') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-user-plus"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Novo Usuário</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Administração do Sistema -->
-                        {% if current_user.is_admin() %}
-                        <div class="nav-section">
-                            <div class="nav-section-header">
-                                <div class="nav-section-title">Administração</div>
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-tachometer-alt"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Dashboard Admin</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('admin.listar_tenants') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-building"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Condomínios</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('admin.listar_modulos') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-th-large"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Módulos</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('admin.system_info') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-info-circle"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Info Sistema</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        {% endif %}
-
-                        <!-- Configurações -->
-                        <div class="nav-section">
-                            <div class="nav-section-header">
-                                <div class="nav-section-title">Configurações</div>
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.configuracoes') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-building"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Condomínio</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.configuracoes_email') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-envelope"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Email</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.configuracoes_geral') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-sliders-h"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Sistema</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.relatorios') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Relatórios</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.ver_logs') }}" class="nav-link">
-                                        <div class="nav-link-icon">
-                                            <i class="fas fa-file-alt"></i>
-                                        </div>
-                                        <div class="nav-link-content">
-                                            <span class="nav-link-title">Logs</span>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
+                        <!-- Menu modular para administradores -->
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('main.index') }}">
+                                    <i class="fas fa-home me-1"></i>
+                                    <span class="d-xl-inline d-none">Início</span>
+                                    <span class="d-xl-none">Home</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Módulo Piscina -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-swimming-pool me-1 text-info"></i>
+                                    Piscina
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">
+                                        <i class="fas fa-swimming-pool me-1"></i> Controle de Piscina
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.listar_moradores') }}">
+                                        <i class="fas fa-users me-2"></i>Moradores
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.gerar_carteirinhas_lote') }}">
+                                        <i class="fas fa-id-card me-2"></i>Carteirinhas
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.acesso_qrcode') }}">
+                                        <i class="fas fa-qrcode me-2"></i>Scanner QR
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.controle_acesso') }}">
+                                        <i class="fas fa-eye me-2"></i>Controle de Acesso
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.listar_salva_vidas') }}">
+                                        <i class="fas fa-life-ring me-2"></i>Salva-vidas
+                                    </a></li>
+                                </ul>
+                            </li>
+                            
+                            <!-- Módulo Manutenção -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-tools me-1 text-success"></i>
+                                    Manutenção
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">
+                                        <i class="fas fa-tools me-1"></i> Manutenção & Chamados
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('manutencao.dashboard') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('manutencao.listar_chamados') }}">
+                                        <i class="fas fa-list me-2"></i>Listar Chamados
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('manutencao.novo_chamado') }}">
+                                        <i class="fas fa-plus me-2"></i>Novo Chamado
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('manutencao.categorias') }}">
+                                        <i class="fas fa-tags me-2"></i>Categorias
+                                    </a></li>
+                                </ul>
+                            </li>
+                            
+                            <!-- Gestão de Usuários -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-users-cog me-1"></i>
+                                    <span class="d-lg-inline d-none">Usuários</span>
+                                    <span class="d-lg-none">Users</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.listar_usuarios') }}">
+                                        <i class="fas fa-list me-2"></i>Listar Usuários
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.cadastrar_usuario') }}">
+                                        <i class="fas fa-user-plus me-2"></i>Novo Usuário
+                                    </a></li>
+                                </ul>
+                            </li>
+                            
+                            <!-- Administração do Sistema -->
+                            {% if current_user.is_admin() %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-danger" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-crown me-1"></i>
+                                    <span class="d-lg-inline d-none">Admin</span>
+                                    <span class="d-lg-none">Admin</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Admin
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.listar_tenants') }}">
+                                        <i class="fas fa-building me-2"></i>Condomínios
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.listar_modulos') }}">
+                                        <i class="fas fa-th-large me-2"></i>Módulos
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-success" href="{{ url_for('admin.garantir_admin_acesso') }}">
+                                        <i class="fas fa-key me-2"></i>Garantir Acesso
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.system_info') }}">
+                                        <i class="fas fa-info-circle me-2"></i>Info Sistema
+                                    </a></li>
+                                </ul>
+                            </li>
+                            {% endif %}
+                            
+                            <!-- Configurações -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog me-1"></i>
+                                    <span class="d-lg-inline d-none">Configurações</span>
+                                    <span class="d-lg-none">Config</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('main.configuracoes') }}">
+                                        <i class="fas fa-building me-2"></i>Condomínio
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.configuracoes_email') }}">
+                                        <i class="fas fa-envelope me-2"></i>Email
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.configuracoes_geral') }}">
+                                        <i class="fas fa-sliders-h me-2"></i>Sistema
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.relatorios') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>Relatórios
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.ver_logs') }}">
+                                        <i class="fas fa-file-alt me-2"></i>Logs
+                                    </a></li>
+                                </ul>
+                            </li>
+                        </ul>
                     {% elif current_user.is_salva_vidas() %}
                         <!-- Menu simplificado para salva-vidas -->
-                        <div class="nav-section">
-                            <div class="nav-title">
-                                <i class="fas fa-life-ring text-info"></i>
-                                Salva-vidas
-                            </div>
-                            <ul class="nav-list">
-                                <li class="nav-item">
-                                    <a href="{{ url_for('auth.salva_vidas_dashboard') }}" class="nav-link">
-                                        <i class="fas fa-tachometer-alt"></i>
-                                        <span>Dashboard</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.acesso_qrcode') }}" class="nav-link">
-                                        <i class="fas fa-qrcode"></i>
-                                        <span>Scanner QR</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.registrar_acesso') }}" class="nav-link">
-                                        <i class="fas fa-clipboard"></i>
-                                        <span>Registrar Acesso</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ url_for('main.controle_acesso') }}" class="nav-link">
-                                        <i class="fas fa-eye"></i>
-                                        <span>Na Piscina</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('auth.salva_vidas_dashboard') }}">
+                                    <i class="fas fa-life-ring me-1"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('main.acesso_qrcode') }}">
+                                    <i class="fas fa-qrcode me-1"></i>
+                                    Scanner QR
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('main.registrar_acesso') }}">
+                                    <i class="fas fa-clipboard me-1"></i>
+                                    Registrar Acesso
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('main.controle_acesso') }}">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Na Piscina
+                                </a>
+                            </li>
+                        </ul>
                     {% endif %}
-                </nav>
-            {% endif %}
-        </div>
-
-        <!-- Sidebar Footer -->
-        <div class="sidebar-footer">
-            {% if current_user.is_authenticated %}
-                <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sair</span>
-                </a>
-            {% else %}
-                <a href="{{ url_for('auth.login') }}" class="nav-link">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Entrar</span>
-                </a>
-            {% endif %}
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="main-wrapper">
-        <!-- Top Bar (Mobile) -->
-        <header class="topbar d-lg-none">
-            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="topbar-brand">
-                <i class="fas fa-building me-2"></i>
-                CondoTech
-            </div>
-            {% if current_user.is_authenticated %}
-            <div class="topbar-user">
-                <div class="dropdown">
-                    <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><h6 class="dropdown-header">
-                            {{ current_user.nome_completo or current_user.username }}<br>
-                            <small class="text-muted">{{ current_user.email }}</small>
-                        </h6></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">
-                            <i class="fas fa-user me-2"></i>Meu Perfil
-                        </a></li>
-                        <li><a class="dropdown-item" href="#">
-                            <i class="fas fa-cog me-2"></i>Configurações
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                            <i class="fas fa-sign-out-alt me-2"></i>Sair
-                        </a></li>
-                    </ul>
-                </div>
-            </div>
-            {% endif %}
-        </header>
-
-        <!-- Page Content -->
-        <main class="main-content">
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                {% if category == 'success' %}
-                                    <i class="fas fa-check-circle me-2"></i>
-                                {% elif category == 'danger' or category == 'error' %}
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                {% elif category == 'warning' %}
-                                    <i class="fas fa-exclamation-circle me-2"></i>
-                                {% elif category == 'info' %}
-                                    <i class="fas fa-info-circle me-2"></i>
-                                {% endif %}
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    </div>
                 {% endif %}
-            {% endwith %}
-
-            <!-- Page Content -->
-            {% block content %}{% endblock %}
-        </main>
-
-        <!-- Footer -->
-        <footer class="main-footer">
-            <div class="footer-content">
-                <p class="mb-1">
-                    <strong>CondoTech Solutions</strong> - Tecnologia que simplifica a vida no condomínio
-                </p>
-                <p class="mb-0">
-                    <small>
-                        © 2024 CondoTech Solutions. 
-                        Desenvolvido com <i class="fas fa-heart text-danger"></i> para condomínios modernos.
-                    </small>
-                </p>
+                
+                <!-- Menu do usuário -->
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="d-none d-sm-inline">{{ current_user.nome_completo }}</span>
+                            <span class="d-sm-none">{{ current_user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">
+                                {{ current_user.nome_completo }}<br>
+                                <small class="text-muted">{{ current_user.email }}</small>
+                            </h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-user me-2"></i>Meu Perfil
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-cog me-2"></i>Configurações
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Entrar
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
             </div>
-        </footer>
-    </div>
+        </div>
+    </nav>
 
-    <!-- Overlay for mobile -->
-    <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+    <!-- Content -->
+    <main class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                            {% elif category == 'info' %}
+                                <i class="fas fa-info-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-1">
+                <strong>CondoTech Solutions</strong> - Tecnologia que simplifica a vida no condomínio
+            </p>
+            <p class="mb-0">
+                <small>
+                    © 2024 CondoTech Solutions. 
+                    Desenvolvido com <i class="fas fa-heart text-danger"></i> para condomínios modernos.
+                </small>
+            </p>
+        </div>
+    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -477,71 +307,6 @@
     
     <!-- Plotly.js para gráficos -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
-    <!-- Sidebar JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
-            // Toggle sidebar on mobile
-            function toggleSidebar() {
-                sidebar.classList.toggle('show');
-                document.body.classList.toggle('sidebar-open');
-            }
-            
-            // Close sidebar
-            function closeSidebar() {
-                sidebar.classList.remove('show');
-                document.body.classList.remove('sidebar-open');
-            }
-            
-            // Event listeners
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', toggleSidebar);
-            }
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', closeSidebar);
-            }
-            
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', closeSidebar);
-            }
-            
-            // Close sidebar when clicking on a link (mobile)
-            const navLinks = document.querySelectorAll('.sidebar .nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 992) {
-                        closeSidebar();
-                    }
-                });
-            });
-            
-            // Auto-close sidebar on window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 992) {
-                    closeSidebar();
-                }
-            });
-            
-            // Highlight active nav item
-            const currentPath = window.location.pathname;
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                    // Expand parent section if needed
-                    const section = link.closest('.nav-section');
-                    if (section) {
-                        section.classList.add('active');
-                    }
-                }
-            });
-        });
-    </script>
 
     <!-- Scripts customizados -->
     {% block scripts %}{% endblock %}

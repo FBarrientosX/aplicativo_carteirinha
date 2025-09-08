@@ -1824,23 +1824,15 @@ footer {
 
 /* ========== FIM QR SCANNER STYLES ========== */
 
-/* ========== SIDEBAR LAYOUT STYLES ========== */
+/* ========== LAYOUT PRINCIPAL RESTAURADO ========== */
 
-/* Layout principal com sidebar */
-.sidebar-layout {
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8fafc;
-    margin: 0;
+/* Estilos básicos para o layout principal */
+.main-content {
     padding: 0;
-    overflow-x: hidden;
+    background: #ffffff;
 }
 
-/* Container principal */
-.main-wrapper {
-    margin-left: 280px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+/* ========== FIM LAYOUT PRINCIPAL ========== */
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
