@@ -1,0 +1,260 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('manutencao', 'dashboard') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-tools text-success"></i> Manutenção
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-chart-bar"></i> Dashboard
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-chart-bar text-success me-2"></i>
+                    Dashboard de Manutenção
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Visão geral dos chamados e atividades de manutenção
+                </p>
+            </div>
+            <div class="page-actions">
+                <a href="{{ url_for('manutencao.novo_chamado') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>
+                    Novo Chamado
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Total de Chamados</div>
+                            <div class="h4 mb-0">24</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Em Andamento</div>
+                            <div class="h4 mb-0">8</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Concluídos</div>
+                            <div class="h4 mb-0">14</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Urgentes</div>
+                            <div class="h4 mb-0">2</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Recent Chamados -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Chamados Recentes
+                        </h5>
+                        <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-primary btn-sm">
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">
+                                    <i class="fas fa-wrench text-warning me-2"></i>
+                                    Reparo no Elevador
+                                </div>
+                                <small class="text-muted">Apartamento 101 - João Silva</small>
+                                <div class="mt-1">
+                                    <span class="badge bg-warning">Em Andamento</span>
+                                    <span class="badge bg-secondary">Elevador</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">Há 2 horas</small>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">
+                                    <i class="fas fa-tools text-success me-2"></i>
+                                    Manutenção da Piscina
+                                </div>
+                                <small class="text-muted">Área Comum - Administração</small>
+                                <div class="mt-1">
+                                    <span class="badge bg-success">Concluído</span>
+                                    <span class="badge bg-info">Piscina</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">Ontem</small>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">
+                                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                    Vazamento no Apartamento 205
+                                </div>
+                                <small class="text-muted">Apartamento 205 - Maria Santos</small>
+                                <div class="mt-1">
+                                    <span class="badge bg-danger">Urgente</span>
+                                    <span class="badge bg-warning">Hidráulica</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">Há 4 horas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manutencao.novo_chamado') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>
+                            Novo Chamado
+                        </a>
+                        <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>
+                            Ver Todos os Chamados
+                        </a>
+                        <a href="{{ url_for('manutencao.categorias') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-tags me-2"></i>
+                            Gerenciar Categorias
+                        </a>
+                        <button class="btn btn-outline-info">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Relatórios
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        Categorias
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-wrench text-warning me-2"></i>
+                                Elevador
+                            </span>
+                            <span class="badge bg-primary rounded-pill">5</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-swimming-pool text-info me-2"></i>
+                                Piscina
+                            </span>
+                            <span class="badge bg-primary rounded-pill">3</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-tint text-primary me-2"></i>
+                                Hidráulica
+                            </span>
+                            <span class="badge bg-primary rounded-pill">7</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-bolt text-warning me-2"></i>
+                                Elétrica
+                            </span>
+                            <span class="badge bg-primary rounded-pill">4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard de manutenção carregado');
+    });
+</script>
+{% endblock %}
