@@ -1,0 +1,463 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'despesas') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-arrow-down"></i> Despesas
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-arrow-down text-danger me-2"></i>
+                    Gestão de Despesas
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Controle todos os gastos do condomínio
+                </p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#novaDespesaModal">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Despesa
+                </button>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importarDespesasModal">
+                    <i class="fas fa-upload me-1"></i>
+                    Importar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Total de Despesas</div>
+                            <div class="h4 mb-0">{{ total_despesas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Valor Total</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(total_valor) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Pagas</div>
+                            <div class="h4 mb-0">{{ despesas_pagas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Pendentes</div>
+                            <div class="h4 mb-0">{{ despesas_pendentes }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">Todas as categorias</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="todas" {% if status_filtro == 'todas' %}selected{% endif %}>Todas</option>
+                        <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendentes</option>
+                        <option value="pago" {% if status_filtro == 'pago' %}selected{% endif %}>Pagas</option>
+                        <option value="atrasado" {% if status_filtro == 'atrasado' %}selected{% endif %}>Atrasadas</option>
+                        <option value="cancelado" {% if status_filtro == 'cancelado' %}selected{% endif %}>Canceladas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" name="data_inicio" class="form-control" value="{{ data_inicio_filtro }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" name="data_fim" class="form-control" value="{{ data_fim_filtro }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Despesas -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Despesas
+                </h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-success btn-sm" onclick="marcarSelecionadas('pago')">
+                        <i class="fas fa-check me-1"></i>
+                        Marcar como Pagas
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="marcarSelecionadas('cancelado')">
+                        <i class="fas fa-times me-1"></i>
+                        Cancelar
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if despesas %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Valor</th>
+                                <th>Data Vencimento</th>
+                                <th>Fornecedor</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for despesa in despesas %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input despesa-checkbox" value="{{ despesa.id }}">
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ despesa.descricao }}</div>
+                                    {% if despesa.observacoes %}
+                                        <small class="text-muted">{{ despesa.observacoes[:50] }}{% if despesa.observacoes|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ despesa.categoria.cor }};">
+                                        {{ despesa.categoria.nome }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-danger">R$ {{ "%.2f"|format(despesa.valor) }}</div>
+                                </td>
+                                <td>
+                                    <small>{{ despesa.data_vencimento.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    {% if despesa.fornecedor_nome %}
+                                        <div class="fw-semibold">{{ despesa.fornecedor_nome }}</div>
+                                        {% if despesa.fornecedor_cnpj %}
+                                            <small class="text-muted">{{ despesa.fornecedor_cnpj }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if despesa.status == 'pago' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Pago
+                                        </span>
+                                    {% elif despesa.status == 'pendente' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Pendente
+                                        </span>
+                                    {% elif despesa.status == 'atrasado' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Atrasado
+                                        </span>
+                                    {% elif despesa.status == 'cancelado' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times me-1"></i>
+                                            Cancelado
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Visualizar" onclick="visualizarDespesa({{ despesa.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if despesa.status != 'pago' %}
+                                        <button class="btn btn-outline-success" title="Marcar como Pago" onclick="marcarComoPago({{ despesa.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-warning" title="Editar" onclick="editarDespesa({{ despesa.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" title="Cancelar" onclick="cancelarDespesa({{ despesa.id }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-arrow-down fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma despesa encontrada</h5>
+                    <p class="text-muted">Use os filtros acima para buscar despesas ou registre uma nova despesa.</p>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#novaDespesaModal">
+                        <i class="fas fa-plus me-1"></i>
+                        Nova Despesa
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Despesa -->
+<div class="modal fade" id="novaDespesaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-danger me-2"></i>
+                    Nova Despesa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Descrição *</label>
+                                <input type="text" class="form-control" placeholder="Ex: Conta de luz" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Categoria *</label>
+                                <select class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Valor *</label>
+                                <input type="number" class="form-control" step="0.01" placeholder="0,00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Data de Vencimento *</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Data de Pagamento</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Fornecedor</label>
+                                <input type="text" class="form-control" placeholder="Nome do fornecedor">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">CNPJ</label>
+                                <input type="text" class="form-control" placeholder="00.000.000/0000-00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" rows="3" placeholder="Observações adicionais..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Despesa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Importar Despesas -->
+<div class="modal fade" id="importarDespesasModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload text-primary me-2"></i>
+                    Importar Despesas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Arquivo Excel/CSV</label>
+                    <input type="file" class="form-control" accept=".xlsx,.xls,.csv">
+                    <div class="form-text">
+                        Formatos aceitos: Excel (.xlsx, .xls) ou CSV (.csv)
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Formato esperado:</strong> Descrição, Categoria, Valor, Data Vencimento, Fornecedor
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i>
+                    Importar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Selecionar todos
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.despesa-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+});
+
+function marcarSelecionadas(status) {
+    const checkboxes = document.querySelectorAll('.despesa-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Selecione pelo menos uma despesa');
+        return;
+    }
+    
+    const ids = Array.from(checkboxes).map(cb => cb.value);
+    // Implementar lógica para marcar como status
+    console.log('Marcar como', status, 'IDs:', ids);
+}
+
+function visualizarDespesa(id) {
+    // Implementar visualização da despesa
+    console.log('Visualizar despesa:', id);
+}
+
+function marcarComoPago(id) {
+    // Implementar marcar como pago
+    console.log('Marcar como pago:', id);
+}
+
+function editarDespesa(id) {
+    // Implementar edição da despesa
+    console.log('Editar despesa:', id);
+}
+
+function cancelarDespesa(id) {
+    if (confirm('Tem certeza que deseja cancelar esta despesa?')) {
+        // Implementar cancelamento da despesa
+        console.log('Cancelar despesa:', id);
+    }
+}
+</script>
+{% endblock %}

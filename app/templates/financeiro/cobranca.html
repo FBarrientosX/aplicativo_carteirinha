@@ -1,0 +1,785 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'cobranca') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-credit-card"></i> Cobranças
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-credit-card text-success me-2"></i>
+                    Gestão de Cobranças
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Gerencie as cobranças de condomínio e acompanhe o status de pagamentos
+                </p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#gerarCobrancasLoteModal">
+                    <i class="fas fa-magic me-1"></i>
+                    Gerar Cobranças em Lote
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaCobrancaModal">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Cobrança
+                </button>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importarCobrancasModal">
+                    <i class="fas fa-upload me-1"></i>
+                    Importar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Total de Cobranças</div>
+                            <div class="h4 mb-0">{{ total_cobrancas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Pagas</div>
+                            <div class="h4 mb-0">{{ cobrancas_pagas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Pendentes</div>
+                            <div class="h4 mb-0">{{ cobrancas_pendentes }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Atrasadas</div>
+                            <div class="h4 mb-0">{{ cobrancas_atrasadas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="todas" {% if status_filtro == 'todas' %}selected{% endif %}>Todas</option>
+                        <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendentes</option>
+                        <option value="pago" {% if status_filtro == 'pago' %}selected{% endif %}>Pagas</option>
+                        <option value="atrasado" {% if status_filtro == 'atrasado' %}selected{% endif %}>Atrasadas</option>
+                        <option value="cancelado" {% if status_filtro == 'cancelado' %}selected{% endif %}>Canceladas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mês de Referência</label>
+                    <input type="month" name="mes" class="form-control" value="{{ mes_filtro }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="busca" class="form-control" placeholder="Nome do morador ou apartamento">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Cobranças -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Cobranças
+                </h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-success btn-sm" onclick="marcarSelecionadas('pago')">
+                        <i class="fas fa-check me-1"></i>
+                        Marcar como Pagas
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="marcarSelecionadas('cancelado')">
+                        <i class="fas fa-times me-1"></i>
+                        Cancelar
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if cobrancas %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Morador</th>
+                                <th>Bloco/Apto</th>
+                                <th>Mês Referência</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cobranca in cobrancas %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input cobranca-checkbox" value="{{ cobranca.id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://via.placeholder.com/32x32/007bff/ffffff?text={{ cobranca.morador.nome[0] }}" 
+                                             alt="Avatar" class="rounded-circle me-2" width="32" height="32">
+                                        <div>
+                                            <div class="fw-semibold">{{ cobranca.morador.nome }}</div>
+                                            <small class="text-muted">{{ cobranca.morador.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ cobranca.bloco }}/{{ cobranca.apartamento }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ cobranca.mes_referencia.strftime('%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">R$ {{ "%.2f"|format(cobranca.valor_total) }}</div>
+                                    {% if cobranca.valor_extra > 0 %}
+                                        <small class="text-muted">+ R$ {{ "%.2f"|format(cobranca.valor_extra) }} extras</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ cobranca.data_vencimento.strftime('%d/%m/%Y') }}</small>
+                                    {% if cobranca.status == 'atrasado' %}
+                                        <div class="text-danger small">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ cobranca.dias_atraso }} dias atraso
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if cobranca.status == 'pago' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Pago
+                                        </span>
+                                    {% elif cobranca.status == 'pendente' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Pendente
+                                        </span>
+                                    {% elif cobranca.status == 'atrasado' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Atrasado
+                                        </span>
+                                    {% elif cobranca.status == 'cancelado' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times me-1"></i>
+                                            Cancelado
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Visualizar" onclick="visualizarCobranca({{ cobranca.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if cobranca.status != 'pago' %}
+                                        <button class="btn btn-outline-success" title="Marcar como Pago" onclick="marcarComoPago({{ cobranca.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-warning" title="Editar" onclick="editarCobranca({{ cobranca.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" title="Cancelar" onclick="cancelarCobranca({{ cobranca.id }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma cobrança encontrada</h5>
+                    <p class="text-muted">Use os filtros acima para buscar cobranças ou gere novas cobranças.</p>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#gerarCobrancasModal">
+                        <i class="fas fa-plus me-1"></i>
+                        Gerar Primeira Cobrança
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Gerar Cobranças -->
+<div class="modal fade" id="gerarCobrancasModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-success me-2"></i>
+                    Gerar Cobranças
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Mês de Referência</label>
+                                <input type="month" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Dia de Vencimento</label>
+                                <input type="number" class="form-control" min="1" max="31" value="10" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor do Condomínio</label>
+                                <input type="number" class="form-control" step="0.01" placeholder="0,00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor Extra (opcional)</label>
+                                <input type="number" class="form-control" step="0.01" placeholder="0,00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" rows="3" placeholder="Observações para as cobranças..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-cogs me-1"></i>
+                    Gerar Cobranças
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Gerar Cobranças em Lote -->
+<div class="modal fade" id="gerarCobrancasLoteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-magic text-success me-2"></i>
+                    Gerar Cobranças em Lote
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formGerarCobrancasLote">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Mês de Referência *</label>
+                                <input type="month" class="form-control" id="mesReferencia" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Dia de Vencimento *</label>
+                                <input type="number" class="form-control" id="diaVencimento" min="1" max="31" value="10" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor do Condomínio *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="valorCondominio" step="0.01" placeholder="0,00" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor Extra (opcional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="valorExtra" step="0.01" placeholder="0,00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seleção de Apartamentos -->
+                    <div class="mb-3">
+                        <label class="form-label">Apartamentos a Incluir</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="todosApartamentos" checked>
+                                    <label class="form-check-label" for="todosApartamentos">
+                                        <strong>Todos os apartamentos</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apenasTitulares">
+                                    <label class="form-check-label" for="apenasTitulares">
+                                        Apenas titulares
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Apartamentos -->
+                    <div class="mb-3" id="listaApartamentos" style="display: none;">
+                        <label class="form-label">Selecionar Apartamentos</label>
+                        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                            <div class="row" id="apartamentosList">
+                                <!-- Lista será preenchida via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" rows="3" placeholder="Observações para as cobranças..."></textarea>
+                    </div>
+                    
+                    <!-- Resumo -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Resumo da Operação</h6>
+                        <div id="resumoOperacao">
+                            <p class="mb-1"><strong>Mês:</strong> <span id="resumoMes">-</span></p>
+                            <p class="mb-1"><strong>Vencimento:</strong> Dia <span id="resumoDia">-</span></p>
+                            <p class="mb-1"><strong>Valor:</strong> R$ <span id="resumoValor">-</span></p>
+                            <p class="mb-0"><strong>Apartamentos:</strong> <span id="resumoAptos">-</span></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGerarCobrancas">
+                    <i class="fas fa-magic me-1"></i>
+                    Gerar Cobranças
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Cobrança Individual -->
+<div class="modal fade" id="novaCobrancaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-primary me-2"></i>
+                    Nova Cobrança
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Morador *</label>
+                        <select class="form-select" required>
+                            <option value="">Selecione um morador...</option>
+                            <!-- Opções serão preenchidas via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Mês de Referência *</label>
+                                <input type="month" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Dia de Vencimento *</label>
+                                <input type="number" class="form-control" min="1" max="31" value="10" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor do Condomínio *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" step="0.01" placeholder="0,00" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor Extra (opcional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" step="0.01" placeholder="0,00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" rows="3" placeholder="Observações..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Cobrança
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Importar Cobranças -->
+<div class="modal fade" id="importarCobrancasModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload text-primary me-2"></i>
+                    Importar Cobranças
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Arquivo Excel/CSV</label>
+                    <input type="file" class="form-control" accept=".xlsx,.xls,.csv">
+                    <div class="form-text">
+                        Formatos aceitos: Excel (.xlsx, .xls) ou CSV (.csv)
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Formato esperado:</strong> Nome, Apartamento, Valor, Vencimento
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i>
+                    Importar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Selecionar todos
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.cobranca-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    // Configurar modal de cobrança em lote
+    setupCobrancaLote();
+    
+    // Carregar apartamentos
+    carregarApartamentos();
+});
+
+function setupCobrancaLote() {
+    const form = document.getElementById('formGerarCobrancasLote');
+    const todosApartamentos = document.getElementById('todosApartamentos');
+    const listaApartamentos = document.getElementById('listaApartamentos');
+    
+    // Toggle lista de apartamentos
+    todosApartamentos.addEventListener('change', function() {
+        listaApartamentos.style.display = this.checked ? 'none' : 'block';
+        atualizarResumo();
+    });
+    
+    // Atualizar resumo quando campos mudarem
+    ['mesReferencia', 'diaVencimento', 'valorCondominio', 'valorExtra'].forEach(id => {
+        document.getElementById(id).addEventListener('input', atualizarResumo);
+    });
+    
+    // Botão gerar cobranças
+    document.getElementById('btnGerarCobrancas').addEventListener('click', gerarCobrancasLote);
+}
+
+function carregarApartamentos() {
+    // Carregar apartamentos do servidor
+    fetch('/financeiro/api/moradores')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const apartamentos = data.moradores;
+                const container = document.getElementById('apartamentosList');
+                container.innerHTML = '';
+                
+                apartamentos.forEach(apto => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-6 col-lg-4 mb-2';
+                    col.innerHTML = `
+                        <div class="form-check">
+                            <input class="form-check-input apartamento-checkbox" type="checkbox" 
+                                   value="${apto.id}" id="apto_${apto.id}" 
+                                   data-bloco="${apto.bloco}" data-apartamento="${apto.apartamento}"
+                                   data-morador="${apto.nome}" data-titular="${apto.titular}">
+                            <label class="form-check-label" for="apto_${apto.id}">
+                                <strong>${apto.bloco}/${apto.apartamento}</strong> - ${apto.nome}
+                                ${apto.titular ? '<span class="badge bg-success ms-1">Titular</span>' : ''}
+                            </label>
+                        </div>
+                    `;
+                    container.appendChild(col);
+                });
+                
+                // Adicionar listeners para checkboxes de apartamentos
+                document.querySelectorAll('.apartamento-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', atualizarResumo);
+                });
+                
+                // Atualizar resumo inicial
+                atualizarResumo();
+            } else {
+                console.error('Erro ao carregar apartamentos:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+        });
+}
+
+function atualizarResumo() {
+    const mes = document.getElementById('mesReferencia').value;
+    const dia = document.getElementById('diaVencimento').value;
+    const valor = parseFloat(document.getElementById('valorCondominio').value) || 0;
+    const valorExtra = parseFloat(document.getElementById('valorExtra').value) || 0;
+    const total = valor + valorExtra;
+    
+    // Atualizar resumo
+    document.getElementById('resumoMes').textContent = mes ? new Date(mes + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : '-';
+    document.getElementById('resumoDia').textContent = dia || '-';
+    document.getElementById('resumoValor').textContent = total.toFixed(2);
+    
+    // Contar apartamentos selecionados
+    const todosApartamentos = document.getElementById('todosApartamentos').checked;
+    let totalAptos = 0;
+    
+    if (todosApartamentos) {
+        totalAptos = document.querySelectorAll('.apartamento-checkbox').length;
+    } else {
+        totalAptos = document.querySelectorAll('.apartamento-checkbox:checked').length;
+    }
+    
+    document.getElementById('resumoAptos').textContent = totalAptos;
+}
+
+function gerarCobrancasLote() {
+    const form = document.getElementById('formGerarCobrancasLote');
+    const formData = new FormData(form);
+    
+    // Validar formulário
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const dados = {
+        mes_referencia: document.getElementById('mesReferencia').value,
+        dia_vencimento: parseInt(document.getElementById('diaVencimento').value),
+        valor_condominio: parseFloat(document.getElementById('valorCondominio').value),
+        valor_extra: parseFloat(document.getElementById('valorExtra').value) || 0,
+        observacoes: document.getElementById('observacoes').value,
+        todos_apartamentos: document.getElementById('todosApartamentos').checked,
+        apenas_titulares: document.getElementById('apenasTitulares').checked
+    };
+    
+    // Se não for todos os apartamentos, pegar os selecionados
+    if (!dados.todos_apartamentos) {
+        dados.apartamentos_selecionados = Array.from(document.querySelectorAll('.apartamento-checkbox:checked'))
+            .map(cb => ({
+                id: cb.value,
+                bloco: cb.dataset.bloco,
+                apartamento: cb.dataset.apartamento,
+                morador: cb.dataset.morador
+            }));
+    }
+    
+    // Mostrar loading
+    const btn = document.getElementById('btnGerarCobrancas');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Gerando...';
+    btn.disabled = true;
+    
+    // Fazer requisição para a API
+    fetch('/financeiro/api/cobrancas/lote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dados)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(`Cobranças geradas com sucesso!\n\nTotal gerado: ${data.total_gerado}\nErros: ${data.total_erros}\nValor por apartamento: R$ ${(dados.valor_condominio + dados.valor_extra).toFixed(2)}`);
+            
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('gerarCobrancasLoteModal'));
+            modal.hide();
+            
+            // Recarregar página para mostrar as novas cobranças
+            window.location.reload();
+        } else {
+            alert('Erro ao gerar cobranças: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+        alert('Erro ao gerar cobranças. Tente novamente.');
+    })
+    .finally(() => {
+        // Resetar botão
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Limpar formulário
+        form.reset();
+        atualizarResumo();
+    });
+}
+
+function marcarSelecionadas(status) {
+    const checkboxes = document.querySelectorAll('.cobranca-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Selecione pelo menos uma cobrança');
+        return;
+    }
+    
+    const ids = Array.from(checkboxes).map(cb => cb.value);
+    // Implementar lógica para marcar como status
+    console.log('Marcar como', status, 'IDs:', ids);
+}
+
+function visualizarCobranca(id) {
+    // Implementar visualização da cobrança
+    console.log('Visualizar cobrança:', id);
+}
+
+function marcarComoPago(id) {
+    // Implementar marcar como pago
+    console.log('Marcar como pago:', id);
+}
+
+function editarCobranca(id) {
+    // Implementar edição da cobrança
+    console.log('Editar cobrança:', id);
+}
+
+function cancelarCobranca(id) {
+    if (confirm('Tem certeza que deseja cancelar esta cobrança?')) {
+        // Implementar cancelamento da cobrança
+        console.log('Cancelar cobrança:', id);
+    }
+}
+</script>
+{% endblock %}

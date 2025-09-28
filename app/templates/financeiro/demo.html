@@ -1,0 +1,268 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'dashboard') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-chart-pie"></i> Demonstração
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-palette text-success me-2"></i>
+                    Demonstração do Módulo Financeiro
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Exemplo de implementação do módulo financeiro com navegação lateral
+                </p>
+            </div>
+            <div class="page-actions">
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Voltar ao Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Funcionalidades do Módulo Financeiro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">✅ Implementado</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i> Dashboard financeiro com estatísticas</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Gestão de cobranças de condomínio</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Controle de receitas e despesas</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Fluxo de caixa</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Relatórios financeiros</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Configurações do módulo</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info">🎨 Características</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-palette text-info me-2"></i> Navegação lateral integrada</li>
+                                <li><i class="fas fa-palette text-info me-2"></i> Gráficos interativos</li>
+                                <li><i class="fas fa-palette text-info me-2"></i> Filtros avançados</li>
+                                <li><i class="fas fa-palette text-info me-2"></i> Exportação de dados</li>
+                                <li><i class="fas fa-palette text-info me-2"></i> Interface responsiva</li>
+                                <li><i class="fas fa-palette text-info me-2"></i> Multi-tenancy</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module Sections -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Dashboard Financeiro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Visão geral das finanças com:</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-wallet text-success me-2"></i> Saldo atual</li>
+                        <li><i class="fas fa-arrow-up text-info me-2"></i> Receitas do mês</li>
+                        <li><i class="fas fa-arrow-down text-danger me-2"></i> Despesas do mês</li>
+                        <li><i class="fas fa-chart-line text-primary me-2"></i> Gráficos de tendência</li>
+                        <li><i class="fas fa-credit-card text-warning me-2"></i> Status de cobranças</li>
+                    </ul>
+                    <a href="{{ url_for('financeiro.dashboard') }}" class="btn btn-success btn-sm">Ver Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Gestão de Cobranças
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Controle completo de cobranças:</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-plus text-primary me-2"></i> Gerar cobranças em lote</li>
+                        <li><i class="fas fa-upload text-primary me-2"></i> Importar de planilhas</li>
+                        <li><i class="fas fa-filter text-primary me-2"></i> Filtros por status e período</li>
+                        <li><i class="fas fa-check text-success me-2"></i> Marcar como pagas</li>
+                        <li><i class="fas fa-download text-info me-2"></i> Exportar relatórios</li>
+                    </ul>
+                    <a href="{{ url_for('financeiro.cobranca') }}" class="btn btn-primary btn-sm">Ver Cobranças</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Receitas & Despesas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Controle de movimentações:</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-arrow-up text-success me-2"></i> Registro de receitas</li>
+                        <li><i class="fas fa-arrow-down text-danger me-2"></i> Controle de despesas</li>
+                        <li><i class="fas fa-tags text-warning me-2"></i> Categorização</li>
+                        <li><i class="fas fa-search text-info me-2"></i> Filtros avançados</li>
+                        <li><i class="fas fa-file-alt text-secondary me-2"></i> Comprovantes</li>
+                    </ul>
+                    <div class="btn-group">
+                        <a href="{{ url_for('financeiro.receitas') }}" class="btn btn-outline-success btn-sm">Receitas</a>
+                        <a href="{{ url_for('financeiro.despesas') }}" class="btn btn-outline-danger btn-sm">Despesas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Models -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        Modelos de Dados Implementados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Entidades Principais</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-table text-primary me-2"></i> <code>CategoriaFinanceira</code> - Categorias de receitas/despesas</li>
+                                <li><i class="fas fa-table text-primary me-2"></i> <code>ContaBancaria</code> - Contas bancárias do condomínio</li>
+                                <li><i class="fas fa-table text-primary me-2"></i> <code>Receita</code> - Registro de receitas</li>
+                                <li><i class="fas fa-table text-primary me-2"></i> <code>Despesa</code> - Registro de despesas</li>
+                                <li><i class="fas fa-table text-primary me-2"></i> <code>Cobranca</code> - Cobranças de condomínio</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Entidades de Apoio</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-table text-secondary me-2"></i> <code>MovimentacaoFinanceira</code> - Histórico de movimentações</li>
+                                <li><i class="fas fa-table text-secondary me-2"></i> <code>ConfiguracaoFinanceira</code> - Configurações do módulo</li>
+                                <li><i class="fas fa-cogs text-info me-2"></i> <code>FinanceiroService</code> - Serviços auxiliares</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Implementation Guide -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-code me-2"></i>
+                        Como Usar o Módulo Financeiro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>1. Acesso ao Módulo</h6>
+                            <p>O módulo financeiro está disponível na navegação principal e na sidebar lateral.</p>
+                            <pre><code># Navegação principal
+Financeiro > Dashboard
+Financeiro > Cobranças
+Financeiro > Receitas
+Financeiro > Despesas
+
+# Navegação lateral
+Módulo: Financeiro
+- Dashboard
+- Cobrança
+- Receitas
+- Despesas
+- Fluxo de Caixa
+- Relatórios
+- Configurações</code></pre>
+
+                            <h6>2. Primeiros Passos</h6>
+                            <ol>
+                                <li>Configure as categorias financeiras</li>
+                                <li>Cadastre as contas bancárias</li>
+                                <li>Configure os valores padrão de cobrança</li>
+                                <li>Gere as primeiras cobranças</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>3. Funcionalidades Principais</h6>
+                            <ul>
+                                <li><strong>Dashboard:</strong> Visão geral das finanças</li>
+                                <li><strong>Cobranças:</strong> Gestão de pagamentos de condomínio</li>
+                                <li><strong>Receitas:</strong> Controle de entradas</li>
+                                <li><strong>Despesas:</strong> Controle de saídas</li>
+                                <li><strong>Relatórios:</strong> Análises e exportações</li>
+                            </ul>
+
+                            <h6>4. Integração</h6>
+                            <p>O módulo está integrado com:</p>
+                            <ul>
+                                <li>Sistema de moradores</li>
+                                <li>Multi-tenancy</li>
+                                <li>Sistema de notificações</li>
+                                <li>Relatórios gerais</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Demonstração do módulo financeiro carregada');
+});
+</script>
+{% endblock %}
