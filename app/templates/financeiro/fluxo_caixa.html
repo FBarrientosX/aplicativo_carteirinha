@@ -1,0 +1,468 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'fluxo_caixa') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-exchange-alt"></i> Fluxo de Caixa
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-exchange-alt text-info me-2"></i>
+                    Fluxo de Caixa
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Acompanhe as movimentações financeiras do condomínio
+                </p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#novaMovimentacaoModal">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Movimentação
+                </button>
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-download me-1"></i>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo do Período -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Entradas</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(total_entradas) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Saídas</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(total_saidas) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Saldo</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(saldo_atual) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-balance-scale fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Movimentações</div>
+                            <div class="h4 mb-0">{{ total_movimentacoes }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="todas" {% if tipo_filtro == 'todas' %}selected{% endif %}>Todas</option>
+                        <option value="entrada" {% if tipo_filtro == 'entrada' %}selected{% endif %}>Entradas</option>
+                        <option value="saida" {% if tipo_filtro == 'saida' %}selected{% endif %}>Saídas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">Todas</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" name="data_inicio" class="form-control" value="{{ data_inicio_filtro }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" name="data_fim" class="form-control" value="{{ data_fim_filtro }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Período</label>
+                    <select name="periodo" class="form-select" onchange="aplicarPeriodo(this.value)">
+                        <option value="">Personalizado</option>
+                        <option value="hoje">Hoje</option>
+                        <option value="semana">Esta Semana</option>
+                        <option value="mes">Este Mês</option>
+                        <option value="trimestre">Este Trimestre</option>
+                        <option value="ano">Este Ano</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráfico de Fluxo de Caixa -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Gráfico de Fluxo de Caixa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fluxoCaixaChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Movimentações -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Movimentações Financeiras
+                </h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if movimentacoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Saldo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimentacoes %}
+                            <tr>
+                                <td>
+                                    <small>{{ mov.data_movimentacao.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ mov.descricao }}</div>
+                                    {% if mov.observacoes %}
+                                        <small class="text-muted">{{ mov.observacoes[:50] }}{% if mov.observacoes|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ mov.categoria.cor }};">
+                                        {{ mov.categoria.nome }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if mov.tipo == 'entrada' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                            Entrada
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-arrow-down me-1"></i>
+                                            Saída
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-bold {% if mov.tipo == 'entrada' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if mov.tipo == 'entrada' %}+{% else %}-{% endif %}R$ {{ "%.2f"|format(mov.valor) }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">R$ {{ "%.2f"|format(mov.saldo_apos) }}</div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Visualizar" onclick="visualizarMovimentacao({{ mov.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning" title="Editar" onclick="editarMovimentacao({{ mov.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" title="Excluir" onclick="excluirMovimentacao({{ mov.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma movimentação encontrada</h5>
+                    <p class="text-muted">Use os filtros acima para buscar movimentações ou registre uma nova movimentação.</p>
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#novaMovimentacaoModal">
+                        <i class="fas fa-plus me-1"></i>
+                        Nova Movimentação
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Movimentação -->
+<div class="modal fade" id="novaMovimentacaoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-info me-2"></i>
+                    Nova Movimentação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Descrição *</label>
+                                <input type="text" class="form-control" placeholder="Ex: Transferência bancária" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo *</label>
+                                <select class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Valor *</label>
+                                <input type="number" class="form-control" step="0.01" placeholder="0,00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Data *</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Categoria</label>
+                                <select class="form-select">
+                                    <option value="">Selecione...</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" rows="3" placeholder="Observações adicionais..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-info">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Movimentação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Fluxo de Caixa
+    const ctx = document.getElementById('fluxoCaixaChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ datas_grafico|tojson }},
+            datasets: [{
+                label: 'Entradas',
+                data: {{ entradas_grafico|tojson }},
+                borderColor: 'rgb(40, 167, 69)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Saídas',
+                data: {{ saidas_grafico|tojson }},
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Saldo',
+                data: {{ saldo_grafico|tojson }},
+                borderColor: 'rgb(13, 202, 240)',
+                backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function aplicarPeriodo(periodo) {
+    const hoje = new Date();
+    const dataInicio = document.querySelector('input[name="data_inicio"]');
+    const dataFim = document.querySelector('input[name="data_fim"]');
+    
+    switch(periodo) {
+        case 'hoje':
+            dataInicio.value = dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'semana':
+            const inicioSemana = new Date(hoje);
+            inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+            dataInicio.value = inicioSemana.toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'mes':
+            dataInicio.value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'trimestre':
+            const trimestre = Math.floor(hoje.getMonth() / 3);
+            dataInicio.value = new Date(hoje.getFullYear(), trimestre * 3, 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'ano':
+            dataInicio.value = new Date(hoje.getFullYear(), 0, 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+    }
+}
+
+function visualizarMovimentacao(id) {
+    // Implementar visualização da movimentação
+    console.log('Visualizar movimentação:', id);
+}
+
+function editarMovimentacao(id) {
+    // Implementar edição da movimentação
+    console.log('Editar movimentação:', id);
+}
+
+function excluirMovimentacao(id) {
+    if (confirm('Tem certeza que deseja excluir esta movimentação?')) {
+        // Implementar exclusão da movimentação
+        console.log('Excluir movimentação:', id);
+    }
+}
+</script>
+{% endblock %}

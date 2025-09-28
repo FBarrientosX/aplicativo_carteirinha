@@ -1,0 +1,408 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'dashboard') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-chart-pie text-success me-2"></i>
+                    Dashboard Financeiro
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Visão geral das finanças do condomínio
+                </p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#novaReceitaModal">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Receita
+                </button>
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#novaDespesaModal">
+                    <i class="fas fa-minus me-1"></i>
+                    Nova Despesa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Saldo Atual</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(saldo_atual) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-wallet fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Receitas do Mês</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(receitas_mes) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Despesas do Mês</div>
+                            <div class="h4 mb-0">R$ {{ "%.2f"|format(despesas_mes) }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Cobranças Atrasadas</div>
+                            <div class="h4 mb-0">{{ cobrancas_atrasadas }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Gráfico Receitas vs Despesas -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Receitas vs Despesas (Últimos 6 Meses)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoReceitasDespesas" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo de Cobranças -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Resumo de Cobranças
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h4 text-success">{{ cobrancas_pendentes }}</div>
+                                <small class="text-muted">Pendentes</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h4 text-warning">{{ cobrancas_atrasadas }}</div>
+                                <small class="text-muted">Atrasadas</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-info">{{ cobrancas_pendentes + cobrancas_atrasadas }}</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('financeiro.cobranca') }}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-eye me-1"></i>
+                            Ver Todas as Cobranças
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabelas de Movimentações Recentes -->
+    <div class="row">
+        <!-- Receitas Recentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-arrow-up text-success me-2"></i>
+                            Receitas Recentes
+                        </h5>
+                        <a href="{{ url_for('financeiro.receitas') }}" class="btn btn-outline-success btn-sm">
+                            Ver Todas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if receitas_recentes %}
+                        <div class="list-group list-group-flush">
+                            {% for receita in receitas_recentes %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ receita.descricao }}</div>
+                                    <small class="text-muted">
+                                        {{ receita.data_recebimento.strftime('%d/%m/%Y') }}
+                                        {% if receita.pagador_nome %} - {{ receita.pagador_nome }}{% endif %}
+                                    </small>
+                                    <div class="mt-1">
+                                        {% if receita.status == 'recebido' %}
+                                            <span class="badge bg-success">Recebido</span>
+                                        {% elif receita.status == 'pendente' %}
+                                            <span class="badge bg-warning">Pendente</span>
+                                        {% elif receita.status == 'atrasado' %}
+                                            <span class="badge bg-danger">Atrasado</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-success">R$ {{ "%.2f"|format(receita.valor) }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Nenhuma receita registrada</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Despesas Recentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-arrow-down text-danger me-2"></i>
+                            Despesas Recentes
+                        </h5>
+                        <a href="{{ url_for('financeiro.despesas') }}" class="btn btn-outline-danger btn-sm">
+                            Ver Todas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if despesas_recentes %}
+                        <div class="list-group list-group-flush">
+                            {% for despesa in despesas_recentes %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ despesa.descricao }}</div>
+                                    <small class="text-muted">
+                                        {{ despesa.data_pagamento.strftime('%d/%m/%Y') }}
+                                        {% if despesa.fornecedor_nome %} - {{ despesa.fornecedor_nome }}{% endif %}
+                                    </small>
+                                    <div class="mt-1">
+                                        {% if despesa.status == 'pago' %}
+                                            <span class="badge bg-success">Pago</span>
+                                        {% elif despesa.status == 'pendente' %}
+                                            <span class="badge bg-warning">Pendente</span>
+                                        {% elif despesa.status == 'atrasado' %}
+                                            <span class="badge bg-danger">Atrasado</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-danger">R$ {{ "%.2f"|format(despesa.valor) }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Nenhuma despesa registrada</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais para Nova Receita e Despesa -->
+<div class="modal fade" id="novaReceitaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-success me-2"></i>
+                    Nova Receita
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" class="form-control" placeholder="Ex: Taxa de condomínio">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Valor</label>
+                        <input type="number" class="form-control" step="0.01" placeholder="0,00">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Recebimento</label>
+                        <input type="date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pagador</label>
+                        <input type="text" class="form-control" placeholder="Nome do pagador">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success">Salvar Receita</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="novaDespesaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-minus text-danger me-2"></i>
+                    Nova Despesa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" class="form-control" placeholder="Ex: Manutenção do elevador">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Valor</label>
+                        <input type="number" class="form-control" step="0.01" placeholder="0,00">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Pagamento</label>
+                        <input type="date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fornecedor</label>
+                        <input type="text" class="form-control" placeholder="Nome do fornecedor">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger">Salvar Despesa</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Receitas vs Despesas
+    const ctx = document.getElementById('graficoReceitasDespesas').getContext('2d');
+    const dados = {{ dados_grafico | tojson }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dados.map(item => item.mes),
+            datasets: [{
+                label: 'Receitas',
+                data: dados.map(item => item.receitas),
+                borderColor: 'rgb(40, 167, 69)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Despesas',
+                data: dados.map(item => item.despesas),
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': R$ ' + context.parsed.y.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

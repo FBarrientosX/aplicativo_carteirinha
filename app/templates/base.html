@@ -108,6 +108,35 @@
                                 </ul>
                             </li>
                             
+                            <!-- Módulo Financeiro -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-dollar-sign me-1 text-success"></i>
+                                    Financeiro
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">
+                                        <i class="fas fa-dollar-sign me-1"></i> Gestão Financeira
+                                    </h6></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('financeiro.dashboard') }}">
+                                        <i class="fas fa-chart-pie me-2"></i>Dashboard
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('financeiro.cobranca') }}">
+                                        <i class="fas fa-credit-card me-2"></i>Cobranças
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('financeiro.receitas') }}">
+                                        <i class="fas fa-arrow-up me-2"></i>Receitas
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('financeiro.despesas') }}">
+                                        <i class="fas fa-arrow-down me-2"></i>Despesas
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('financeiro.relatorios') }}">
+                                        <i class="fas fa-file-invoice me-2"></i>Relatórios
+                                    </a></li>
+                                </ul>
+                            </li>
+                            
                             <!-- Gestão de Usuários -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">

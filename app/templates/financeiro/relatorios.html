@@ -1,0 +1,498 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'relatorios') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-file-invoice"></i> Relatórios
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice text-primary me-2"></i>
+                    Relatórios Financeiros
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Gere relatórios detalhados sobre a situação financeira do condomínio
+                </p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="gerarRelatorio()">
+                    <i class="fas fa-download me-1"></i>
+                    Gerar Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Período -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Filtros do Relatório
+            </h5>
+        </div>
+        <div class="card-body">
+            <form id="filtrosRelatorio" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo de Relatório</label>
+                    <select name="tipo_relatorio" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        <option value="resumo_mensal">Resumo Mensal</option>
+                        <option value="fluxo_caixa">Fluxo de Caixa</option>
+                        <option value="receitas_despesas">Receitas vs Despesas</option>
+                        <option value="categorias">Por Categorias</option>
+                        <option value="fornecedores">Por Fornecedores</option>
+                        <option value="moradores">Por Moradores</option>
+                        <option value="balanco">Balanço Patrimonial</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" name="data_inicio" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" name="data_fim" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Período</label>
+                    <select name="periodo" class="form-select" onchange="aplicarPeriodo(this.value)">
+                        <option value="">Personalizado</option>
+                        <option value="hoje">Hoje</option>
+                        <option value="semana">Esta Semana</option>
+                        <option value="mes">Este Mês</option>
+                        <option value="trimestre">Este Trimestre</option>
+                        <option value="ano">Este Ano</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Formato</label>
+                    <select name="formato" class="form-select">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cards de Relatórios Rápidos -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-pie fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Resumo Mensal</h5>
+                    <p class="card-text text-muted">Visão geral das receitas e despesas do mês</p>
+                    <button class="btn btn-outline-primary" onclick="gerarRelatorioRapido('resumo_mensal')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-exchange-alt fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Fluxo de Caixa</h5>
+                    <p class="card-text text-muted">Movimentações financeiras detalhadas</p>
+                    <button class="btn btn-outline-info" onclick="gerarRelatorioRapido('fluxo_caixa')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-balance-scale fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Receitas vs Despesas</h5>
+                    <p class="card-text text-muted">Comparativo entre entradas e saídas</p>
+                    <button class="btn btn-outline-success" onclick="gerarRelatorioRapido('receitas_despesas')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-tags fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Por Categorias</h5>
+                    <p class="card-text text-muted">Análise por categorias financeiras</p>
+                    <button class="btn btn-outline-warning" onclick="gerarRelatorioRapido('categorias')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relatórios Avançados -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-building fa-3x text-secondary mb-3"></i>
+                    <h5 class="card-title">Por Fornecedores</h5>
+                    <p class="card-text text-muted">Gastos detalhados por fornecedor</p>
+                    <button class="btn btn-outline-secondary" onclick="gerarRelatorioRapido('fornecedores')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-danger mb-3"></i>
+                    <h5 class="card-title">Por Moradores</h5>
+                    <p class="card-text text-muted">Receitas e débitos por morador</p>
+                    <button class="btn btn-outline-danger" onclick="gerarRelatorioRapido('moradores')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-3x text-dark mb-3"></i>
+                    <h5 class="card-title">Balanço Patrimonial</h5>
+                    <p class="card-text text-muted">Situação patrimonial do condomínio</p>
+                    <button class="btn btn-outline-dark" onclick="gerarRelatorioRapido('balanco')">
+                        <i class="fas fa-download me-1"></i>
+                        Gerar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Relatório Personalizado</h5>
+                    <p class="card-text text-muted">Configure seu próprio relatório</p>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#relatorioPersonalizadoModal">
+                        <i class="fas fa-cog me-1"></i>
+                        Configurar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Relatórios -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history me-2"></i>
+                Histórico de Relatórios Gerados
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if relatorios_gerados %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Tipo</th>
+                                <th>Período</th>
+                                <th>Formato</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for relatorio in relatorios_gerados %}
+                            <tr>
+                                <td>
+                                    <small>{{ relatorio.data_geracao.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ relatorio.tipo }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ relatorio.periodo_inicio.strftime('%d/%m/%Y') }} - {{ relatorio.periodo_fim.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ relatorio.formato.upper() }}</span>
+                                </td>
+                                <td>
+                                    {% if relatorio.status == 'concluido' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Concluído
+                                        </span>
+                                    {% elif relatorio.status == 'processando' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>
+                                            Processando
+                                        </span>
+                                    {% elif relatorio.status == 'erro' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>
+                                            Erro
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if relatorio.status == 'concluido' %}
+                                        <a href="{{ relatorio.url_download }}" class="btn btn-outline-primary" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger" title="Excluir" onclick="excluirRelatorio({{ relatorio.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum relatório gerado</h5>
+                    <p class="text-muted">Gere seu primeiro relatório usando os filtros acima.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Relatório Personalizado -->
+<div class="modal fade" id="relatorioPersonalizadoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog text-primary me-2"></i>
+                    Relatório Personalizado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="relatorioPersonalizadoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Relatório</label>
+                                <input type="text" class="form-control" placeholder="Ex: Relatório Mensal Detalhado">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Formato</label>
+                                <select class="form-select">
+                                    <option value="pdf">PDF</option>
+                                    <option value="excel">Excel</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data Início</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data Fim</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Seções a Incluir</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="resumo" checked>
+                                    <label class="form-check-label" for="resumo">
+                                        Resumo Executivo
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="receitas" checked>
+                                    <label class="form-check-label" for="receitas">
+                                        Detalhamento de Receitas
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="despesas" checked>
+                                    <label class="form-check-label" for="despesas">
+                                        Detalhamento de Despesas
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="graficos">
+                                    <label class="form-check-label" for="graficos">
+                                        Gráficos e Análises
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="categorias">
+                                    <label class="form-check-label" for="categorias">
+                                        Análise por Categorias
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="observacoes">
+                                    <label class="form-check-label" for="observacoes">
+                                        Observações e Recomendações
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="gerarRelatorioPersonalizado()">
+                    <i class="fas fa-download me-1"></i>
+                    Gerar Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Definir período padrão (mês atual)
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    
+    document.querySelector('input[name="data_inicio"]').value = inicioMes.toISOString().split('T')[0];
+    document.querySelector('input[name="data_fim"]').value = fimMes.toISOString().split('T')[0];
+});
+
+function aplicarPeriodo(periodo) {
+    const hoje = new Date();
+    const dataInicio = document.querySelector('input[name="data_inicio"]');
+    const dataFim = document.querySelector('input[name="data_fim"]');
+    
+    switch(periodo) {
+        case 'hoje':
+            dataInicio.value = dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'semana':
+            const inicioSemana = new Date(hoje);
+            inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+            dataInicio.value = inicioSemana.toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'mes':
+            dataInicio.value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'trimestre':
+            const trimestre = Math.floor(hoje.getMonth() / 3);
+            dataInicio.value = new Date(hoje.getFullYear(), trimestre * 3, 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+        case 'ano':
+            dataInicio.value = new Date(hoje.getFullYear(), 0, 1).toISOString().split('T')[0];
+            dataFim.value = hoje.toISOString().split('T')[0];
+            break;
+    }
+}
+
+function gerarRelatorio() {
+    const form = document.getElementById('filtrosRelatorio');
+    const formData = new FormData(form);
+    
+    // Validar se o tipo de relatório foi selecionado
+    if (!formData.get('tipo_relatorio')) {
+        alert('Selecione um tipo de relatório');
+        return;
+    }
+    
+    // Simular geração do relatório
+    console.log('Gerando relatório:', Object.fromEntries(formData));
+    alert('Relatório sendo gerado... Você será notificado quando estiver pronto.');
+}
+
+function gerarRelatorioRapido(tipo) {
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    
+    // Simular geração do relatório rápido
+    console.log('Gerando relatório rápido:', tipo);
+    alert(`Relatório ${tipo} sendo gerado para o período de ${inicioMes.toLocaleDateString()} a ${fimMes.toLocaleDateString()}`);
+}
+
+function gerarRelatorioPersonalizado() {
+    const form = document.getElementById('relatorioPersonalizadoForm');
+    const formData = new FormData(form);
+    
+    // Simular geração do relatório personalizado
+    console.log('Gerando relatório personalizado:', Object.fromEntries(formData));
+    alert('Relatório personalizado sendo gerado...');
+    
+    // Fechar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('relatorioPersonalizadoModal'));
+    modal.hide();
+}
+
+function excluirRelatorio(id) {
+    if (confirm('Tem certeza que deseja excluir este relatório?')) {
+        // Implementar exclusão do relatório
+        console.log('Excluir relatório:', id);
+        alert('Relatório excluído com sucesso!');
+    }
+}
+</script>
+{% endblock %}

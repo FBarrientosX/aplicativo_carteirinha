@@ -49,11 +49,11 @@ def create_app(config_class=Config):
         app.logger.setLevel(logging.INFO)
         app.logger.info('CondoTech Solutions startup')
     
-    print("✅ Flask app criado")
+    print("Flask app criado")
 
     # Importar modelos para que sejam conhecidos pelo Alembic
     from app import models
-    print("✅ Modelos importados")
+    print("Modelos importados")
 
     # Registrar blueprints
     from app.routes import bp as main_bp
@@ -72,13 +72,17 @@ def create_app(config_class=Config):
     from app.admin_routes import admin_bp
     app.register_blueprint(admin_bp)
     
-    print("✅ Blueprints registrados")
+    # NOVO: Blueprint financeiro
+    from app.financeiro_routes import financeiro_bp
+    app.register_blueprint(financeiro_bp)
+    
+    print("Blueprints registrados")
 
     # NOVO: Inicializar middleware de multi-tenancy
     try:
         from app.middleware import init_tenant_middleware
         init_tenant_middleware(app)
-        print("✅ Middleware de multi-tenancy inicializado")
+        print("Middleware de multi-tenancy inicializado")
     except Exception as e:
         print(f"⚠️ Aviso: Middleware de multi-tenancy não pôde ser inicializado: {e}")
 
@@ -88,7 +92,7 @@ def create_app(config_class=Config):
         from app.models import Usuario
         return Usuario.query.get(int(user_id))
     
-    print("✅ User loader configurado")
+    print("User loader configurado")
     
     
     # ===== FILTROS PERSONALIZADOS JINJA2 =====

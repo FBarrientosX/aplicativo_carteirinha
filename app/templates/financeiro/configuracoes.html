@@ -1,0 +1,989 @@
+{% extends "base_sidebar.html" %}
+{% from "navigation/sidebar_nav.html" import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+    {{ render_sidebar_nav('financeiro', 'configuracoes') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="fas fa-dollar-sign text-success"></i> Financeiro
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-cog"></i> Configurações
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-cog text-primary me-2"></i>
+                    Configurações Financeiras
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Configure as opções do módulo financeiro
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs de Configuração -->
+    <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias" type="button" role="tab">
+                <i class="fas fa-tags me-2"></i>
+                Categorias
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contas-tab" data-bs-toggle="tab" data-bs-target="#contas" type="button" role="tab">
+                <i class="fas fa-university me-2"></i>
+                Contas Bancárias
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cobranca-tab" data-bs-toggle="tab" data-bs-target="#cobranca" type="button" role="tab">
+                <i class="fas fa-credit-card me-2"></i>
+                Cobrança
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="taxas-tab" data-bs-toggle="tab" data-bs-target="#taxas" type="button" role="tab">
+                <i class="fas fa-percentage me-2"></i>
+                Taxas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="geral-tab" data-bs-toggle="tab" data-bs-target="#geral" type="button" role="tab">
+                <i class="fas fa-cog me-2"></i>
+                Geral
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="configTabsContent">
+        <!-- Categorias -->
+        <div class="tab-pane fade show active" id="categorias" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-tags me-2"></i>
+                            Categorias Financeiras
+                        </h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaCategoriaModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Nova Categoria
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">Receitas</h6>
+                            <div class="list-group">
+                                {% for categoria in categorias_receitas %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge me-2" style="background-color: {{ categoria.cor }};">&nbsp;</span>
+                                        <strong>{{ categoria.nome }}</strong>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-warning" onclick="editarCategoria({{ categoria.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="excluirCategoria({{ categoria.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Despesas</h6>
+                            <div class="list-group">
+                                {% for categoria in categorias_despesas %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge me-2" style="background-color: {{ categoria.cor }};">&nbsp;</span>
+                                        <strong>{{ categoria.nome }}</strong>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-warning" onclick="editarCategoria({{ categoria.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="excluirCategoria({{ categoria.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contas Bancárias -->
+        <div class="tab-pane fade" id="contas" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-university me-2"></i>
+                            Contas Bancárias
+                        </h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaContaModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Nova Conta
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if contas_bancarias %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Banco</th>
+                                        <th>Agência</th>
+                                        <th>Conta</th>
+                                        <th>Tipo</th>
+                                        <th>Saldo Atual</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for conta in contas_bancarias %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ conta.banco }}</div>
+                                        </td>
+                                        <td>{{ conta.agencia }}</td>
+                                        <td>{{ conta.numero_conta }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ conta.tipo_conta }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">R$ {{ "%.2f"|format(conta.saldo_atual) }}</div>
+                                        </td>
+                                        <td>
+                                            {% if conta.ativa %}
+                                                <span class="badge bg-success">Ativa</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inativa</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="visualizarConta({{ conta.id }})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="editarConta({{ conta.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" onclick="excluirConta({{ conta.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhuma conta bancária cadastrada</h5>
+                            <p class="text-muted">Adicione as contas bancárias do condomínio para melhor controle financeiro.</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaContaModal">
+                                <i class="fas fa-plus me-1"></i>
+                                Nova Conta
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações de Cobrança -->
+        <div class="tab-pane fade" id="cobranca" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Configurações de Cobrança
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Valor da Taxa de Condomínio</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" step="0.01" value="500.00">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Dia de Vencimento</label>
+                                    <select class="form-select">
+                                        <option value="5">Dia 5</option>
+                                        <option value="10" selected>Dia 10</option>
+                                        <option value="15">Dia 15</option>
+                                        <option value="20">Dia 20</option>
+                                        <option value="25">Dia 25</option>
+                                        <option value="30">Dia 30</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Multa por Atraso (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" step="0.01" value="2.00">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Juros por Dia (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" step="0.01" value="0.10">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="cobranca_automatica" checked>
+                                <label class="form-check-label" for="cobranca_automatica">
+                                    Gerar cobranças automaticamente no início do mês
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enviar_email" checked>
+                                <label class="form-check-label" for="enviar_email">
+                                    Enviar e-mail de cobrança automaticamente
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            Salvar Configurações
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações de Taxas -->
+        <div class="tab-pane fade" id="taxas" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-percentage me-2"></i>
+                            Configuração de Taxas
+                        </h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaTaxaModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Nova Taxa
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Taxas Padrão -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-star me-2"></i>
+                                Taxas Padrão do Condomínio
+                            </h6>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Multa por Atraso</div>
+                                        <small class="text-muted">Aplicada quando o pagamento é feito após o vencimento</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-warning me-2">2,00%</span>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editarTaxa('multa_atraso')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Juros por Dia</div>
+                                        <small class="text-muted">Juros diários sobre o valor em atraso</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-danger me-2">0,10%</span>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editarTaxa('juros_dia')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Taxa de Manutenção</div>
+                                        <small class="text-muted">Taxa fixa para manutenção das áreas comuns</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-info me-2">R$ 50,00</span>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editarTaxa('manutencao')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Fundo de Reserva</div>
+                                        <small class="text-muted">Percentual para formação do fundo de reserva</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">5,00%</span>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editarTaxa('fundo_reserva')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Taxas Personalizadas -->
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-cog me-2"></i>
+                                Taxas Personalizadas
+                            </h6>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Taxa de Piscina</div>
+                                        <small class="text-muted">Taxa adicional para uso da piscina</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">R$ 30,00</span>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-warning" onclick="editarTaxa('piscina')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="excluirTaxa('piscina')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Taxa de Salão de Festas</div>
+                                        <small class="text-muted">Taxa para reserva do salão de festas</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">R$ 100,00</span>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-warning" onclick="editarTaxa('salao_festas')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="excluirTaxa('salao_festas')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">Taxa de Garagem Extra</div>
+                                        <small class="text-muted">Taxa mensal para vaga de garagem adicional</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">R$ 80,00</span>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-warning" onclick="editarTaxa('garagem_extra')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="excluirTaxa('garagem_extra')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Histórico de Alterações -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-history me-2"></i>
+                            Histórico de Alterações
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Taxa</th>
+                                        <th>Valor Anterior</th>
+                                        <th>Novo Valor</th>
+                                        <th>Usuário</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><small>27/09/2025 14:30</small></td>
+                                        <td>Multa por Atraso</td>
+                                        <td><span class="text-muted">1,50%</span></td>
+                                        <td><span class="text-success">2,00%</span></td>
+                                        <td><small>Admin</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><small>25/09/2025 10:15</small></td>
+                                        <td>Taxa de Piscina</td>
+                                        <td><span class="text-muted">R$ 25,00</span></td>
+                                        <td><span class="text-success">R$ 30,00</span></td>
+                                        <td><small>Admin</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><small>20/09/2025 16:45</small></td>
+                                        <td>Fundo de Reserva</td>
+                                        <td><span class="text-muted">3,00%</span></td>
+                                        <td><span class="text-success">5,00%</span></td>
+                                        <td><small>Admin</small></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações Gerais -->
+        <div class="tab-pane fade" id="geral" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações Gerais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Moeda Padrão</label>
+                                    <select class="form-select">
+                                        <option value="BRL" selected>Real (R$)</option>
+                                        <option value="USD">Dólar ($)</option>
+                                        <option value="EUR">Euro (€)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Formato de Data</label>
+                                    <select class="form-select">
+                                        <option value="dd/mm/yyyy" selected>DD/MM/AAAA</option>
+                                        <option value="mm/dd/yyyy">MM/DD/AAAA</option>
+                                        <option value="yyyy-mm-dd">AAAA-MM-DD</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Automático</label>
+                                    <select class="form-select">
+                                        <option value="diario">Diário</option>
+                                        <option value="semanal" selected>Semanal</option>
+                                        <option value="mensal">Mensal</option>
+                                        <option value="desabilitado">Desabilitado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Notificações</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notif_email" checked>
+                                        <label class="form-check-label" for="notif_email">
+                                            E-mail
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notif_sistema" checked>
+                                        <label class="form-check-label" for="notif_sistema">
+                                            Sistema
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            Salvar Configurações
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Categoria -->
+<div class="modal fade" id="novaCategoriaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-primary me-2"></i>
+                    Nova Categoria
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Categoria *</label>
+                        <input type="text" class="form-control" placeholder="Ex: Manutenção" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo *</label>
+                        <select class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="receita">Receita</option>
+                            <option value="despesa">Despesa</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cor</label>
+                        <input type="color" class="form-control form-control-color" value="#007bff">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" rows="3" placeholder="Descrição da categoria..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Categoria
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Conta -->
+<div class="modal fade" id="novaContaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-primary me-2"></i>
+                    Nova Conta Bancária
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Banco *</label>
+                                <input type="text" class="form-control" placeholder="Ex: Banco do Brasil" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Conta *</label>
+                                <select class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="corrente">Conta Corrente</option>
+                                    <option value="poupanca">Conta Poupança</option>
+                                    <option value="investimento">Conta Investimento</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Agência *</label>
+                                <input type="text" class="form-control" placeholder="1234" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Número da Conta *</label>
+                                <input type="text" class="form-control" placeholder="12345-6" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Saldo Inicial</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" step="0.01" placeholder="0,00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="conta_ativa" checked>
+                            <label class="form-check-label" for="conta_ativa">
+                                Conta ativa
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Conta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Taxa -->
+<div class="modal fade" id="novaTaxaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus text-primary me-2"></i>
+                    Nova Taxa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Taxa *</label>
+                        <input type="text" class="form-control" placeholder="Ex: Taxa de Piscina" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Taxa *</label>
+                        <select class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="percentual">Percentual (%)</option>
+                            <option value="valor_fixo">Valor Fixo (R$)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Valor *</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" step="0.01" placeholder="0,00" required>
+                            <span class="input-group-text" id="unidade_taxa">%</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select">
+                            <option value="">Selecione...</option>
+                            <option value="padrao">Taxa Padrão</option>
+                            <option value="adicional">Taxa Adicional</option>
+                            <option value="multa">Multa/Juros</option>
+                            <option value="reserva">Fundo de Reserva</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" rows="3" placeholder="Descrição da taxa..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="taxa_ativa" checked>
+                            <label class="form-check-label" for="taxa_ativa">
+                                Taxa ativa
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Taxa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Taxa -->
+<div class="modal fade" id="editarTaxaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-warning me-2"></i>
+                    Editar Taxa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Taxa *</label>
+                        <input type="text" class="form-control" id="edit_nome_taxa" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Taxa *</label>
+                        <select class="form-select" id="edit_tipo_taxa" required>
+                            <option value="percentual">Percentual (%)</option>
+                            <option value="valor_fixo">Valor Fixo (R$)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Valor *</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="edit_valor_taxa" step="0.01" required>
+                            <span class="input-group-text" id="edit_unidade_taxa">%</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="edit_categoria_taxa">
+                            <option value="padrao">Taxa Padrão</option>
+                            <option value="adicional">Taxa Adicional</option>
+                            <option value="multa">Multa/Juros</option>
+                            <option value="reserva">Fundo de Reserva</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao_taxa" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit_taxa_ativa">
+                            <label class="form-check-label" for="edit_taxa_ativa">
+                                Taxa ativa
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning">
+                    <i class="fas fa-save me-1"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Alterar unidade da taxa baseado no tipo
+    const tipoTaxaSelect = document.querySelector('select[name="tipo_taxa"]');
+    const unidadeTaxa = document.getElementById('unidade_taxa');
+    
+    if (tipoTaxaSelect) {
+        tipoTaxaSelect.addEventListener('change', function() {
+            if (this.value === 'percentual') {
+                unidadeTaxa.textContent = '%';
+            } else if (this.value === 'valor_fixo') {
+                unidadeTaxa.textContent = 'R$';
+            }
+        });
+    }
+
+    // Alterar unidade da taxa no modal de edição
+    const editTipoTaxaSelect = document.getElementById('edit_tipo_taxa');
+    const editUnidadeTaxa = document.getElementById('edit_unidade_taxa');
+    
+    if (editTipoTaxaSelect) {
+        editTipoTaxaSelect.addEventListener('change', function() {
+            if (this.value === 'percentual') {
+                editUnidadeTaxa.textContent = '%';
+            } else if (this.value === 'valor_fixo') {
+                editUnidadeTaxa.textContent = 'R$';
+            }
+        });
+    }
+});
+
+function editarCategoria(id) {
+    // Implementar edição da categoria
+    console.log('Editar categoria:', id);
+}
+
+function excluirCategoria(id) {
+    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+        // Implementar exclusão da categoria
+        console.log('Excluir categoria:', id);
+    }
+}
+
+function visualizarConta(id) {
+    // Implementar visualização da conta
+    console.log('Visualizar conta:', id);
+}
+
+function editarConta(id) {
+    // Implementar edição da conta
+    console.log('Editar conta:', id);
+}
+
+function excluirConta(id) {
+    if (confirm('Tem certeza que deseja excluir esta conta bancária?')) {
+        // Implementar exclusão da conta
+        console.log('Excluir conta:', id);
+    }
+}
+
+// Funções para gerenciar taxas
+function editarTaxa(tipoTaxa) {
+    // Dados das taxas (simulados)
+    const taxas = {
+        'multa_atraso': {
+            nome: 'Multa por Atraso',
+            tipo: 'percentual',
+            valor: 2.00,
+            categoria: 'multa',
+            descricao: 'Aplicada quando o pagamento é feito após o vencimento',
+            ativa: true
+        },
+        'juros_dia': {
+            nome: 'Juros por Dia',
+            tipo: 'percentual',
+            valor: 0.10,
+            categoria: 'multa',
+            descricao: 'Juros diários sobre o valor em atraso',
+            ativa: true
+        },
+        'manutencao': {
+            nome: 'Taxa de Manutenção',
+            tipo: 'valor_fixo',
+            valor: 50.00,
+            categoria: 'padrao',
+            descricao: 'Taxa fixa para manutenção das áreas comuns',
+            ativa: true
+        },
+        'fundo_reserva': {
+            nome: 'Fundo de Reserva',
+            tipo: 'percentual',
+            valor: 5.00,
+            categoria: 'reserva',
+            descricao: 'Percentual para formação do fundo de reserva',
+            ativa: true
+        },
+        'piscina': {
+            nome: 'Taxa de Piscina',
+            tipo: 'valor_fixo',
+            valor: 30.00,
+            categoria: 'adicional',
+            descricao: 'Taxa adicional para uso da piscina',
+            ativa: true
+        },
+        'salao_festas': {
+            nome: 'Taxa de Salão de Festas',
+            tipo: 'valor_fixo',
+            valor: 100.00,
+            categoria: 'adicional',
+            descricao: 'Taxa para reserva do salão de festas',
+            ativa: true
+        },
+        'garagem_extra': {
+            nome: 'Taxa de Garagem Extra',
+            tipo: 'valor_fixo',
+            valor: 80.00,
+            categoria: 'adicional',
+            descricao: 'Taxa mensal para vaga de garagem adicional',
+            ativa: true
+        }
+    };
+
+    const taxa = taxas[tipoTaxa];
+    if (taxa) {
+        // Preencher o modal de edição
+        document.getElementById('edit_nome_taxa').value = taxa.nome;
+        document.getElementById('edit_tipo_taxa').value = taxa.tipo;
+        document.getElementById('edit_valor_taxa').value = taxa.valor;
+        document.getElementById('edit_categoria_taxa').value = taxa.categoria;
+        document.getElementById('edit_descricao_taxa').value = taxa.descricao;
+        document.getElementById('edit_taxa_ativa').checked = taxa.ativa;
+        
+        // Atualizar unidade
+        const editUnidadeTaxa = document.getElementById('edit_unidade_taxa');
+        editUnidadeTaxa.textContent = taxa.tipo === 'percentual' ? '%' : 'R$';
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('editarTaxaModal'));
+        modal.show();
+    }
+}
+
+function excluirTaxa(tipoTaxa) {
+    if (confirm('Tem certeza que deseja excluir esta taxa?')) {
+        // Implementar exclusão da taxa
+        console.log('Excluir taxa:', tipoTaxa);
+        alert('Taxa excluída com sucesso!');
+    }
+}
+
+function salvarTaxa() {
+    // Implementar salvamento da taxa
+    console.log('Salvar nova taxa');
+    alert('Taxa salva com sucesso!');
+    
+    // Fechar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('novaTaxaModal'));
+    modal.hide();
+}
+
+function salvarEdicaoTaxa() {
+    // Implementar salvamento da edição da taxa
+    console.log('Salvar edição da taxa');
+    alert('Taxa atualizada com sucesso!');
+    
+    // Fechar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editarTaxaModal'));
+    modal.hide();
+}
+</script>
+{% endblock %}

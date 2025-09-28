@@ -194,6 +194,59 @@
             </ul>
         </div>
 
+    {% elif current_module == 'financeiro' %}
+        <!-- Navegação do Módulo Financeiro -->
+        <div class="nav-section">
+            <div class="nav-header">
+                <i class="fas fa-dollar-sign nav-icon text-success"></i>
+                <span class="nav-title">Financeiro</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item {{ 'active' if current_page == 'dashboard' else '' }}">
+                    <a href="{{ url_for('financeiro.dashboard') }}" class="nav-link">
+                        <i class="fas fa-chart-pie nav-link-icon"></i>
+                        <span class="nav-link-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'cobranca' else '' }}">
+                    <a href="{{ url_for('financeiro.cobranca') }}" class="nav-link">
+                        <i class="fas fa-credit-card nav-link-icon"></i>
+                        <span class="nav-link-text">Cobrança</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'receitas' else '' }}">
+                    <a href="{{ url_for('financeiro.receitas') }}" class="nav-link">
+                        <i class="fas fa-arrow-up nav-link-icon"></i>
+                        <span class="nav-link-text">Receitas</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'despesas' else '' }}">
+                    <a href="{{ url_for('financeiro.despesas') }}" class="nav-link">
+                        <i class="fas fa-arrow-down nav-link-icon"></i>
+                        <span class="nav-link-text">Despesas</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'fluxo_caixa' else '' }}">
+                    <a href="{{ url_for('financeiro.fluxo_caixa') }}" class="nav-link">
+                        <i class="fas fa-exchange-alt nav-link-icon"></i>
+                        <span class="nav-link-text">Fluxo de Caixa</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'relatorios' else '' }}">
+                    <a href="{{ url_for('financeiro.relatorios') }}" class="nav-link">
+                        <i class="fas fa-file-invoice nav-link-icon"></i>
+                        <span class="nav-link-text">Relatórios</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'configuracoes' else '' }}">
+                    <a href="{{ url_for('financeiro.configuracoes') }}" class="nav-link">
+                        <i class="fas fa-cog nav-link-icon"></i>
+                        <span class="nav-link-text">Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
     {% elif current_module == 'salva_vidas' %}
         <!-- Navegação específica para salva-vidas -->
         <div class="nav-section">
