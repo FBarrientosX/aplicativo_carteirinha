@@ -15,11 +15,6 @@ import json
 # Criar blueprint para o módulo financeiro
 financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/financeiro')
 
-@financeiro_bp.route('/demo')
-@login_required
-def demo():
-    """Demonstração do módulo financeiro"""
-    return render_template('financeiro/demo.html', title='Demo Módulo Financeiro')
 
 @financeiro_bp.route('/')
 @financeiro_bp.route('/dashboard')

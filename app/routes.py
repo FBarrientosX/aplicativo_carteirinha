@@ -18,12 +18,6 @@ from flask_login import login_required
 # Criar blueprint para as rotas
 bp = Blueprint('main', __name__)
 
-@bp.route('/demo-sidebar')
-@login_required
-def demo_sidebar():
-    """Demonstração da nova navegação lateral"""
-    return render_template('demo_sidebar.html', title='Demo Navegação Lateral')
-
 @bp.route('/')
 @bp.route('/index')
 @login_required
