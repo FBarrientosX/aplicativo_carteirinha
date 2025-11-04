@@ -76,6 +76,19 @@ def create_app(config_class=Config):
     from app.financeiro_routes import financeiro_bp
     app.register_blueprint(financeiro_bp)
     
+    # NOVO: Blueprints de módulos adicionais (MyCond-like)
+    from app.reservas_routes import reservas_bp
+    app.register_blueprint(reservas_bp)
+    
+    from app.visitantes_routes import visitantes_bp
+    app.register_blueprint(visitantes_bp)
+    
+    from app.encomendas_routes import encomendas_bp
+    app.register_blueprint(encomendas_bp)
+    
+    from app.classificados_routes import classificados_bp
+    app.register_blueprint(classificados_bp)
+    
     print("Blueprints registrados")
 
     # NOVO: Inicializar middleware de multi-tenancy

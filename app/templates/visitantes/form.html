@@ -1,0 +1,95 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('visitantes', 'novo') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Registrar Visitante
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.nome_completo.label(class="form-label") }}
+                            {{ form.nome_completo(class="form-control") }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.tipo_documento.label(class="form-label") }}
+                                {{ form.tipo_documento(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.documento.label(class="form-label") }}
+                                {{ form.documento(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.telefone.label(class="form-label") }}
+                            {{ form.telefone(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.empresa.label(class="form-label") }}
+                            {{ form.empresa(class="form-control") }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.veiculo_placa.label(class="form-label") }}
+                                {{ form.veiculo_placa(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.veiculo_modelo.label(class="form-label") }}
+                                {{ form.veiculo_modelo(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.morador_id.label(class="form-label") }}
+                            {{ form.morador_id(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.apartamento_destino.label(class="form-label") }}
+                            {{ form.apartamento_destino(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.data_saida_prevista.label(class="form-label") }}
+                            {{ form.data_saida_prevista(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.observacoes.label(class="form-label") }}
+                            {{ form.observacoes(class="form-control", rows=3) }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-warning") }}
+                            <a href="{{ url_for('visitantes.listar_visitantes') }}" class="btn btn-secondary mt-2">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

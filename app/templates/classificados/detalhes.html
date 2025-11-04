@@ -1,0 +1,222 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('classificados', 'listar') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Imagens do Classificado -->
+        <div class="col-md-5 mb-4">
+            <div class="card">
+                {% if classificado.fotos %}
+                <div id="carouselClassificado" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for foto in classificado.fotos %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ url_for('classificados.foto_classificado', filename=foto.nome_arquivo) }}" 
+                                 class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Foto">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if classificado.fotos|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselClassificado" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselClassificado" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="card-body text-center" style="height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image fa-5x text-muted"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Informações do Classificado -->
+        <div class="col-md-7 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ classificado.titulo }}</h4>
+                            <small>
+                                <i class="fas fa-user"></i> {{ classificado.morador.nome_completo }}
+                                {% if classificado.apartamento %}
+                                - {{ classificado.apartamento }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% if classificado.destaque %}
+                        <span class="badge bg-warning">Destaque</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge bg-{{ 'primary' if classificado.tipo == 'produto' else 'info' }} fs-6">
+                            {{ 'Produto' if classificado.tipo == 'produto' else 'Serviço' }}
+                        </span>
+                        {% if classificado.categoria %}
+                        <span class="badge bg-secondary fs-6">{{ classificado.categoria }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if classificado.preco %}
+                    <div class="mb-3">
+                        <h3 class="text-success mb-1">R$ {{ classificado.preco|currency }}</h3>
+                        {% if classificado.tipo_preco == 'negociavel' %}
+                        <small class="text-muted">(Negociável)</small>
+                        {% elif classificado.tipo_preco == 'sob_consulta' %}
+                        <small class="text-muted">(Sob Consulta)</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h5>Descrição</h5>
+                        <p class="text-muted">{{ classificado.descricao|nl2br }}</p>
+                    </div>
+                    
+                    {% if classificado.total_avaliacoes > 0 %}
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <h5 class="mb-2">Avaliação</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <span class="display-6 text-warning">{{ classificado.avaliacao_media }}</span>
+                                <span class="text-muted">/ 5.0</span>
+                            </div>
+                            <div>
+                                {% for i in range(classificado.avaliacao_media|int) %}
+                                <i class="fas fa-star text-warning"></i>
+                                {% endfor %}
+                                {% for i in range(5 - classificado.avaliacao_media|int) %}
+                                <i class="far fa-star text-warning"></i>
+                                {% endfor %}
+                                <br>
+                                <small class="text-muted">({{ classificado.total_avaliacoes }} avaliações)</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    <h5>Informações de Contato</h5>
+                    <ul class="list-unstyled">
+                        {% if classificado.telefone %}
+                        <li><i class="fas fa-phone text-primary"></i> {{ classificado.telefone }}</li>
+                        {% endif %}
+                        {% if classificado.whatsapp %}
+                        <li><i class="fab fa-whatsapp text-success"></i> {{ classificado.whatsapp }}</li>
+                        {% endif %}
+                        {% if classificado.email %}
+                        <li><i class="fas fa-envelope text-info"></i> {{ classificado.email }}</li>
+                        {% endif %}
+                    </ul>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-eye"></i> {{ classificado.visualizacoes }} visualizações
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-calendar"></i> Publicado em {{ classificado.data_criacao|datetimeformat }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Avaliações -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star text-warning"></i> Avaliações e Comentários
+                        {% if classificado.total_avaliacoes > 0 %}
+                        <span class="badge bg-warning">{{ classificado.total_avaliacoes }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Formulário de Avaliação -->
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <h6>Avaliar este anúncio</h6>
+                        <form method="POST" action="{{ url_for('classificados.avaliar_classificado', id=classificado.id) }}">
+                            {{ form_avaliacao.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    {{ form_avaliacao.nota.label(class="form-label") }}
+                                    {{ form_avaliacao.nota(class="form-select") }}
+                                </div>
+                                <div class="col-md-9 mb-3">
+                                    {{ form_avaliacao.comentario.label(class="form-label") }}
+                                    {{ form_avaliacao.comentario(class="form-control", rows=2, placeholder="Deixe seu comentário...") }}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    {{ form_avaliacao.comprou(class="form-check-input") }}
+                                    {{ form_avaliacao.comprou.label(class="form-check-label") }}
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    {{ form_avaliacao.utilizou(class="form-check-input") }}
+                                    {{ form_avaliacao.utilizou.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            
+                            {{ form_avaliacao.submit(class="btn btn-warning") }}
+                        </form>
+                    </div>
+                    
+                    <!-- Lista de Avaliações -->
+                    {% if avaliacoes %}
+                    <div class="list-group">
+                        {% for avaliacao in avaliacoes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {{ avaliacao.morador.nome_completo }}
+                                        {% if avaliacao.comprou or avaliacao.utilizou %}
+                                        <span class="badge bg-success">Comprou/Utilizou</span>
+                                        {% endif %}
+                                    </h6>
+                                    {% if avaliacao.nota %}
+                                    <div class="mb-2">
+                                        {% for i in range(avaliacao.nota) %}
+                                        <i class="fas fa-star text-warning"></i>
+                                        {% endfor %}
+                                        {% for i in range(5 - avaliacao.nota) %}
+                                        <i class="far fa-star text-warning"></i>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if avaliacao.comentario %}
+                                    <p class="mb-1">{{ avaliacao.comentario }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">{{ avaliacao.data_avaliacao|datetimeformat }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Ainda não há avaliações para este anúncio.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

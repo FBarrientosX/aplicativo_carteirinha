@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitField, SelectField, IntegerField, PasswordField, DecimalField
+from wtforms import StringField, TextAreaField, BooleanField, DateField, SubmitField, SelectField, IntegerField, PasswordField, DecimalField, TimeField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange, ValidationError
 from datetime import datetime
 
@@ -314,4 +314,172 @@ class FiltrosChamadosForm(FlaskForm):
     status = SelectField('Status', choices=[('', 'Todos')])
     categoria = SelectField('Categoria', choices=[('', 'Todas')])
     prioridade = SelectField('Prioridade', choices=[('', 'Todas')])
-    busca = StringField('Buscar') 
+    busca = StringField('Buscar')
+
+
+# ================================
+# FORMULÁRIOS - MÓDULOS ADICIONAIS
+# ================================
+
+class EspacoComumForm(FlaskForm):
+    """Formulário para cadastro de espaços comuns"""
+    nome = StringField('Nome do Espaço', validators=[DataRequired(), Length(max=200)])
+    descricao = TextAreaField('Descrição', validators=[Optional(), Length(max=1000)])
+    capacidade_maxima = IntegerField('Capacidade Máxima', validators=[Optional(), NumberRange(min=1)])
+    area_metros = DecimalField('Área (m²)', validators=[Optional(), NumberRange(min=0)])
+    tempo_antecipacao_horas = IntegerField('Antecipação Mínima (horas)', default=24, validators=[Optional(), NumberRange(min=1)])
+    tempo_maximo_horas = IntegerField('Tempo Máximo (horas)', default=4, validators=[Optional(), NumberRange(min=1)])
+    valor_taxa = DecimalField('Taxa de Uso (R$)', default=0, validators=[Optional(), NumberRange(min=0)])
+    requer_aprovacao = BooleanField('Requer Aprovação', default=False)
+    horario_inicio = TimeField('Horário Início', validators=[Optional()])
+    horario_fim = TimeField('Horário Fim', validators=[Optional()])
+    equipamentos = TextAreaField('Equipamentos Disponíveis', validators=[Optional()])
+    ativo = BooleanField('Ativo', default=True)
+    submit = SubmitField('Salvar')
+
+
+class ReservaEspacoForm(FlaskForm):
+    """Formulário para reserva de espaços"""
+    espaco_id = SelectField('Espaço', validators=[DataRequired()], coerce=int)
+    morador_id = SelectField('Morador', validators=[DataRequired()], coerce=int)
+    data_reserva = DateField('Data da Reserva', validators=[DataRequired()])
+    hora_inicio = TimeField('Hora Início', validators=[DataRequired()])
+    hora_fim = TimeField('Hora Fim', validators=[DataRequired()])
+    quantidade_pessoas = IntegerField('Quantidade de Pessoas', default=1, validators=[Optional(), NumberRange(min=1)])
+    finalidade = StringField('Finalidade', validators=[Optional(), Length(max=200)])
+    observacoes = TextAreaField('Observações', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Solicitar Reserva')
+
+
+class VisitanteForm(FlaskForm):
+    """Formulário para cadastro de visitantes"""
+    nome_completo = StringField('Nome Completo', validators=[DataRequired(), Length(max=200)])
+    documento = StringField('Documento (CPF/RG)', validators=[Optional(), Length(max=20)])
+    tipo_documento = SelectField('Tipo de Documento',
+                                choices=[('rg', 'RG'), ('cpf', 'CPF'), ('cnh', 'CNH')],
+                                default='rg')
+    telefone = StringField('Telefone', validators=[Optional(), Length(max=20)])
+    veiculo_placa = StringField('Placa do Veículo', validators=[Optional(), Length(max=10)])
+    veiculo_modelo = StringField('Modelo do Veículo', validators=[Optional(), Length(max=100)])
+    tipo = SelectField('Tipo',
+                      choices=[('visitante', 'Visitante'), ('funcionario', 'Funcionário'), 
+                              ('prestador', 'Prestador de Serviço')],
+                      validators=[DataRequired()])
+    empresa = StringField('Empresa', validators=[Optional(), Length(max=200)])
+    morador_id = SelectField('Morador Responsável', validators=[DataRequired()], coerce=int)
+    apartamento_destino = StringField('Apartamento Destino', validators=[DataRequired(), Length(max=10)])
+    data_saida_prevista = DateField('Saída Prevista', validators=[Optional()])
+    observacoes = TextAreaField('Observações', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Registrar Visitante')
+
+
+class EncomendaForm(FlaskForm):
+    """Formulário para cadastro de encomendas"""
+    morador_id = SelectField('Morador', validators=[DataRequired()], coerce=int)
+    transportadora = StringField('Transportadora', validators=[Optional(), Length(max=200)])
+    codigo_rastreamento = StringField('Código de Rastreamento', validators=[Optional(), Length(max=100)])
+    descricao = TextAreaField('Descrição', validators=[Optional(), Length(max=500)])
+    quantidade_pacotes = IntegerField('Quantidade de Pacotes', default=1, validators=[Optional(), NumberRange(min=1)])
+    local_armazenamento = StringField('Local de Armazenamento', validators=[Optional(), Length(max=100)])
+    observacoes = TextAreaField('Observações', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Registrar Encomenda')
+
+
+class FiltroReservaForm(FlaskForm):
+    """Formulário para filtros de reservas"""
+    espaco_id = SelectField('Espaço', choices=[('', 'Todos')], coerce=int)
+    status = SelectField('Status',
+                        choices=[('', 'Todos'), ('pendente', 'Pendente'), ('aprovado', 'Aprovado'),
+                                ('recusado', 'Recusado'), ('cancelado', 'Cancelado'), ('concluido', 'Concluído')])
+    data_inicio = DateField('Data Início', validators=[Optional()])
+    data_fim = DateField('Data Fim', validators=[Optional()])
+    busca = StringField('Buscar')
+
+
+class FiltroVisitanteForm(FlaskForm):
+    """Formulário para filtros de visitantes"""
+    tipo = SelectField('Tipo',
+                      choices=[('', 'Todos'), ('visitante', 'Visitante'), ('funcionario', 'Funcionário'),
+                              ('prestador', 'Prestador')])
+    status = SelectField('Status',
+                        choices=[('', 'Todos'), ('em_visita', 'Em Visita'), ('saiu', 'Saiu'), ('expirado', 'Expirado')])
+    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=int)
+    busca = StringField('Buscar')
+
+
+class FiltroEncomendaForm(FlaskForm):
+    """Formulário para filtros de encomendas"""
+    status = SelectField('Status',
+                        choices=[('', 'Todas'), ('aguardando', 'Aguardando'), ('recebida', 'Recebida'),
+                                ('entregue', 'Entregue'), ('retirada', 'Retirada'), ('devolvida', 'Devolvida')])
+    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=int)
+    transportadora = StringField('Transportadora', validators=[Optional()])
+    busca = StringField('Buscar')
+
+
+# ================================
+# FORMULÁRIOS - MARKETPLACE/CLASSIFICADOS
+# ================================
+
+class ClassificadoForm(FlaskForm):
+    """Formulário para cadastro de classificados"""
+    titulo = StringField('Título do Anúncio', validators=[DataRequired(), Length(max=200)])
+    descricao = TextAreaField('Descrição', validators=[DataRequired(), Length(max=2000)])
+    tipo = SelectField('Tipo',
+                      choices=[('produto', 'Produto'), ('servico', 'Serviço')],
+                      validators=[DataRequired()])
+    categoria = StringField('Categoria', validators=[Optional(), Length(max=100)])
+    
+    # Preço
+    preco = DecimalField('Preço (R$)', validators=[Optional(), NumberRange(min=0)])
+    tipo_preco = SelectField('Tipo de Preço',
+                            choices=[('fixo', 'Preço Fixo'), ('negociavel', 'Negociável'),
+                                    ('sob_consulta', 'Sob Consulta')],
+                            default='negociavel')
+    
+    # Contato
+    telefone = StringField('Telefone', validators=[Optional(), Length(max=20)])
+    email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
+    whatsapp = StringField('WhatsApp', validators=[Optional(), Length(max=20)])
+    
+    # Status
+    status = SelectField('Status',
+                        choices=[('ativo', 'Ativo'), ('pausado', 'Pausado')],
+                        default='ativo')
+    destaque = BooleanField('Anúncio em Destaque', default=False)
+    
+    # Fotos (múltiplas)
+    fotos = FileField('Fotos do Anúncio', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Apenas imagens: jpg, jpeg, png, gif, webp')
+    ], render_kw={'multiple': True})
+    
+    submit = SubmitField('Publicar Anúncio')
+
+
+class AvaliacaoClassificadoForm(FlaskForm):
+    """Formulário para avaliação de classificados"""
+    nota = SelectField('Nota (1-5 estrelas)',
+                      choices=[(1, '1 estrela'), (2, '2 estrelas'), (3, '3 estrelas'),
+                              (4, '4 estrelas'), (5, '5 estrelas')],
+                      coerce=int, validators=[Optional()])
+    comentario = TextAreaField('Comentário', validators=[Optional(), Length(max=500)])
+    comprou = BooleanField('Comprou este produto/serviço', default=False)
+    utilizou = BooleanField('Utilizou este serviço', default=False)
+    submit = SubmitField('Enviar Avaliação')
+
+
+class FiltroClassificadoForm(FlaskForm):
+    """Formulário para filtros de classificados"""
+    tipo = SelectField('Tipo',
+                      choices=[('', 'Todos'), ('produto', 'Produto'), ('servico', 'Serviço')])
+    categoria = StringField('Categoria', validators=[Optional()])
+    status = SelectField('Status',
+                        choices=[('', 'Todos'), ('ativo', 'Ativo'), ('pausado', 'Pausado'),
+                                ('vendido', 'Vendido'), ('encerrado', 'Encerrado')])
+    busca = StringField('Buscar', validators=[Optional()])
+    ordenar = SelectField('Ordenar por',
+                         choices=[('recentes', 'Mais Recentes'), ('visualizacoes', 'Mais Visualizados'),
+                                ('avaliacao', 'Melhor Avaliados'), ('preco_menor', 'Menor Preço'),
+                                ('preco_maior', 'Maior Preço')],
+                         default='recentes') 

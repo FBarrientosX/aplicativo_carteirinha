@@ -1,0 +1,100 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('reservas', 'espacos') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-{{ 'edit' if espaco else 'plus' }}"></i>
+                        {{ 'Editar' if espaco else 'Novo' }} Espaço Comum
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.nome.label(class="form-label") }}
+                            {{ form.nome(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.descricao.label(class="form-label") }}
+                            {{ form.descricao(class="form-control", rows=3) }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.capacidade_maxima.label(class="form-label") }}
+                                {{ form.capacidade_maxima(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.area_metros.label(class="form-label") }}
+                                {{ form.area_metros(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.tempo_antecipacao_horas.label(class="form-label") }}
+                                {{ form.tempo_antecipacao_horas(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.tempo_maximo_horas.label(class="form-label") }}
+                                {{ form.tempo_maximo_horas(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.valor_taxa.label(class="form-label") }}
+                                {{ form.valor_taxa(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.horario_inicio.label(class="form-label") }}
+                                {{ form.horario_inicio(class="form-control", type="time") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.horario_fim.label(class="form-label") }}
+                                {{ form.horario_fim(class="form-control", type="time") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.equipamentos.label(class="form-label") }}
+                            {{ form.equipamentos(class="form-control", rows=2) }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.requer_aprovacao(class="form-check-input") }}
+                                {{ form.requer_aprovacao.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.ativo(class="form-check-input") }}
+                                {{ form.ativo.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('reservas.listar_espacos') }}" class="btn btn-secondary mt-2">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1025,3 +1025,381 @@ class HistoricoChamado(db.Model):
     # Relacionamentos
     chamado = db.relationship('ChamadoManutencao', backref='historico')
     usuario = db.relationship('Usuario', backref='acoes_chamados')
+
+
+# ================================
+# MÓDULOS ADICIONAIS - SIMILARES AO MYCOND
+# ================================
+
+class EspacoComum(db.Model):
+    """Espaços comuns do condomínio disponíveis para reserva"""
+    __tablename__ = 'espacos_comuns'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    # Informações do espaço
+    nome = db.Column(db.String(200), nullable=False)  # Ex: Salão de Festas, Churrasqueira, Academia
+    descricao = db.Column(db.Text, nullable=True)
+    capacidade_maxima = db.Column(db.Integer, nullable=True)  # Quantidade de pessoas
+    area_metros = db.Column(db.Numeric(10, 2), nullable=True)  # Área em m²
+    
+    # Configurações de reserva
+    tempo_antecipacao_horas = db.Column(db.Integer, default=24)  # Horas mínimas para reservar
+    tempo_maximo_horas = db.Column(db.Integer, default=4)  # Tempo máximo de reserva
+    valor_taxa = db.Column(db.Numeric(10, 2), default=0)  # Taxa de uso (opcional)
+    requer_aprovacao = db.Column(db.Boolean, default=False)  # Requer aprovação do síndico
+    
+    # Regras
+    horario_inicio = db.Column(db.Time, nullable=True)  # Horário de início permitido
+    horario_fim = db.Column(db.Time, nullable=True)  # Horário de fim permitido
+    dias_semana_disponiveis = db.Column(db.String(20), default='0123456')  # 0=Dom, 6=Sáb
+    
+    # Status e configuração
+    ativo = db.Column(db.Boolean, default=True)
+    fotos = db.Column(db.JSON, default=[])  # URLs das fotos
+    equipamentos = db.Column(db.Text, nullable=True)  # Lista de equipamentos disponíveis
+    
+    # Timestamps
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    reservas = db.relationship('ReservaEspaco', backref='espaco', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<EspacoComum {self.nome}>'
+
+
+class ReservaEspaco(db.Model):
+    """Reservas de espaços comuns"""
+    __tablename__ = 'reservas_espacos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(20), nullable=False, unique=True)  # Ex: RES2024001
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    espaco_id = db.Column(db.Integer, db.ForeignKey('espacos_comuns.id'), nullable=False)
+    
+    # Informações da reserva
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    data_reserva = db.Column(db.Date, nullable=False)
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fim = db.Column(db.Time, nullable=False)
+    quantidade_pessoas = db.Column(db.Integer, default=1)
+    
+    # Status e aprovação
+    status = db.Column(db.String(20), default='pendente')  # pendente, aprovado, recusado, cancelado, concluido
+    aprovado_por = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    data_aprovacao = db.Column(db.DateTime, nullable=True)
+    motivo_recusa = db.Column(db.Text, nullable=True)
+    
+    # Informações adicionais
+    finalidade = db.Column(db.String(200), nullable=True)  # Ex: Aniversário, Reunião familiar
+    observacoes = db.Column(db.Text, nullable=True)
+    taxa_paga = db.Column(db.Boolean, default=False)
+    valor_pago = db.Column(db.Numeric(10, 2), nullable=True)
+    
+    # Timestamps
+    data_solicitacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    morador = db.relationship('Morador', backref='reservas_espacos')
+    aprovador = db.relationship('Usuario', foreign_keys=[aprovado_por])
+    
+    def gerar_numero(self):
+        """Gera número único da reserva"""
+        import random
+        import string
+        year = datetime.now().year
+        random_str = ''.join(random.choices(string.digits, k=4))
+        return f"RES{year}{random_str}"
+    
+    @property
+    def status_cor(self):
+        cores = {
+            'pendente': 'warning',
+            'aprovado': 'success',
+            'recusado': 'danger',
+            'cancelado': 'secondary',
+            'concluido': 'info'
+        }
+        return cores.get(self.status, 'secondary')
+    
+    @property
+    def esta_em_andamento(self):
+        """Verifica se a reserva está em andamento"""
+        agora = datetime.now()
+        data_hora_inicio = datetime.combine(self.data_reserva, self.hora_inicio)
+        data_hora_fim = datetime.combine(self.data_reserva, self.hora_fim)
+        
+        return data_hora_inicio <= agora <= data_hora_fim and self.status == 'aprovado'
+    
+    def __repr__(self):
+        return f'<ReservaEspaco {self.numero} - {self.espaco.nome}>'
+
+
+class Visitante(db.Model):
+    """Controle de visitantes e funcionários"""
+    __tablename__ = 'visitantes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    # Informações do visitante
+    nome_completo = db.Column(db.String(200), nullable=False)
+    documento = db.Column(db.String(20), nullable=True)  # CPF ou RG
+    tipo_documento = db.Column(db.String(20), default='rg')  # rg, cpf, cnh
+    telefone = db.Column(db.String(20), nullable=True)
+    veiculo_placa = db.Column(db.String(10), nullable=True)
+    veiculo_modelo = db.Column(db.String(100), nullable=True)
+    
+    # Tipo de visitante
+    tipo = db.Column(db.String(20), nullable=False)  # visitante, funcionario, prestador
+    empresa = db.Column(db.String(200), nullable=True)  # Se for prestador ou funcionário
+    
+    # Relacionamento com morador
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    apartamento_destino = db.Column(db.String(10), nullable=False)  # Ex: 101, 205
+    
+    # Controle de acesso
+    data_entrada = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    data_saida_prevista = db.Column(db.DateTime, nullable=True)
+    data_saida_real = db.Column(db.DateTime, nullable=True)
+    autorizado_por = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    
+    # Status
+    status = db.Column(db.String(20), default='em_visita')  # em_visita, saiu, expirado
+    entrada_autorizada = db.Column(db.Boolean, default=True)
+    observacoes = db.Column(db.Text, nullable=True)
+    
+    # Foto (opcional)
+    foto_url = db.Column(db.String(500), nullable=True)
+    
+    # Timestamps
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    morador = db.relationship('Morador', backref='visitantes')
+    autorizador = db.relationship('Usuario', foreign_keys=[autorizado_por])
+    
+    @property
+    def esta_dentro(self):
+        """Verifica se o visitante ainda está no condomínio"""
+        return self.status == 'em_visita' and self.entrada_autorizada
+    
+    @property
+    def tempo_permanencia(self):
+        """Calcula tempo de permanência"""
+        if self.data_saida_real:
+            return self.data_saida_real - self.data_entrada
+        elif self.data_entrada:
+            return datetime.utcnow() - self.data_entrada
+        return None
+    
+    def __repr__(self):
+        return f'<Visitante {self.nome_completo} - {self.apartamento_destino}>'
+
+
+class Encomenda(db.Model):
+    """Portal de encomendas - Controle de entregas"""
+    __tablename__ = 'encomendas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(20), nullable=False, unique=True)  # Ex: ENC2024001
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    # Informações da encomenda
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    transportadora = db.Column(db.String(200), nullable=True)  # Ex: Correios, Mercado Livre
+    codigo_rastreamento = db.Column(db.String(100), nullable=True)
+    descricao = db.Column(db.Text, nullable=True)  # Descrição do produto
+    quantidade_pacotes = db.Column(db.Integer, default=1)
+    
+    # Status e controle
+    status = db.Column(db.String(20), default='aguardando')  # aguardando, recebida, entregue, retirada, devolvida
+    data_recebimento = db.Column(db.DateTime, nullable=True)
+    data_retirada = db.Column(db.DateTime, nullable=True)
+    retirado_por = db.Column(db.String(200), nullable=True)  # Nome de quem retirou
+    documento_retirada = db.Column(db.String(20), nullable=True)  # Documento de quem retirou
+    
+    # Localização
+    local_armazenamento = db.Column(db.String(100), nullable=True)  # Ex: Portaria, Sala de Encomendas
+    observacoes = db.Column(db.Text, nullable=True)
+    
+    # Notificações
+    notificacao_enviada = db.Column(db.Boolean, default=False)
+    data_notificacao = db.Column(db.DateTime, nullable=True)
+    
+    # Timestamps
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    morador = db.relationship('Morador', backref='encomendas')
+    
+    def gerar_numero(self):
+        """Gera número único da encomenda"""
+        import random
+        import string
+        year = datetime.now().year
+        random_str = ''.join(random.choices(string.digits, k=4))
+        return f"ENC{year}{random_str}"
+    
+    @property
+    def status_cor(self):
+        cores = {
+            'aguardando': 'warning',
+            'recebida': 'info',
+            'entregue': 'success',
+            'retirada': 'primary',
+            'devolvida': 'danger'
+        }
+        return cores.get(self.status, 'secondary')
+    
+    @property
+    def dias_aguardando(self):
+        """Dias desde o recebimento"""
+        if self.data_recebimento:
+            return (datetime.utcnow() - self.data_recebimento).days
+        return None
+    
+    def __repr__(self):
+        return f'<Encomenda {self.numero} - {self.morador.nome_completo}>'
+
+
+class Classificado(db.Model):
+    """Classificados - Marketplace para condôminos divulgarem produtos e serviços"""
+    __tablename__ = 'classificados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    # Informações do anúncio
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=False)
+    tipo = db.Column(db.String(20), nullable=False)  # produto, servico
+    categoria = db.Column(db.String(100), nullable=True)  # Ex: Limpeza, Manutenção, Alimentação
+    
+    # Informações de contato
+    telefone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    whatsapp = db.Column(db.String(20), nullable=True)
+    
+    # Preços e valores
+    preco = db.Column(db.Numeric(10, 2), nullable=True)  # Preço do produto/serviço
+    tipo_preco = db.Column(db.String(20), nullable=True)  # fixo, negociavel, sob_consulta
+    
+    # Status e controle
+    status = db.Column(db.String(20), default='ativo')  # ativo, pausado, vendido, encerrado
+    destaque = db.Column(db.Boolean, default=False)  # Anúncio em destaque
+    visualizacoes = db.Column(db.Integer, default=0)  # Contador de visualizações
+    
+    # Localização (opcional)
+    apartamento = db.Column(db.String(10), nullable=True)  # Bloco-Apartamento do anunciante
+    
+    # Timestamps
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data_expiracao = db.Column(db.DateTime, nullable=True)  # Data de expiração do anúncio
+    
+    # Relacionamentos
+    morador = db.relationship('Morador', backref='classificados')
+    fotos = db.relationship('FotoClassificado', backref='classificado', lazy=True, cascade='all, delete-orphan')
+    avaliacoes = db.relationship('AvaliacaoClassificado', backref='classificado', lazy=True, cascade='all, delete-orphan')
+    
+    @property
+    def avaliacao_media(self):
+        """Calcula a média das avaliações"""
+        if not self.avaliacoes:
+            return 0.0
+        avaliacoes_positivas = [a for a in self.avaliacoes if a.nota is not None]
+        if not avaliacoes_positivas:
+            return 0.0
+        soma = sum(a.nota for a in avaliacoes_positivas)
+        return round(soma / len(avaliacoes_positivas), 1)
+    
+    @property
+    def total_avaliacoes(self):
+        """Total de avaliações"""
+        return len([a for a in self.avaliacoes if a.nota is not None])
+    
+    @property
+    def status_cor(self):
+        cores = {
+            'ativo': 'success',
+            'pausado': 'warning',
+            'vendido': 'info',
+            'encerrado': 'secondary'
+        }
+        return cores.get(self.status, 'secondary')
+    
+    def incrementar_visualizacao(self):
+        """Incrementa contador de visualizações"""
+        self.visualizacoes += 1
+        db.session.commit()
+    
+    def __repr__(self):
+        return f'<Classificado {self.titulo} - {self.morador.nome_completo}>'
+
+
+class FotoClassificado(db.Model):
+    """Fotos dos classificados"""
+    __tablename__ = 'fotos_classificados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    classificado_id = db.Column(db.Integer, db.ForeignKey('classificados.id'), nullable=False)
+    
+    # Informações do arquivo
+    nome_arquivo = db.Column(db.String(255), nullable=False)
+    caminho_arquivo = db.Column(db.String(500), nullable=False)
+    nome_original = db.Column(db.String(255), nullable=False)
+    tamanho = db.Column(db.Integer, nullable=True)
+    ordem = db.Column(db.Integer, default=0)  # Ordem de exibição
+    
+    # Timestamps
+    data_upload = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<FotoClassificado {self.nome_original}>'
+
+
+class AvaliacaoClassificado(db.Model):
+    """Avaliações e comentários dos classificados"""
+    __tablename__ = 'avaliacoes_classificados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    classificado_id = db.Column(db.Integer, db.ForeignKey('classificados.id'), nullable=False)
+    
+    # Informações da avaliação
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)  # Quem avaliou
+    nota = db.Column(db.Integer, nullable=True)  # 1 a 5 estrelas
+    comentario = db.Column(db.Text, nullable=True)
+    
+    # Indicadores de experiência
+    comprou = db.Column(db.Boolean, default=False)  # Comprou o produto/serviço
+    utilizou = db.Column(db.Boolean, default=False)  # Utilizou o serviço
+    
+    # Status
+    aprovado = db.Column(db.Boolean, default=True)  # Avaliação aprovada (moderação)
+    
+    # Timestamps
+    data_avaliacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    morador = db.relationship('Morador', backref='avaliacoes_feitas')
+    
+    @property
+    def nota_estrelas(self):
+        """Retorna HTML com estrelas"""
+        if not self.nota:
+            return ""
+        estrelas = "★" * self.nota + "☆" * (5 - self.nota)
+        return estrelas
+    
+    def __repr__(self):
+        return f'<AvaliacaoClassificado {self.nota} estrelas - {self.morador.nome_completo}>'

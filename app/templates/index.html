@@ -93,35 +93,140 @@
                     </div>
                 </div>
 
-                <!-- Módulos Futuros -->
+                <!-- Módulo Reserva de Espaços -->
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 module-card" style="border-left: 5px solid #6c757d; opacity: 0.7;">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #007bff;">
                         <div class="card-body text-center">
                             <div class="mb-3">
-                                <i class="fas fa-door-open fa-4x text-secondary"></i>
+                                <i class="fas fa-calendar-alt fa-4x text-primary"></i>
                             </div>
-                            <h4 class="card-title">Controle de Acesso</h4>
+                            <h4 class="card-title">Reserva de Espaços</h4>
                             <p class="card-text text-muted mb-4">
-                                Sistema de controle de acesso, portaria digital, 
-                                cadastro de visitantes e integração com interfones.
+                                Sistema completo para reserva de espaços comuns como salão de festas, 
+                                churrasqueira, academia e outros ambientes do condomínio.
                             </p>
                             
                             <div class="mb-3">
-                                <small class="text-muted">Em breve:</small>
+                                <small class="text-muted">Funcionalidades principais:</small>
                                 <ul class="list-unstyled small mt-2">
-                                    <li><i class="fas fa-clock text-warning"></i> Portaria digital</li>
-                                    <li><i class="fas fa-clock text-warning"></i> Cadastro de visitantes</li>
-                                    <li><i class="fas fa-clock text-warning"></i> QR Code temporário</li>
-                                    <li><i class="fas fa-clock text-warning"></i> Histórico de acessos</li>
+                                    <li><i class="fas fa-check text-success"></i> Reserva online</li>
+                                    <li><i class="fas fa-check text-success"></i> Controle de conflitos</li>
+                                    <li><i class="fas fa-check text-success"></i> Aprovação automática</li>
+                                    <li><i class="fas fa-check text-success"></i> Calendário de reservas</li>
                                 </ul>
                             </div>
                             
                             <div class="d-grid gap-2">
-                                <button class="btn btn-secondary" disabled>
-                                    <i class="fas fa-lock"></i> Em Desenvolvimento
-                                </button>
-                                <small class="text-warning">
-                                    <i class="fas fa-clock"></i> Próxima Atualização
+                                <a href="{{ url_for('reservas.listar_espacos') }}" class="btn btn-primary">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Controle de Visitantes -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #ffc107;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-user-friends fa-4x text-warning"></i>
+                            </div>
+                            <h4 class="card-title">Controle de Visitantes</h4>
+                            <p class="card-text text-muted mb-4">
+                                Gestão completa de visitantes, funcionários e prestadores de serviço 
+                                com controle de entrada e saída em tempo real.
+                            </p>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Cadastro de visitantes</li>
+                                    <li><i class="fas fa-check text-success"></i> Controle de acesso</li>
+                                    <li><i class="fas fa-check text-success"></i> Registro de veículos</li>
+                                    <li><i class="fas fa-check text-success"></i> Histórico completo</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('visitantes.listar_visitantes') }}" class="btn btn-warning">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Portal de Encomendas -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #17a2b8;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-box fa-4x text-info"></i>
+                            </div>
+                            <h4 class="card-title">Portal de Encomendas</h4>
+                            <p class="card-text text-muted mb-4">
+                                Controle completo de encomendas recebidas na portaria com notificações 
+                                automáticas aos moradores e rastreamento de entregas.
+                            </p>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Registro de encomendas</li>
+                                    <li><i class="fas fa-check text-success"></i> Notificações automáticas</li>
+                                    <li><i class="fas fa-check text-success"></i> Código de rastreamento</li>
+                                    <li><i class="fas fa-check text-success"></i> Controle de retirada</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('encomendas.listar_encomendas') }}" class="btn btn-info">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Marketplace/Classificados -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #28a745;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-store fa-4x text-success"></i>
+                            </div>
+                            <h4 class="card-title">Marketplace</h4>
+                            <p class="card-text text-muted mb-4">
+                                Classificados para condôminos divulgarem produtos e serviços, 
+                                com sistema de avaliações e comentários dos compradores.
+                            </p>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Anúncios de produtos</li>
+                                    <li><i class="fas fa-check text-success"></i> Anúncios de serviços</li>
+                                    <li><i class="fas fa-check text-success"></i> Sistema de avaliações</li>
+                                    <li><i class="fas fa-check text-success"></i> Upload de fotos</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('classificados.listar_classificados') }}" class="btn btn-success">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
                                 </small>
                             </div>
                         </div>
@@ -201,7 +306,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="border-end">
-                                <h4 class="text-info mb-1">2</h4>
+                                <h4 class="text-info mb-1">6</h4>
                                 <small class="text-muted">Módulos Ativos</small>
                             </div>
                         </div>

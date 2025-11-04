@@ -1,0 +1,112 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('classificados', 'meus') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-user-circle text-success"></i>
+                        Meus Anúncios
+                    </h2>
+                    <p class="text-muted mb-0">Gerencie seus classificados publicados</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('classificados.novo_classificado') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Novo Anúncio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Classificados -->
+    <div class="row">
+        {% if classificados %}
+        {% for classificado in classificados %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ classificado.titulo }}</h5>
+                        <small class="text-muted">{{ classificado.data_criacao|datetimeformat }}</small>
+                    </div>
+                    <div>
+                        <span class="badge bg-{{ classificado.status_cor }}">{{ classificado.status|title }}</span>
+                        {% if classificado.destaque %}
+                        <span class="badge bg-warning">Destaque</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if classificado.fotos %}
+                <img src="{{ url_for('classificados.foto_classificado', filename=classificado.fotos[0].nome_arquivo) }}" 
+                     class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ classificado.titulo }}">
+                {% endif %}
+                
+                <div class="card-body">
+                    <p class="card-text">{{ classificado.descricao[:150] }}{% if classificado.descricao|length > 150 %}...{% endif %}</p>
+                    
+                    <div class="mb-2">
+                        <span class="badge bg-{{ 'primary' if classificado.tipo == 'produto' else 'info' }}">
+                            {{ 'Produto' if classificado.tipo == 'produto' else 'Serviço' }}
+                        </span>
+                        {% if classificado.categoria %}
+                        <span class="badge bg-secondary">{{ classificado.categoria }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if classificado.preco %}
+                    <div class="mb-2">
+                        <strong class="text-success">R$ {{ classificado.preco|currency }}</strong>
+                    </div>
+                    {% endif %}
+                    
+                    {% if classificado.total_avaliacoes > 0 %}
+                    <div class="mb-2">
+                        <small class="text-warning">
+                            {% for i in range(classificado.avaliacao_media|int) %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                        </small>
+                        <small class="text-muted">({{ classificado.total_avaliacoes }} avaliações)</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-eye"></i> {{ classificado.visualizacoes }} visualizações
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{{ url_for('classificados.ver_classificado', id=classificado.id) }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-eye"></i> Ver
+                        </a>
+                        <a href="{{ url_for('classificados.editar_classificado', id=classificado.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Você ainda não publicou nenhum anúncio.
+                <a href="{{ url_for('classificados.novo_classificado') }}" class="alert-link">Publique seu primeiro anúncio</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
