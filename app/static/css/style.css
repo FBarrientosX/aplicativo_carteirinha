@@ -2340,16 +2340,16 @@ body {
 .sidebar-layout .main-content > .container-fluid {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    margin: 0 auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 .sidebar-layout .container-fluid {
     max-width: 100% !important;
-    margin: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    margin: 0 auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
     width: 100% !important;
 }
 
@@ -2361,8 +2361,8 @@ body {
     
     .sidebar-layout .main-content > .container-fluid,
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
     }
 }
 
@@ -2373,32 +2373,32 @@ body {
     
     .sidebar-layout .main-content > .container-fluid,
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
     }
 }
 
 @media (max-width: 1400px) {
     .sidebar-layout .main-content > .container-fluid,
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
     }
 }
 
 @media (max-width: 1200px) {
     .sidebar-layout .main-content > .container-fluid,
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
     }
 }
 
 @media (max-width: 768px) {
     .sidebar-layout .main-content > .container-fluid,
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
 }
 
@@ -3076,8 +3076,8 @@ body {
     }
     
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 2.5rem !important;
+        padding-right: 2.5rem !important;
     }
 }
 
@@ -3105,8 +3105,8 @@ body {
     }
     
     .sidebar-layout .container-fluid {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
     }
 }
 
