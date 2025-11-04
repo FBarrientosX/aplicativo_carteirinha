@@ -408,6 +408,9 @@ class RegistroAcesso(db.Model):
     observacoes = db.Column(db.Text)
     ip_origem = db.Column(db.String(45))  # IP de onde foi registrado
     
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    
     # Relacionamento
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
     
