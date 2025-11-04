@@ -2,11 +2,12 @@
 {% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
 
 {% block content %}
-<!-- Navegação contextual do módulo -->
-{{ render_module_nav('piscina', 'moradores') }}
-{{ render_breadcrumb('piscina', 'moradores', 'Moradores') }}
+<div class="container-fluid">
+    <!-- Navegação contextual do módulo -->
+    {{ render_module_nav('piscina', 'moradores') }}
+    {{ render_breadcrumb('piscina', 'moradores', 'Moradores') }}
 
-<div class="row">
+    <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
@@ -206,5 +207,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %} 

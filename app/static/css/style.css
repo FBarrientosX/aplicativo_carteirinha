@@ -2313,6 +2313,36 @@ footer {
 
 /* ========== FIM LAYOUT PRINCIPAL ========== */
 
+/* Centralizar conteúdo das páginas */
+.container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .container-fluid {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
 /* Sidebar */
 .sidebar {
     position: fixed;
