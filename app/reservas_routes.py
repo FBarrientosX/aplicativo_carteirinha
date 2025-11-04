@@ -28,14 +28,24 @@ def listar_espacos():
     
     # Estatísticas
     total_espacos = len(espacos)
-    reservas_hoje = ReservaEspaco.query.filter_by(
-        tenant_id=tenant_id,
-        data_reserva=date.today()
-    ).count()
-    reservas_pendentes = ReservaEspaco.query.filter_by(
-        tenant_id=tenant_id,
-        status='pendente'
-    ).count()
+    
+    try:
+        reservas_hoje = ReservaEspaco.query.filter_by(
+            tenant_id=tenant_id,
+            data_reserva=date.today()
+        ).count()
+        reservas_pendentes = ReservaEspaco.query.filter_by(
+            tenant_id=tenant_id,
+            status='pendente'
+        ).count()
+    except Exception as e:
+        # Se a tabela não existe, usar valores padrão
+        if 'no such table: reservas_espacos' in str(e).lower():
+            current_app.logger.error(f'Tabela reservas_espacos não existe: {e}')
+            reservas_hoje = 0
+            reservas_pendentes = 0
+        else:
+            raise
     
     stats = {
         'total_espacos': total_espacos,
