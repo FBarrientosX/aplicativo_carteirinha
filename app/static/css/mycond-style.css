@@ -687,6 +687,28 @@ h1, h2, h3, h4, h5, h6 {
     padding: 2rem;
 }
 
+/* Centralização de conteúdo em dashboards */
+.row.justify-content-center {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.row.justify-content-center > .col-lg-3,
+.row.justify-content-center > .col-lg-5 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+/* Melhorar espaçamento entre cards de estatísticas */
+.row.justify-content-center .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.row.justify-content-center .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .module-card .card-body {

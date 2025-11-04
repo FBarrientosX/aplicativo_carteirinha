@@ -32,11 +32,11 @@
     </div>
 
     <!-- Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+    <div class="row mb-4 justify-content-center">
+        <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
+            <div class="card bg-primary text-white h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-0">{{ total_dentro }}</h4>
                             <p class="mb-0">Na Piscina Agora</p>
@@ -48,10 +48,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
+        <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
+            <div class="card bg-success text-white h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-0">{{ entradas_hoje }}</h4>
                             <p class="mb-0">Entradas Hoje</p>
@@ -63,10 +63,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
+        <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
+            <div class="card bg-info text-white h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-0">{{ ultimos_registros|length }}</h4>
                             <p class="mb-0">Últimos Registros</p>
@@ -78,10 +78,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
+        <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
+            <div class="card bg-warning text-white h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-0">
                                 <a href="{{ url_for('main.historico_acesso') }}" class="text-white text-decoration-none">
@@ -97,10 +97,10 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row justify-content-center">
         <!-- Moradores na Piscina -->
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-lg-5 col-md-6 mb-4 mb-md-0">
+            <div class="card h-100">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-users me-2"></i>
@@ -132,9 +132,9 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-swimming-pool fa-3x mb-3"></i>
-                            <p>Nenhum morador na piscina no momento</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-swimming-pool fa-4x mb-3" style="opacity: 0.3;"></i>
+                            <p class="mb-0">Nenhum morador na piscina no momento</p>
                         </div>
                     {% endif %}
                 </div>
@@ -142,8 +142,8 @@
         </div>
 
         <!-- Últimos Registros -->
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-lg-5 col-md-6">
+            <div class="card h-100">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-history me-2"></i>
@@ -152,11 +152,11 @@
                 </div>
                 <div class="card-body">
                     {% if ultimos_registros %}
-                        <div class="list-group list-group-flush">
+                        <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
                             {% for registro in ultimos_registros %}
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <div>
+                                    <div class="flex-grow-1">
                                         <h6 class="mb-1">{{ registro.morador.nome_completo }}</h6>
                                         <p class="mb-1">
                                             <span class="badge bg-{% if registro.tipo == 'entrada' %}success{% else %}danger{% endif %}">
@@ -180,7 +180,7 @@
                                             </small>
                                         {% endif %}
                                     </div>
-                                    <small class="text-muted">
+                                    <small class="text-muted text-end ms-2">
                                         {{ registro.data_hora.strftime('%H:%M') }}
                                         <br>
                                         {{ registro.data_hora.strftime('%d/%m') }}
@@ -196,9 +196,9 @@
                             </a>
                         </div>
                     {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-history fa-3x mb-3"></i>
-                            <p>Nenhum registro encontrado</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-history fa-4x mb-3" style="opacity: 0.3;"></i>
+                            <p class="mb-0">Nenhum registro encontrado</p>
                         </div>
                     {% endif %}
                 </div>
@@ -206,51 +206,6 @@
         </div>
     </div>
 
-    <!-- Ações Rápidas -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2"></i>
-                        Ações Rápidas
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                                <i class="fas fa-qrcode fa-2x mb-2"></i>
-                                <span>Leitor QR Code</span>
-                                <small class="text-muted">Acesso automático</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.registrar_acesso') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                                <i class="fas fa-edit fa-2x mb-2"></i>
-                                <span>Registro Manual</span>
-                                <small class="text-muted">Entrada/saída manual</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                                <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                <span>Relatórios</span>
-                                <small class="text-muted">Histórico e estatísticas</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                                <i class="fas fa-users fa-2x mb-2"></i>
-                                <span>Moradores</span>
-                                <small class="text-muted">Gerenciar carteirinhas</small>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>

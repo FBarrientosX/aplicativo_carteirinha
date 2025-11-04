@@ -3137,6 +3137,18 @@ body {
     .d-flex.flex-column.flex-lg-row.gap-3 {
         gap: 2rem !important;
     }
+    
+    /* Melhorar centralização de cards de estatísticas */
+    .row.justify-content-center > .col-lg-3 {
+        max-width: 280px !important;
+        flex: 0 0 280px !important;
+    }
+    
+    /* Melhorar distribuição de conteúdo principal */
+    .row.justify-content-center > .col-lg-5 {
+        max-width: 45% !important;
+        flex: 0 0 45% !important;
+    }
 }
 
 /* Remover indicadores desnecessários - design minimalista */
