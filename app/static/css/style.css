@@ -2379,31 +2379,26 @@ body {
 }
 
 @media (max-width: 1400px) {
-    .main-content > *,
-    .container-fluid {
-        max-width: 100% !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+    .sidebar-layout .main-content > .container-fluid,
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
 @media (max-width: 1200px) {
-    .main-content > *,
-    .container-fluid {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
+    .sidebar-layout .main-content > .container-fluid,
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
 @media (max-width: 768px) {
-    .main-content {
-        padding: 1.5rem 0;
-    }
-    
-    .main-content > *,
-    .container-fluid {
-        padding-left: 1rem;
-        padding-right: 1rem;
+    .sidebar-layout .main-content > .container-fluid,
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
@@ -3076,7 +3071,13 @@ body {
     
     .sidebar-layout .main-content {
         margin-left: 280px !important;
-        padding: 2.5rem !important;
+        width: calc(100% - 280px) !important;
+        padding: 2rem !important;
+    }
+    
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
