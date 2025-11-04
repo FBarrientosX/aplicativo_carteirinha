@@ -994,10 +994,10 @@ def selecionar_morador_carteirinha():
         if form.status.data == 'regular':
             query = query.filter(Morador.carteirinha_ativa == True)
         elif form.status.data == 'vencida':
-            query = query.filter(Morador.data_vencimento < date.today())
+            query = query.filter(Morador.data_vencimento < datetime.now().date())
         elif form.status.data == 'a_vencer':
-            data_limite = date.today() + timedelta(days=30)
-            query = query.filter(Morador.data_vencimento.between(date.today(), data_limite))
+            data_limite = datetime.now().date() + timedelta(days=30)
+            query = query.filter(Morador.data_vencimento.between(datetime.now().date(), data_limite))
         elif form.status.data == 'sem_carteirinha':
             query = query.filter(Morador.data_vencimento.is_(None))
     
@@ -1414,6 +1414,7 @@ def registrar_acesso():
     from app.forms import RegistroAcessoForm
     from app.models import RegistroAcesso, Morador
     
+    tenant_id = getattr(g, 'tenant_id', 1)
     form = RegistroAcessoForm()
     
     if form.validate_on_submit():
@@ -1636,9 +1637,8 @@ def historico_morador(morador_id):
 @login_required
 def historico_por_unidade():
     """Histórico de acesso agrupado por unidade (bloco-apto)"""
-    from app.models import RegistroAcesso, Morador
-    
     try:
+        from app.models import RegistroAcesso, Morador
         tenant_id = getattr(g, 'tenant_id', 1)
         
         # Filtros opcionais
@@ -1738,6 +1738,16 @@ def historico_por_unidade():
             for r in query_saidas.group_by(Morador.bloco, Morador.apartamento).all()
         }
         
+        # Classe simples para resultado (definida antes do loop)
+        class ResultadoUnidade:
+            def __init__(self, bloco, apartamento, total_acessos, entradas, saidas, ultimo_acesso):
+                self.bloco = bloco
+                self.apartamento = apartamento
+                self.total_acessos = total_acessos
+                self.entradas = entradas
+                self.saidas = saidas
+                self.ultimo_acesso = ultimo_acesso
+        
         # Processar resultados
         resultados = []
         for resultado in resultados_raw:
@@ -1750,16 +1760,7 @@ def historico_por_unidade():
             entradas = entradas_por_unidade.get((bloco, apartamento), 0)
             saidas = saidas_por_unidade.get((bloco, apartamento), 0)
             
-            # Criar objeto similar ao resultado anterior
-            class ResultadoUnidade:
-                def __init__(self, bloco, apartamento, total_acessos, entradas, saidas, ultimo_acesso):
-                    self.bloco = bloco
-                    self.apartamento = apartamento
-                    self.total_acessos = total_acessos
-                    self.entradas = entradas
-                    self.saidas = saidas
-                    self.ultimo_acesso = ultimo_acesso
-            
+            # Criar objeto resultado
             resultados.append(ResultadoUnidade(
                 bloco=bloco,
                 apartamento=apartamento,
@@ -1770,19 +1771,26 @@ def historico_por_unidade():
             ))
         
         # Buscar blocos únicos para o filtro
-        blocos = db.session.query(Morador.bloco).filter(
-            Morador.tenant_id == tenant_id
-        ).distinct().order_by(Morador.bloco).all()
+        try:
+            blocos_raw = db.session.query(Morador.bloco).filter(
+                Morador.tenant_id == tenant_id
+            ).distinct().order_by(Morador.bloco).all()
+            blocos = [b[0] for b in blocos_raw] if blocos_raw else []
+        except:
+            blocos = []
         
         return render_template('acesso/historico_unidade.html',
                              title='Histórico por Unidade',
                              resultados=resultados,
-                             blocos=[b[0] for b in blocos],
+                             blocos=blocos,
                              bloco_filtro=bloco_filtro,
                              apartamento_filtro=apartamento_filtro,
                              data_inicio=data_inicio,
                              data_fim=data_fim)
     except Exception as e:
         flash(f'Erro ao carregar histórico por unidade: {str(e)}', 'error')
-        current_app.logger.error(f'Erro em historico_por_unidade: {str(e)}', exc_info=True)
+        try:
+            current_app.logger.error(f'Erro em historico_por_unidade: {str(e)}', exc_info=True)
+        except:
+            pass
         return redirect(url_for('main.historico_acesso'))
