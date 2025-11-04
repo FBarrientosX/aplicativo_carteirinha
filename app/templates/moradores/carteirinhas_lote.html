@@ -1,25 +1,31 @@
-{% extends "base.html" %}
-{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'carteirinhas') }}
+{% endblock %}
 
 {% block content %}
-<!-- Navegação contextual do módulo -->
-{{ render_module_nav('piscina', 'carteirinhas') }}
-{{ render_breadcrumb('piscina', 'carteirinhas', 'Carteirinhas em Lote') }}
-
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="fas fa-id-card-alt me-2"></i>
-                Gerar Carteirinhas em Lote
-            </h1>
-            <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>
-                Voltar para Moradores
-            </a>
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-id-card-alt text-info"></i>
+                        Gerar Carteirinhas em Lote
+                    </h2>
+                    <p class="text-muted mb-0">Selecione os moradores para gerar carteirinhas</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar para Moradores
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
 {% if moradores %}
 <form method="POST" id="form-lote">

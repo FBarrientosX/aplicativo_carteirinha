@@ -1,26 +1,35 @@
-{% extends "base.html" %}
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'salva_vidas') }}
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="fas fa-life-ring me-2"></i>
-                {{ salva_vidas.nome_completo }}
-            </h1>
-            <div>
-                <a href="{{ url_for('main.editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-primary me-2">
-                    <i class="fas fa-edit me-1"></i>
-                    Editar
-                </a>
-                <a href="{{ url_for('main.listar_salva_vidas') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar
-                </a>
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-life-ring text-info"></i>
+                        {{ salva_vidas.nome_completo }}
+                    </h2>
+                    <p class="text-muted mb-0">Detalhes do salva-vidas</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('main.editar_salva_vidas', id=salva_vidas.id) }}" class="btn btn-primary me-2">
+                        <i class="fas fa-edit me-1"></i>
+                        Editar
+                    </a>
+                    <a href="{{ url_for('main.listar_salva_vidas') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <div class="row">
     <div class="col-md-4">

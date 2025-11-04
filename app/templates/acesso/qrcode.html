@@ -1,19 +1,29 @@
-{% extends "base.html" %}
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'scanner') }}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row justify-content-center">
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center mb-4">
         <div class="col-12 col-lg-10 col-xl-8">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
-                <h1 class="mb-2 mb-sm-0">
-                    <i class="fas fa-qrcode me-2 text-primary"></i>
-                    <span class="d-none d-md-inline">Leitor QR Code</span>
-                    <span class="d-md-none">QR Code</span>
-                </h1>
-                <a href="{{ url_for('main.controle_acesso') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar
-                </a>
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-qrcode text-info"></i>
+                        <span class="d-none d-md-inline">Leitor QR Code</span>
+                        <span class="d-md-none">QR Code</span>
+                    </h2>
+                    <p class="text-muted mb-0">Escaneie ou digite o código QR da carteirinha</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('main.controle_acesso') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
             </div>
 
             <!-- Formulário de Busca -->

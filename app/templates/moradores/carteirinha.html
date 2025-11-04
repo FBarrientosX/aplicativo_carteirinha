@@ -1,14 +1,22 @@
-{% extends "base.html" %}
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'carteirinhas') }}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>
-                    <i class="fas fa-id-card me-2"></i>
-                    Carteirinha da Piscina
-                </h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-id-card text-info"></i>
+                        Carteirinha da Piscina
+                    </h2>
+                    <p class="text-muted mb-0">Visualize e imprima a carteirinha do morador</p>
+                </div>
                 <div>
                     <a href="{{ url_for('main.ver_morador', id=morador.id) }}" class="btn btn-secondary me-2">
                         <i class="fas fa-arrow-left me-1"></i>

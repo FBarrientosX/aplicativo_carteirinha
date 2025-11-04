@@ -1,19 +1,22 @@
-{% extends "base.html" %}
-{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'controle') }}
+{% endblock %}
 
 {% block content %}
-<!-- Navegação contextual do módulo -->
-{{ render_module_nav('piscina', 'controle') }}
-{{ render_breadcrumb('piscina', 'controle', 'Controle de Acesso') }}
-
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>
-                    <i class="fas fa-swimming-pool me-2 text-primary"></i>
-                    Controle de Acesso à Piscina
-                </h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-swimming-pool text-info"></i>
+                        Controle de Acesso à Piscina
+                    </h2>
+                    <p class="text-muted mb-0">Gerencie o acesso de moradores à piscina</p>
+                </div>
                 <div>
                     <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-primary me-2">
                         <i class="fas fa-qrcode me-1"></i>
