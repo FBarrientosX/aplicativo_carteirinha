@@ -2323,26 +2323,45 @@ body {
 
 .main-content > * {
     width: 100% !important;
-    max-width: 1400px !important;
+    max-width: 98% !important;
     margin: 0 auto !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
 }
 
 .container-fluid {
-    max-width: 1400px !important;
+    max-width: 98% !important;
     margin: 0 auto !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
     width: 100% !important;
+}
+
+/* Para telas maiores, usar quase toda largura */
+@media (min-width: 1600px) {
+    .main-content > *,
+    .container-fluid {
+        max-width: 96% !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+
+@media (min-width: 1920px) {
+    .main-content > *,
+    .container-fluid {
+        max-width: 94% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
 }
 
 @media (max-width: 1400px) {
     .main-content > *,
     .container-fluid {
-        max-width: 100%;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        max-width: 98% !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
 }
 
@@ -2378,15 +2397,22 @@ body {
     }
 }
 
-/* Garantir que rows dentro de container-fluid sejam centralizadas */
+/* Garantir que rows dentro de container-fluid ocupem toda largura */
 .container-fluid .row {
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
 }
 
 .container-fluid .row > * {
     padding-left: calc(var(--bs-gutter-x) * 0.5);
     padding-right: calc(var(--bs-gutter-x) * 0.5);
+}
+
+/* Garantir que col-12 ocupe toda largura */
+.container-fluid .row .col-12 {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* Centralizar cards dos módulos no dashboard */
