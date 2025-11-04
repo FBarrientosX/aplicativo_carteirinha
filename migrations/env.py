@@ -38,7 +38,7 @@ def get_engine_url():
 # target_metadata = mymodel.Base.metadata
 
 # Importar app e criar contexto
-from app import create_app
+from app import create_app, db
 
 app = create_app()
 
