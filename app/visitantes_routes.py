@@ -64,9 +64,20 @@ def listar_visitantes():
         if 'no such table: visitantes' in str(e).lower():
             flash('A tabela de visitantes ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
             current_app.logger.error(f'Tabela visitantes não existe: {e}')
-            # Criar objeto paginação vazio
-            from flask_sqlalchemy import Pagination
-            visitantes = Pagination(query=None, page=1, per_page=20, total=0, items=[])
+            # Criar objeto paginação vazio usando um mock simples
+            class PaginationMock:
+                def __init__(self):
+                    self.items = []
+                    self.page = 1
+                    self.per_page = 20
+                    self.total = 0
+                    self.pages = 0
+                    self.has_prev = False
+                    self.has_next = False
+                    self.prev_num = None
+                    self.next_num = None
+            
+            visitantes = PaginationMock()
             stats = {
                 'total': 0,
                 'dentro': 0,
