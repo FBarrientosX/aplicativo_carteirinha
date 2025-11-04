@@ -9,6 +9,12 @@
                 <span class="nav-title">Controle de Piscina</span>
             </div>
             <ul class="nav-menu">
+                <li class="nav-item {{ 'active' if current_page == 'controle' else '' }}">
+                    <a href="{{ url_for('main.controle_acesso') }}" class="nav-link">
+                        <i class="fas fa-eye nav-link-icon"></i>
+                        <span class="nav-link-text">Controle de Acesso</span>
+                    </a>
+                </li>
                 <li class="nav-item {{ 'active' if current_page == 'moradores' else '' }}">
                     <a href="{{ url_for('main.listar_moradores') }}" class="nav-link">
                         <i class="fas fa-users nav-link-icon"></i>
@@ -25,12 +31,6 @@
                     <a href="{{ url_for('main.acesso_qrcode') }}" class="nav-link">
                         <i class="fas fa-qrcode nav-link-icon"></i>
                         <span class="nav-link-text">Scanner QR</span>
-                    </a>
-                </li>
-                <li class="nav-item {{ 'active' if current_page == 'controle' else '' }}">
-                    <a href="{{ url_for('main.controle_acesso') }}" class="nav-link">
-                        <i class="fas fa-eye nav-link-icon"></i>
-                        <span class="nav-link-text">Controle de Acesso</span>
                     </a>
                 </li>
                 <li class="nav-item {{ 'active' if current_page == 'salva_vidas' else '' }}">
