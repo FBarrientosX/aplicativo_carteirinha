@@ -412,36 +412,13 @@ class RegistroAcesso(db.Model):
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
     
     def __init__(self, **kwargs):
-        """Construtor adaptativo que lida com tenant_id opcionalmente"""
-        # Verificar se tenant_id existe na tabela
-        has_tenant_id = False
-        try:
-            from sqlalchemy import inspect
-            mapper = inspect(self.__class__)
-            has_tenant_id = 'tenant_id' in [col.key for col in mapper.columns]
-        except Exception:
-            # Fallback: tentar verificar diretamente na tabela
-            try:
-                from sqlalchemy import text
-                result = db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-                has_tenant_id = True
-            except Exception:
-                has_tenant_id = False
+        """Construtor que garante tenant_id"""
+        # Garantir que tenant_id seja definido
+        if 'tenant_id' not in kwargs:
+            from flask import g
+            kwargs['tenant_id'] = getattr(g, 'tenant_id', 1)
         
-        # Se tenant_id existe, usar. Se não, remover de kwargs
-        if has_tenant_id:
-            if 'tenant_id' in kwargs:
-                self.tenant_id = kwargs.pop('tenant_id')
-            else:
-                # Obter tenant_id do contexto
-                from flask import g
-                tenant_id = getattr(g, 'tenant_id', 1)
-                self.tenant_id = tenant_id
-        else:
-            # Remover tenant_id de kwargs se não existir na tabela
-            kwargs.pop('tenant_id', None)
-        
-        # Chamar construtor pai com argumentos restantes
+        # Chamar construtor pai
         super().__init__(**kwargs)
     
     @property
