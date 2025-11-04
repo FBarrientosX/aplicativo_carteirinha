@@ -9,7 +9,7 @@
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
                 <div class="flex-grow-1">
                     <h2 class="mb-1">
                         <i class="fas fa-building text-info"></i>
@@ -17,7 +17,7 @@
                     </h2>
                     <p class="text-muted mb-0">Visualize o histórico de acessos agrupado por unidade</p>
                 </div>
-                <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="d-flex flex-wrap flex-nowrap flex-lg-wrap gap-2 align-items-center">
                     <button class="btn btn-success" onclick="exportarCSV()">
                         <i class="fas fa-download me-1"></i>
                         Exportar CSV
@@ -46,7 +46,7 @@
         <div class="card-body">
             <form method="GET">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
                         <div class="form-group">
                             <label for="bloco" class="form-label">Bloco</label>
                             <select name="bloco" id="bloco" class="form-select">
@@ -59,36 +59,36 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
                         <div class="form-group">
                             <label for="apartamento" class="form-label">Apartamento</label>
                             <input type="text" name="apartamento" id="apartamento" class="form-control" 
                                    value="{{ apartamento_filtro }}" placeholder="Ex: 101">
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
                         <div class="form-group">
                             <label for="data_inicio" class="form-label">Data Início</label>
                             <input type="date" name="data_inicio" id="data_inicio" class="form-control" 
                                    value="{{ data_inicio }}">
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
                         <div class="form-group">
                             <label for="data_fim" class="form-label">Data Fim</label>
                             <input type="date" name="data_fim" id="data_fim" class="form-control" 
                                    value="{{ data_fim }}">
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-4 col-md-12">
                         <div class="form-group">
                             <label class="form-label d-block">&nbsp;</label>
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary flex-fill">
                                     <i class="fas fa-search me-1"></i>
                                     Filtrar
                                 </button>
-                                <a href="{{ url_for('main.historico_por_unidade') }}" class="btn btn-secondary">
+                                <a href="{{ url_for('main.historico_por_unidade') }}" class="btn btn-secondary flex-fill">
                                     <i class="fas fa-eraser me-1"></i>
                                     Limpar
                                 </a>

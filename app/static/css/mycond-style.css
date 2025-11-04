@@ -500,13 +500,35 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Melhorar espaçamento em headers de página */
-.d-flex.flex-column.flex-md-row.gap-3 {
+.d-flex.flex-column.flex-md-row.gap-3,
+.d-flex.flex-column.flex-lg-row.gap-3 {
     gap: 1rem !important;
 }
 
-@media (max-width: 767px) {
+/* Garantir que botões fiquem em linha em telas grandes */
+@media (min-width: 992px) {
+    .d-flex.flex-column.flex-lg-row.gap-3 {
+        flex-direction: row !important;
+    }
+    
+    .d-flex.flex-wrap.flex-nowrap.flex-lg-wrap.gap-2 {
+        flex-wrap: nowrap !important;
+    }
+}
+
+/* Ajustes para telas médias */
+@media (min-width: 768px) and (max-width: 991px) {
     .d-flex.flex-column.flex-md-row.gap-3 {
+        flex-direction: row !important;
+    }
+}
+
+/* Ajustes para telas pequenas */
+@media (max-width: 767px) {
+    .d-flex.flex-column.flex-md-row.gap-3,
+    .d-flex.flex-column.flex-lg-row.gap-3 {
         gap: 0.75rem !important;
+        flex-direction: column !important;
     }
     
     .d-flex.flex-wrap.gap-2 {
