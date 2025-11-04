@@ -24,7 +24,7 @@ bp = Blueprint('main', __name__)
 def index():
     """Dashboard principal - apenas módulos"""
     # Renderizar apenas os módulos, sem estatísticas
-    return render_template('index.html', title='Dashboard')
+    return render_template('index_wireframe.html', title='Dashboard')
 
 @bp.route('/moradores')
 def listar_moradores():

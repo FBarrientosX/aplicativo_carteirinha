@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    {% if title %}
+    <title>{{ title }} - CondoTech Solutions</title>
+    {% else %}
+    <title>CondoTech Solutions</title>
+    {% endif %}
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- MyCond Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mycond-style.css') }}">
+    
+    <style>
+        /* Header azul claro estilo wireframe */
+        .top-header-wireframe {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content-wireframe {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header-logo-wireframe {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .header-user-wireframe {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+        }
+        
+        .user-avatar-wireframe {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e74c3c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .notification-badge-wireframe {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 2px solid white;
+        }
+        
+        /* Conteúdo centralizado */
+        .main-content-wireframe {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Título principal */
+        .page-title-wireframe {
+            text-align: center;
+            margin: 3rem 0 1rem;
+        }
+        
+        .page-title-wireframe h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle-wireframe {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Seção de módulos */
+        .modules-section-wireframe {
+            text-align: center;
+            margin: 3rem 0;
+        }
+        
+        .modules-section-wireframe h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+        
+        /* Cards de módulos - 4 colunas */
+        .modules-grid-wireframe {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .modules-grid-wireframe {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .modules-grid-wireframe {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .module-card-wireframe {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .module-card-wireframe:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .module-icon-wireframe {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .module-title-wireframe {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .module-description-wireframe {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        .module-features-wireframe {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        
+        .module-features-wireframe ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .module-features-wireframe li {
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .module-features-wireframe i {
+            color: #27ae60;
+        }
+        
+        .module-button-wireframe {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            transition: background 0.2s;
+        }
+        
+        .module-button-wireframe:hover {
+            background: #2980b9;
+            color: white;
+        }
+        
+        .module-status-wireframe {
+            background: #27ae60;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        /* Cards informativos inferiores */
+        .info-cards-wireframe {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .info-cards-wireframe {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .info-card-wireframe {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .info-card-icon-wireframe {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-card-text-wireframe {
+            color: #2c3e50;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+    </style>
+</head>
+<body style="background-color: #f8f9fa;">
+    <!-- Header Azul Claro -->
+    <header class="top-header-wireframe">
+        <div class="header-content-wireframe">
+            <div class="header-logo-wireframe">
+                <i class="fas fa-building"></i>
+                <span>CondoTech Solutions</span>
+            </div>
+            <div class="header-user-wireframe">
+                <div class="user-avatar-wireframe" style="position: relative;">
+                    <i class="fas fa-user"></i>
+                    <span class="notification-badge-wireframe">3</span>
+                </div>
+                <span style="font-weight: 500;">Administrador</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content-wireframe">
+        <!-- Título e Saudação -->
+        <div class="page-title-wireframe">
+            <h1>Painel Geral</h1>
+            <p class="page-subtitle-wireframe">
+                Que bom ter você por aqui, {{ current_user.nome_completo if current_user.is_authenticated else 'Administrador' }}!
+            </p>
+        </div>
+
+        <!-- Seção de Módulos -->
+        <div class="modules-section-wireframe">
+            <h3>
+                <i class="fas fa-building me-2"></i>
+                Selecione um Módulo
+            </h3>
+            
+            <div class="modules-grid-wireframe">
+                <!-- Módulo 1: Controle de Piscina -->
+                <div class="module-card-wireframe" style="border-top-color: #3498db;">
+                    <div class="module-icon-wireframe" style="color: #3498db;">
+                        <i class="fas fa-swimming-pool"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Controle de Piscina</h4>
+                    <p class="module-description-wireframe">
+                        Gerencie o acesso e controle de moradores na área da piscina
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Controle de acesso</li>
+                            <li><i class="fas fa-check"></i> Scanner QR Code</li>
+                            <li><i class="fas fa-check"></i> Histórico completo</li>
+                            <li><i class="fas fa-check"></i> Relatórios detalhados</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('main.controle_acesso') }}" class="module-button-wireframe">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 2: Manutenção & Chamados -->
+                <div class="module-card-wireframe" style="border-top-color: #27ae60;">
+                    <div class="module-icon-wireframe" style="color: #27ae60;">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Manutenção & Chamados</h4>
+                    <p class="module-description-wireframe">
+                        Sistema de abertura e acompanhamento de chamados de manutenção
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Abertura de chamados</li>
+                            <li><i class="fas fa-check"></i> Acompanhamento</li>
+                            <li><i class="fas fa-check"></i> Priorização</li>
+                            <li><i class="fas fa-check"></i> Histórico completo</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('manutencao.dashboard') }}" class="module-button-wireframe" style="background: #27ae60;">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 3: Reserva de Espaços -->
+                <div class="module-card-wireframe" style="border-top-color: #3498db;">
+                    <div class="module-icon-wireframe" style="color: #3498db;">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Reserva de Espaços</h4>
+                    <p class="module-description-wireframe">
+                        Gerencie reservas de áreas comuns e espaços do condomínio
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Calendário integrado</li>
+                            <li><i class="fas fa-check"></i> Controle de disponibilidade</li>
+                            <li><i class="fas fa-check"></i> Notificações automáticas</li>
+                            <li><i class="fas fa-check"></i> Relatórios de uso</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('reservas.listar_espacos') }}" class="module-button-wireframe">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 4: Controle de Visitantes -->
+                <div class="module-card-wireframe" style="border-top-color: #f39c12;">
+                    <div class="module-icon-wireframe" style="color: #f39c12;">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Controle de Visitantes</h4>
+                    <p class="module-description-wireframe">
+                        Sistema completo para controle e registro de visitantes
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Registro de entrada/saída</li>
+                            <li><i class="fas fa-check"></i> Autorização prévia</li>
+                            <li><i class="fas fa-check"></i> Foto e documentação</li>
+                            <li><i class="fas fa-check"></i> Relatórios de acesso</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('visitantes.listar_visitantes') }}" class="module-button-wireframe" style="background: #f39c12;">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 5: Portal de Encomendas -->
+                <div class="module-card-wireframe" style="border-top-color: #3498db;">
+                    <div class="module-icon-wireframe" style="color: #3498db;">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Portal de Encomendas</h4>
+                    <p class="module-description-wireframe">
+                        Gerencie recebimento e entrega de encomendas dos moradores
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Registro de recebimento</li>
+                            <li><i class="fas fa-check"></i> Notificação automática</li>
+                            <li><i class="fas fa-check"></i> Controle de entrega</li>
+                            <li><i class="fas fa-check"></i> Histórico completo</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('encomendas.listar_encomendas') }}" class="module-button-wireframe">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 6: Marketplace -->
+                <div class="module-card-wireframe" style="border-top-color: #27ae60;">
+                    <div class="module-icon-wireframe" style="color: #27ae60;">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Marketplace</h4>
+                    <p class="module-description-wireframe">
+                        Plataforma de compra e venda entre moradores do condomínio
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Anúncios de produtos</li>
+                            <li><i class="fas fa-check"></i> Sistema de avaliações</li>
+                            <li><i class="fas fa-check"></i> Chat integrado</li>
+                            <li><i class="fas fa-check"></i> Moderação de conteúdo</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('classificados.listar_classificados') }}" class="module-button-wireframe" style="background: #27ae60;">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 7: Ocorrências -->
+                <div class="module-card-wireframe" style="border-top-color: #e74c3c;">
+                    <div class="module-icon-wireframe" style="color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Ocorrências</h4>
+                    <p class="module-description-wireframe">
+                        Registro e acompanhamento de ocorrências no condomínio
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Registro de ocorrências</li>
+                            <li><i class="fas fa-check"></i> Classificação por tipo</li>
+                            <li><i class="fas fa-check"></i> Anexo de evidências</li>
+                            <li><i class="fas fa-check"></i> Relatórios estatísticos</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('ocorrencias.listar') }}" class="module-button-wireframe" style="background: #e74c3c;">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+
+                <!-- Módulo 8: Achados e Perdidos -->
+                <div class="module-card-wireframe" style="border-top-color: #f39c12;">
+                    <div class="module-icon-wireframe" style="color: #f39c12;">
+                        <i class="fas fa-search-dollar"></i>
+                    </div>
+                    <h4 class="module-title-wireframe">Achados e Perdidos</h4>
+                    <p class="module-description-wireframe">
+                        Sistema para controle de objetos perdidos e encontrados
+                    </p>
+                    <div class="module-features-wireframe">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Cadastro de objetos</li>
+                            <li><i class="fas fa-check"></i> Sistema de busca</li>
+                            <li><i class="fas fa-check"></i> Notificações automáticas</li>
+                            <li><i class="fas fa-check"></i> Controle de devolução</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('achados.listar') }}" class="module-button-wireframe" style="background: #f39c12;">
+                        <i class="fas fa-play"></i> Acessar Módulo
+                    </a>
+                    <span class="module-status-wireframe">
+                        <i class="fas fa-check-circle me-1"></i> Módulo Ativo
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards Informativos Inferiores -->
+        <div class="info-cards-wireframe">
+            <div class="info-card-wireframe">
+                <div class="info-card-icon-wireframe" style="color: #3498db;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <p class="info-card-text-wireframe">
+                    Sistema protegido com as melhores práticas de segurança
+                </p>
+            </div>
+            
+            <div class="info-card-wireframe">
+                <div class="info-card-icon-wireframe" style="color: #3498db;">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <p class="info-card-text-wireframe">
+                    Acesse de qualquer lugar com total disponibilidade
+                </p>
+            </div>
+            
+            <div class="info-card-wireframe">
+                <div class="info-card-icon-wireframe" style="color: #27ae60;">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <p class="info-card-text-wireframe">
+                    Suporte especializado disponível quando precisar
+                </p>
+            </div>
+            
+            <div class="info-card-wireframe">
+                <div class="info-card-icon-wireframe" style="color: #f39c12;">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <p class="info-card-text-wireframe">
+                    Tecnologia de ponta para gestão moderna
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
