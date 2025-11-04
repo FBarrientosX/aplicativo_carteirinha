@@ -262,7 +262,7 @@ class BuscaMoradorForm(FlaskForm):
 
 class FiltroAcessoForm(FlaskForm):
     """Formulário para filtrar registros de acesso"""
-    morador_id = SelectField('Morador', coerce=int)
+    morador_id = SelectField('Morador', coerce=coerce_int_or_none)
     data_inicio = DateField('Data Início')
     data_fim = DateField('Data Fim')
     tipo = SelectField('Tipo', choices=[('', 'Todos'), ('entrada', 'Entradas'), ('saida', 'Saídas')])
