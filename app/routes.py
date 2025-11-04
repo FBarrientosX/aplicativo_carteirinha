@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, send_from_
 from werkzeug.utils import secure_filename
 import io
 from app import db
-from sqlalchemy import text, func, case
+from sqlalchemy import text, func
 from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas, RegistroAcesso
 from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm, RegistroAcessoForm, BuscaMoradorForm
 from app.carteirinha_service import gerar_carteirinha_completa, gerar_pdf_carteirinha, gerar_lote_pdf
@@ -1638,66 +1638,151 @@ def historico_por_unidade():
     """Histórico de acesso agrupado por unidade (bloco-apto)"""
     from app.models import RegistroAcesso, Morador
     
-    tenant_id = getattr(g, 'tenant_id', 1)
-    
-    # Filtros opcionais
-    bloco_filtro = request.args.get('bloco', '')
-    apartamento_filtro = request.args.get('apartamento', '')
-    data_inicio = request.args.get('data_inicio', '')
-    data_fim = request.args.get('data_fim', '')
-    
-    # Query base - agrupar por bloco e apartamento
-    query = db.session.query(
-        Morador.bloco,
-        Morador.apartamento,
-        func.count(RegistroAcesso.id).label('total_acessos'),
-        func.sum(case([(RegistroAcesso.tipo == 'entrada', 1)], else_=0)).label('entradas'),
-        func.sum(case([(RegistroAcesso.tipo == 'saida', 1)], else_=0)).label('saidas'),
-        func.max(RegistroAcesso.data_hora).label('ultimo_acesso')
-    ).join(
-        RegistroAcesso, Morador.id == RegistroAcesso.morador_id
-    ).filter(
-        Morador.tenant_id == tenant_id
-    )
-    
-    # Aplicar filtros
-    if bloco_filtro:
-        query = query.filter(Morador.bloco == bloco_filtro)
-    
-    if apartamento_filtro:
-        query = query.filter(Morador.apartamento == apartamento_filtro)
-    
-    if data_inicio:
-        try:
-            data_ini = datetime.strptime(data_inicio, '%Y-%m-%d').date()
-            query = query.filter(db.func.date(RegistroAcesso.data_hora) >= data_ini)
-        except:
-            pass
-    
-    if data_fim:
-        try:
-            data_f = datetime.strptime(data_fim, '%Y-%m-%d').date()
-            query = query.filter(db.func.date(RegistroAcesso.data_hora) <= data_f)
-        except:
-            pass
-    
-    # Agrupar e ordenar
-    resultados = query.group_by(
-        Morador.bloco, Morador.apartamento
-    ).order_by(
-        Morador.bloco, Morador.apartamento
-    ).all()
-    
-    # Buscar blocos únicos para o filtro
-    blocos = db.session.query(Morador.bloco).filter(
-        Morador.tenant_id == tenant_id
-    ).distinct().order_by(Morador.bloco).all()
-    
-    return render_template('acesso/historico_unidade.html',
-                         title='Histórico por Unidade',
-                         resultados=resultados,
-                         blocos=[b[0] for b in blocos],
-                         bloco_filtro=bloco_filtro,
-                         apartamento_filtro=apartamento_filtro,
-                         data_inicio=data_inicio,
-                         data_fim=data_fim)
+    try:
+        tenant_id = getattr(g, 'tenant_id', 1)
+        
+        # Filtros opcionais
+        bloco_filtro = request.args.get('bloco', '')
+        apartamento_filtro = request.args.get('apartamento', '')
+        data_inicio = request.args.get('data_inicio', '')
+        data_fim = request.args.get('data_fim', '')
+        
+        # Query base - agrupar por bloco e apartamento (simplificada para compatibilidade)
+        base_query = db.session.query(
+            Morador.bloco,
+            Morador.apartamento,
+            func.count(RegistroAcesso.id).label('total_acessos'),
+            func.max(RegistroAcesso.data_hora).label('ultimo_acesso')
+        ).join(
+            RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+        ).filter(
+            Morador.tenant_id == tenant_id
+        )
+        
+        # Aplicar filtros
+        if bloco_filtro:
+            base_query = base_query.filter(Morador.bloco == bloco_filtro)
+        
+        if apartamento_filtro:
+            base_query = base_query.filter(Morador.apartamento == apartamento_filtro)
+        
+        if data_inicio:
+            try:
+                data_ini = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                base_query = base_query.filter(db.func.date(RegistroAcesso.data_hora) >= data_ini)
+            except:
+                pass
+        
+        if data_fim:
+            try:
+                data_f = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                base_query = base_query.filter(db.func.date(RegistroAcesso.data_hora) <= data_f)
+            except:
+                pass
+        
+        # Agrupar e ordenar
+        resultados_raw = base_query.group_by(
+            Morador.bloco, Morador.apartamento
+        ).order_by(
+            Morador.bloco, Morador.apartamento
+        ).all()
+        
+        # Query para contar entradas e saídas por unidade (mais eficiente)
+        query_entradas = db.session.query(
+            Morador.bloco,
+            Morador.apartamento,
+            func.count(RegistroAcesso.id).label('count')
+        ).join(
+            RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+        ).filter(
+            Morador.tenant_id == tenant_id,
+            RegistroAcesso.tipo == 'entrada'
+        )
+        
+        query_saidas = db.session.query(
+            Morador.bloco,
+            Morador.apartamento,
+            func.count(RegistroAcesso.id).label('count')
+        ).join(
+            RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+        ).filter(
+            Morador.tenant_id == tenant_id,
+            RegistroAcesso.tipo == 'saida'
+        )
+        
+        # Aplicar filtros de data nas queries de entradas/saídas
+        if data_inicio:
+            try:
+                data_ini = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                query_entradas = query_entradas.filter(db.func.date(RegistroAcesso.data_hora) >= data_ini)
+                query_saidas = query_saidas.filter(db.func.date(RegistroAcesso.data_hora) >= data_ini)
+            except:
+                pass
+        
+        if data_fim:
+            try:
+                data_f = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                query_entradas = query_entradas.filter(db.func.date(RegistroAcesso.data_hora) <= data_f)
+                query_saidas = query_saidas.filter(db.func.date(RegistroAcesso.data_hora) <= data_f)
+            except:
+                pass
+        
+        # Agrupar e obter resultados
+        entradas_por_unidade = {
+            (r.bloco, r.apartamento): r.count 
+            for r in query_entradas.group_by(Morador.bloco, Morador.apartamento).all()
+        }
+        
+        saidas_por_unidade = {
+            (r.bloco, r.apartamento): r.count 
+            for r in query_saidas.group_by(Morador.bloco, Morador.apartamento).all()
+        }
+        
+        # Processar resultados
+        resultados = []
+        for resultado in resultados_raw:
+            bloco = resultado.bloco
+            apartamento = resultado.apartamento
+            total_acessos = resultado.total_acessos
+            ultimo_acesso = resultado.ultimo_acesso
+            
+            # Obter contagens de entradas e saídas
+            entradas = entradas_por_unidade.get((bloco, apartamento), 0)
+            saidas = saidas_por_unidade.get((bloco, apartamento), 0)
+            
+            # Criar objeto similar ao resultado anterior
+            class ResultadoUnidade:
+                def __init__(self, bloco, apartamento, total_acessos, entradas, saidas, ultimo_acesso):
+                    self.bloco = bloco
+                    self.apartamento = apartamento
+                    self.total_acessos = total_acessos
+                    self.entradas = entradas
+                    self.saidas = saidas
+                    self.ultimo_acesso = ultimo_acesso
+            
+            resultados.append(ResultadoUnidade(
+                bloco=bloco,
+                apartamento=apartamento,
+                total_acessos=total_acessos,
+                entradas=entradas,
+                saidas=saidas,
+                ultimo_acesso=ultimo_acesso
+            ))
+        
+        # Buscar blocos únicos para o filtro
+        blocos = db.session.query(Morador.bloco).filter(
+            Morador.tenant_id == tenant_id
+        ).distinct().order_by(Morador.bloco).all()
+        
+        return render_template('acesso/historico_unidade.html',
+                             title='Histórico por Unidade',
+                             resultados=resultados,
+                             blocos=[b[0] for b in blocos],
+                             bloco_filtro=bloco_filtro,
+                             apartamento_filtro=apartamento_filtro,
+                             data_inicio=data_inicio,
+                             data_fim=data_fim)
+    except Exception as e:
+        flash(f'Erro ao carregar histórico por unidade: {str(e)}', 'error')
+        current_app.logger.error(f'Erro em historico_por_unidade: {str(e)}', exc_info=True)
+        return redirect(url_for('main.historico_acesso'))
