@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, send_from_
 from werkzeug.utils import secure_filename
 import io
 from app import db
-from sqlalchemy import text
+from sqlalchemy import text, func, case
 from app.models import Morador, AnexoMorador, LogNotificacao, ConfiguracaoSistema, Condominio, SalvaVidas, RegistroAcesso
 from app.forms import MoradorForm, ValidarCarteirinhaForm, FiltroMoradorForm, ConfiguracaoEmailForm, ConfiguracaoCondominioForm, ConfiguracaoGeralForm, SalvaVidasForm, FiltroSalvaVidasForm, RegistroAcessoForm, BuscaMoradorForm
 from app.carteirinha_service import gerar_carteirinha_completa, gerar_pdf_carteirinha, gerar_lote_pdf
@@ -13,7 +13,6 @@ import uuid
 import plotly.graph_objs as go
 import plotly.utils
 import json
-from sqlalchemy import func
 from flask_login import login_required
 
 # Criar blueprint para as rotas
@@ -1637,7 +1636,6 @@ def historico_morador(morador_id):
 def historico_por_unidade():
     """Histórico de acesso agrupado por unidade (bloco-apto)"""
     from app.models import RegistroAcesso, Morador
-    from sqlalchemy import func
     
     tenant_id = getattr(g, 'tenant_id', 1)
     
@@ -1652,11 +1650,13 @@ def historico_por_unidade():
         Morador.bloco,
         Morador.apartamento,
         func.count(RegistroAcesso.id).label('total_acessos'),
-        func.count(db.case((RegistroAcesso.tipo == 'entrada', 1))).label('entradas'),
-        func.count(db.case((RegistroAcesso.tipo == 'saida', 1))).label('saidas'),
+        func.count(case((RegistroAcesso.tipo == 'entrada', 1))).label('entradas'),
+        func.count(case((RegistroAcesso.tipo == 'saida', 1))).label('saidas'),
         func.max(RegistroAcesso.data_hora).label('ultimo_acesso')
     ).join(
         RegistroAcesso, Morador.id == RegistroAcesso.morador_id
+    ).filter(
+        Morador.tenant_id == tenant_id
     )
     
     # Aplicar filtros
@@ -1688,7 +1688,9 @@ def historico_por_unidade():
     ).all()
     
     # Buscar blocos únicos para o filtro
-    blocos = db.session.query(Morador.bloco).distinct().order_by(Morador.bloco).all()
+    blocos = db.session.query(Morador.bloco).filter(
+        Morador.tenant_id == tenant_id
+    ).distinct().order_by(Morador.bloco).all()
     
     return render_template('acesso/historico_unidade.html',
                          title='Histórico por Unidade',

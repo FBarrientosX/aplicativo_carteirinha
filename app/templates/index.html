@@ -232,6 +232,134 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Módulo Ocorrências -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #dc3545;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-exclamation-triangle fa-4x text-danger"></i>
+                            </div>
+                            <h4 class="card-title">Ocorrências</h4>
+                            <p class="card-text text-muted mb-4">
+                                Registro e acompanhamento de ocorrências no condomínio, com notificações e gestão de status.
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Registro de ocorrências</li>
+                                    <li><i class="fas fa-check text-success"></i> Notificações (WhatsApp)</li>
+                                    <li><i class="fas fa-check text-success"></i> Gestão de status e prioridade</li>
+                                    <li><i class="fas fa-check text-success"></i> Anexar fotos</li>
+                                </ul>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('ocorrencias.listar_ocorrencias') }}" class="btn btn-danger">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Achados e Perdidos -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #ffc107;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-search-dollar fa-4x text-warning"></i>
+                            </div>
+                            <h4 class="card-title">Achados e Perdidos</h4>
+                            <p class="card-text text-muted mb-4">
+                                Sistema para registrar itens achados e perdidos no condomínio, facilitando a devolução.
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Registro de itens</li>
+                                    <li><i class="fas fa-check text-success"></i> Upload de fotos</li>
+                                    <li><i class="fas fa-check text-success"></i> Controle de devolução</li>
+                                    <li><i class="fas fa-check text-success"></i> Contato com proprietário</li>
+                                </ul>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('achados.listar_itens') }}" class="btn btn-warning">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Votação -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #007bff;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-vote-yea fa-4x text-primary"></i>
+                            </div>
+                            <h4 class="card-title">Votação</h4>
+                            <p class="card-text text-muted mb-4">
+                                Sistema para realizar votações online em assembleias, com pautas e apuração de votos.
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Criação de assembleias</li>
+                                    <li><i class="fas fa-check text-success"></i> Pautas de votação</li>
+                                    <li><i class="fas fa-check text-success"></i> Registro de votos</li>
+                                    <li><i class="fas fa-check text-success"></i> Apuração de resultados</li>
+                                </ul>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('votacao.listar_assembleias') }}" class="btn btn-primary">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulo Atividades -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 module-card" style="border-left: 5px solid #17a2b8;">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-check fa-4x text-info"></i>
+                            </div>
+                            <h4 class="card-title">Atividades</h4>
+                            <p class="card-text text-muted mb-4">
+                                Divulgação e gestão de atividades do condomínio, com sistema de inscrições e taxas.
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Funcionalidades principais:</small>
+                                <ul class="list-unstyled small mt-2">
+                                    <li><i class="fas fa-check text-success"></i> Criação de atividades</li>
+                                    <li><i class="fas fa-check text-success"></i> Inscrições online</li>
+                                    <li><i class="fas fa-check text-success"></i> Controle de vagas</li>
+                                    <li><i class="fas fa-check text-success"></i> Gestão de pagamentos (stub)</li>
+                                </ul>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('atividades.listar_atividades') }}" class="btn btn-info">
+                                    <i class="fas fa-play"></i> Acessar Módulo
+                                </a>
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Módulo Ativo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -306,7 +434,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="border-end">
-                                <h4 class="text-info mb-1">6</h4>
+                                <h4 class="text-info mb-1">10</h4>
                                 <small class="text-muted">Módulos Ativos</small>
                             </div>
                         </div>

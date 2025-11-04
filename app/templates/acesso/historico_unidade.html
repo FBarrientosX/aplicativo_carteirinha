@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-building me-2 text-info"></i>
+                    Histórico de Acessos por Unidade
+                </h1>
+                <div>
+                    <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-list me-1"></i>
+                        Histórico Completo
+                    </a>
+                    <a href="{{ url_for('main.controle_acesso') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                    <button class="btn btn-success" onclick="exportarCSV()">
+                        <i class="fas fa-download me-1"></i>
+                        Exportar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Filtros
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="bloco" class="form-label">Bloco</label>
+                    <select name="bloco" id="bloco" class="form-select">
+                        <option value="">Todos os blocos</option>
+                        {% for bloco in blocos %}
+                            <option value="{{ bloco }}" {% if bloco_filtro == bloco %}selected{% endif %}>
+                                {{ bloco }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="apartamento" class="form-label">Apartamento</label>
+                    <input type="text" name="apartamento" id="apartamento" class="form-control" 
+                           value="{{ apartamento_filtro }}" placeholder="Ex: 101">
+                </div>
+                <div class="col-md-2">
+                    <label for="data_inicio" class="form-label">Data Início</label>
+                    <input type="date" name="data_inicio" id="data_inicio" class="form-control" 
+                           value="{{ data_inicio }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="data_fim" class="form-label">Data Fim</label>
+                    <input type="date" name="data_fim" id="data_fim" class="form-control" 
+                           value="{{ data_fim }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>
+                        Filtrar
+                    </button>
+                    <a href="{{ url_for('main.historico_por_unidade') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-eraser me-1"></i>
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Unidades
+                {% if resultados %}
+                    <span class="badge bg-primary">{{ resultados|length }}</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if resultados %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Unidade</th>
+                                <th>Total de Acessos</th>
+                                <th>Entradas</th>
+                                <th>Saídas</th>
+                                <th>Último Acesso</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resultado in resultados %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>
+                                            <i class="fas fa-building me-1 text-primary"></i>
+                                            Bloco {{ resultado.bloco }} - Apt {{ resultado.apartamento }}
+                                        </strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-door-open me-1"></i>
+                                        {{ resultado.total_acessos }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-sign-in-alt me-1"></i>
+                                        {{ resultado.entradas }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-sign-out-alt me-1"></i>
+                                        {{ resultado.saidas }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if resultado.ultimo_acesso %}
+                                        <div>
+                                            <strong>{{ resultado.ultimo_acesso.strftime('%d/%m/%Y') }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ resultado.ultimo_acesso.strftime('%H:%M:%S') }}</small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.historico_acesso', bloco=resultado.bloco, apartamento=resultado.apartamento) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Ver histórico detalhado">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma unidade encontrada</h5>
+                    <p class="text-muted">
+                        {% if request.args %}
+                            Tente ajustar os filtros ou 
+                            <a href="{{ url_for('main.historico_por_unidade') }}" class="text-decoration-none">limpar a busca</a>
+                        {% else %}
+                            Ainda não há registros de acesso agrupados por unidade
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function exportarCSV() {
+    // Coletar dados da tabela
+    const table = document.querySelector('table');
+    if (!table) {
+        alert('Nenhum dado para exportar');
+        return;
+    }
+    
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    // Cabeçalho
+    const headers = [];
+    rows[0].querySelectorAll('th').forEach(th => {
+        headers.push(th.textContent.trim());
+    });
+    csv.push(headers.join(','));
+    
+    // Dados
+    for (let i = 1; i < rows.length; i++) {
+        const row = [];
+        const cols = rows[i].querySelectorAll('td');
+        
+        cols.forEach((col, index) => {
+            if (index < 5) { // Ignorar coluna de ações
+                let text = col.textContent.trim().replace(/\n/g, ' ').replace(/,/g, ';');
+                row.push('"' + text + '"');
+            }
+        });
+        csv.push(row.join(','));
+    }
+    
+    // Download
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'historico_acesso_por_unidade.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}
+

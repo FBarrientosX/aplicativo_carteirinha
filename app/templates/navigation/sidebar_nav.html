@@ -45,6 +45,12 @@
                         <span class="nav-link-text">Histórico</span>
                     </a>
                 </li>
+                <li class="nav-item {{ 'active' if current_page == 'historico_unidade' else '' }}">
+                    <a href="{{ url_for('main.historico_por_unidade') }}" class="nav-link">
+                        <i class="fas fa-building nav-link-icon"></i>
+                        <span class="nav-link-text">Histórico por Unidade</span>
+                    </a>
+                </li>
             </ul>
         </div>
 
