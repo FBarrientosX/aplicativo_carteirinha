@@ -1182,7 +1182,7 @@ class Visitante(db.Model):
     
     # Relacionamentos
     morador = db.relationship('Morador', backref='visitantes')
-    autorizador = db.relationship('Usuario', foreign_keys=[autorizado_por])
+    autorizador = db.relationship('Usuario', foreign_keys=[autorizado_por], backref='visitantes_autorizados')
     
     @property
     def esta_dentro(self):
