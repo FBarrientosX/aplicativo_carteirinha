@@ -15,49 +15,67 @@ def listar_visitantes():
     tenant_id = getattr(g, 'tenant_id', 1)
     form = FiltroVisitanteForm(request.args)
     
-    # Query base
-    query = Visitante.query.filter_by(tenant_id=tenant_id)
-    
-    # Aplicar filtros
-    if form.tipo.data:
-        query = query.filter_by(tipo=form.tipo.data)
-    
-    if form.status.data:
-        query = query.filter_by(status=form.status.data)
-    
-    if form.morador_id.data:
-        query = query.filter_by(morador_id=form.morador_id.data)
-    
-    if form.busca.data:
-        query = query.filter(
-            Visitante.nome_completo.contains(form.busca.data)
+    try:
+        # Query base
+        query = Visitante.query.filter_by(tenant_id=tenant_id)
+        
+        # Aplicar filtros
+        if form.tipo.data:
+            query = query.filter_by(tipo=form.tipo.data)
+        
+        if form.status.data:
+            query = query.filter_by(status=form.status.data)
+        
+        if form.morador_id.data:
+            query = query.filter_by(morador_id=form.morador_id.data)
+        
+        if form.busca.data:
+            query = query.filter(
+                Visitante.nome_completo.contains(form.busca.data)
+            )
+        
+        # Configurar choices do formulário
+        moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+        form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
+        
+        # Paginação
+        page = request.args.get('page', 1, type=int)
+        visitantes = query.order_by(Visitante.data_entrada.desc()).paginate(
+            page=page, per_page=20, error_out=False
         )
-    
-    # Configurar choices do formulário
-    moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
-    form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
-    
-    # Paginação
-    page = request.args.get('page', 1, type=int)
-    visitantes = query.order_by(Visitante.data_entrada.desc()).paginate(
-        page=page, per_page=20, error_out=False
-    )
-    
-    # Estatísticas
-    visitantes_dentro = Visitante.query.filter_by(
-        tenant_id=tenant_id,
-        status='em_visita'
-    ).count()
-    
-    visitantes_hoje = Visitante.query.filter_by(tenant_id=tenant_id).filter(
-        db.func.date(Visitante.data_entrada) == datetime.now().date()
-    ).count()
-    
-    stats = {
-        'total': visitantes.total,
-        'dentro': visitantes_dentro,
-        'hoje': visitantes_hoje
-    }
+        
+        # Estatísticas
+        visitantes_dentro = Visitante.query.filter_by(
+            tenant_id=tenant_id,
+            status='em_visita'
+        ).count()
+        
+        visitantes_hoje = Visitante.query.filter_by(tenant_id=tenant_id).filter(
+            db.func.date(Visitante.data_entrada) == datetime.now().date()
+        ).count()
+        
+        stats = {
+            'total': visitantes.total,
+            'dentro': visitantes_dentro,
+            'hoje': visitantes_hoje
+        }
+    except Exception as e:
+        # Se a tabela não existe, mostrar mensagem amigável
+        if 'no such table: visitantes' in str(e).lower():
+            flash('A tabela de visitantes ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela visitantes não existe: {e}')
+            # Criar objeto paginação vazio
+            from flask_sqlalchemy import Pagination
+            visitantes = Pagination(query=None, page=1, per_page=20, total=0, items=[])
+            stats = {
+                'total': 0,
+                'dentro': 0,
+                'hoje': 0
+            }
+            moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+            form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
+        else:
+            raise
     
     return render_template('visitantes/listar.html',
                          title='Controle de Visitantes',
@@ -124,7 +142,16 @@ def ver_visitante(id):
 def registrar_saida(id):
     """Registrar saída do visitante"""
     tenant_id = getattr(g, 'tenant_id', 1)
-    visitante = Visitante.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    try:
+        visitante = Visitante.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    except Exception as e:
+        if 'no such table: visitantes' in str(e).lower():
+            flash('A tabela de visitantes ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela visitantes não existe: {e}')
+            return redirect(url_for('visitantes.listar_visitantes'))
+        else:
+            raise
     
     if visitante.status != 'em_visita':
         flash('Visitante já saiu do condomínio!', 'warning')
@@ -146,10 +173,17 @@ def visitantes_dentro():
     """Lista visitantes atualmente no condomínio"""
     tenant_id = getattr(g, 'tenant_id', 1)
     
-    visitantes = Visitante.query.filter_by(
-        tenant_id=tenant_id,
-        status='em_visita'
-    ).order_by(Visitante.data_entrada).all()
+    try:
+        visitantes = Visitante.query.filter_by(
+            tenant_id=tenant_id,
+            status='em_visita'
+        ).order_by(Visitante.data_entrada).all()
+    except Exception as e:
+        if 'no such table: visitantes' in str(e).lower():
+            current_app.logger.error(f'Tabela visitantes não existe: {e}')
+            visitantes = []
+        else:
+            raise
     
     return render_template('visitantes/dentro.html',
                          title='Visitantes no Condomínio',
