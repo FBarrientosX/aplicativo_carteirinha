@@ -187,15 +187,35 @@ body {
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: var(--mycond-shadow);
+    min-height: 140px;
+    display: flex;
+    align-items: center;
 }
 
 .stats-card .metric-large,
 .stats-card .metric-medium {
     color: white;
+    font-weight: 700;
 }
 
 .stats-card .metric-label {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.stats-card .card-icon {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stats-card .card-icon i {
+    font-size: 3rem;
+    opacity: 0.3;
+    color: white;
 }
 
 /* Alertas e badges */
@@ -350,5 +370,51 @@ h1, h2, h3, h4, h5, h6 {
 .module-card[style*="border-left"] {
     border-left-width: 4px !important;
     border-left-style: solid !important;
+}
+
+/* Títulos de seção */
+h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--mycond-text);
+    margin-bottom: 1.5rem;
+}
+
+/* Cards simples de métricas */
+.card .metric-medium {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.card .metric-label {
+    font-size: 0.875rem;
+    color: var(--mycond-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Melhorias nos cards do dashboard */
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Cards de status com cores */
+.text-success {
+    color: var(--mycond-success) !important;
+}
+
+.text-warning {
+    color: var(--mycond-warning) !important;
+}
+
+.text-danger {
+    color: var(--mycond-danger) !important;
+}
+
+.text-secondary {
+    color: var(--mycond-text-light) !important;
 }
 
