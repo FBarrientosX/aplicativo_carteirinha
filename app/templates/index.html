@@ -416,11 +416,48 @@
 .module-card {
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
+    max-width: 100%;
 }
 
 .module-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Centralizar cards dos módulos */
+.container-fluid .row.mb-5 .col-12 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container-fluid .row.mb-5 .col-12 .row.justify-content-center {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Garantir que os cards dos módulos tenham largura consistente */
+.container-fluid .row.mb-5 .col-12 .row.justify-content-center > div {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+@media (min-width: 992px) {
+    .container-fluid .row.mb-5 .col-12 .row.justify-content-center > .col-lg-4 {
+        max-width: 380px;
+        flex: 0 0 380px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .container-fluid .row.mb-5 .col-12 .row.justify-content-center > .col-md-6 {
+        max-width: 350px;
+        flex: 0 0 350px;
+    }
 }
 </style>
 {% endblock %}

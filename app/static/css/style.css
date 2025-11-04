@@ -2463,6 +2463,7 @@ body {
     justify-content: center !important;
     display: flex !important;
     flex-wrap: wrap !important;
+    gap: 1.5rem !important;
 }
 
 /* Específico para a seção de módulos no index.html */
@@ -2471,8 +2472,21 @@ body {
     justify-content: center !important;
     align-items: stretch !important;
     margin: 0 auto !important;
-    max-width: 100% !important;
+    max-width: 1400px !important;
     width: 100% !important;
+}
+
+/* Centralizar container de módulos no painel geral */
+.container-fluid .row.mb-5 {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.container-fluid .row.mb-5 .col-12 {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    max-width: 100% !important;
 }
 
 /* Centralizar conteúdo dentro de cards e seções */
