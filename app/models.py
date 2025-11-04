@@ -1269,6 +1269,183 @@ class Encomenda(db.Model):
         return f'<Encomenda {self.numero} - {self.morador.nome_completo}>'
 
 
+# ======= Lista de Convidados (Eventos em Reservas) =======
+class ListaConvidado(db.Model):
+    """Convidados vinculados a uma reserva de espaço"""
+    __tablename__ = 'lista_convidados'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1)
+    reserva_id = db.Column(db.Integer, db.ForeignKey('reservas_espacos.id'), nullable=False)
+
+    nome = db.Column(db.String(200), nullable=False)
+    documento = db.Column(db.String(20), nullable=True)
+    autorizado = db.Column(db.Boolean, default=True)
+
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    reserva = db.relationship('ReservaEspaco', backref='convidados')
+
+    def __repr__(self):
+        return f'<Convidado {self.nome} - Reserva {self.reserva_id}>'
+
+
+# ======= Ocorrências =======
+class Ocorrencia(db.Model):
+    __tablename__ = 'ocorrencias'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1)
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=False)
+    categoria = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(20), default='aberta')  # aberta, em_analise, resolvida, arquivada
+
+    foto_nome = db.Column(db.String(255), nullable=True)
+    foto_caminho = db.Column(db.String(500), nullable=True)
+
+    data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data_fechamento = db.Column(db.DateTime, nullable=True)
+
+    morador = db.relationship('Morador')
+
+    def __repr__(self):
+        return f'<Ocorrencia {self.titulo} - {self.status}>'
+
+
+# ======= Achados e Perdidos =======
+class AchadoPerdido(db.Model):
+    __tablename__ = 'achados_perdidos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, default=1)
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+
+    tipo = db.Column(db.String(20), nullable=False)  # achado, perdido
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    local = db.Column(db.String(200), nullable=True)
+    status = db.Column(db.String(20), default='aberto')  # aberto, devolvido, resolvido
+
+    foto_nome = db.Column(db.String(255), nullable=True)
+    foto_caminho = db.Column(db.String(500), nullable=True)
+
+    data_registro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    morador = db.relationship('Morador')
+
+    def __repr__(self):
+        return f'<AchadoPerdido {self.tipo}:{self.titulo}>'
+
+
+# ======= Votação (Assembleias) =======
+class Assembleia(db.Model):
+    __tablename__ = 'assembleias'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    inicio = db.Column(db.DateTime, nullable=False)
+    fim = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(20), default='aberta')  # aberta, fechada, agendada
+
+    pautas = db.relationship('Pauta', backref='assembleia', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Assembleia {self.titulo}>'
+
+
+class Pauta(db.Model):
+    __tablename__ = 'pautas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    assembleia_id = db.Column(db.Integer, db.ForeignKey('assembleias.id'), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+
+    votos = db.relationship('Voto', backref='pauta', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Pauta {self.titulo}>'
+
+
+class Voto(db.Model):
+    __tablename__ = 'votos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    pauta_id = db.Column(db.Integer, db.ForeignKey('pautas.id'), nullable=False)
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    escolha = db.Column(db.String(10), nullable=False)  # sim, nao, abstenção
+    data_voto = db.Column(db.DateTime, default=datetime.utcnow)
+
+    morador = db.relationship('Morador')
+
+    __table_args__ = (
+        db.UniqueConstraint('pauta_id', 'morador_id', name='uq_voto_unico'),
+    )
+
+    def __repr__(self):
+        return f'<Voto {self.escolha}>'
+
+
+# ======= Atividades/Inscrições =======
+class Atividade(db.Model):
+    __tablename__ = 'atividades'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    nome = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    exige_pagamento = db.Column(db.Boolean, default=False)
+    valor_taxa = db.Column(db.Numeric(10, 2), nullable=True)
+
+    turmas = db.relationship('TurmaAtividade', backref='atividade', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Atividade {self.nome}>'
+
+
+class TurmaAtividade(db.Model):
+    __tablename__ = 'turmas_atividade'
+
+    id = db.Column(db.Integer, primary_key=True)
+    atividade_id = db.Column(db.Integer, db.ForeignKey('atividades.id'), nullable=False)
+    nome_turma = db.Column(db.String(200), nullable=False)
+    horario = db.Column(db.String(100), nullable=True)
+    vagas = db.Column(db.Integer, default=0)
+
+    inscricoes = db.relationship('InscricaoAtividade', backref='turma', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Turma {self.nome_turma}>'
+
+
+class InscricaoAtividade(db.Model):
+    __tablename__ = 'inscricoes_atividade'
+
+    id = db.Column(db.Integer, primary_key=True)
+    turma_id = db.Column(db.Integer, db.ForeignKey('turmas_atividade.id'), nullable=False)
+    morador_id = db.Column(db.Integer, db.ForeignKey('moradores.id'), nullable=False)
+    data_inscricao = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='ativa')  # ativa, cancelada
+    pago = db.Column(db.Boolean, default=False)
+
+    morador = db.relationship('Morador')
+
+    __table_args__ = (
+        db.UniqueConstraint('turma_id', 'morador_id', name='uq_inscricao_unica'),
+    )
+
+    def __repr__(self):
+        return f'<Inscricao {self.turma_id}-{self.morador_id}>'
+
+
 class Classificado(db.Model):
     """Classificados - Marketplace para condôminos divulgarem produtos e serviços"""
     __tablename__ = 'classificados'

@@ -6,6 +6,8 @@ from app.models import Encomenda, Morador
 from app.forms import EncomendaForm, FiltroEncomendaForm
 from datetime import datetime, timedelta
 from app.email_service import enviar_email
+from app.whatsapp_service import send_whatsapp_message
+from sqlalchemy import or_
 
 encomendas_bp = Blueprint('encomendas', __name__, url_prefix='/encomendas')
 
@@ -31,7 +33,7 @@ def listar_encomendas():
     
     if form.busca.data:
         query = query.filter(
-            db.or_(
+            or_(
                 Encomenda.numero.contains(form.busca.data),
                 Encomenda.codigo_rastreamento.contains(form.busca.data),
                 Encomenda.descricao.contains(form.busca.data)
@@ -131,7 +133,7 @@ def marcar_recebida(id):
     encomenda.data_recebimento = datetime.utcnow()
     encomenda.data_atualizacao = datetime.utcnow()
     
-    # Enviar notificação ao morador
+    # Notificações ao morador: Email + WhatsApp (stub)
     try:
         morador = encomenda.morador
         email = morador.get_email_notificacao()
@@ -146,12 +148,19 @@ def marcar_recebida(id):
             )
             encomenda.notificacao_enviada = True
             encomenda.data_notificacao = datetime.utcnow()
+        if morador.celular:
+            msg = (
+                f"Olá, {morador.nome_completo}. Chegou uma encomenda para você.\n"
+                f"Número: {encomenda.numero} | Local: {encomenda.local_armazenamento or 'Portaria'}\n"
+                f"Favor retirar apresentando documento."
+            )
+            send_whatsapp_message(morador.celular, msg)
     except Exception as e:
-        print(f"Erro ao enviar notificação: {e}")
+        print(f"Erro ao notificar: {e}")
     
     db.session.commit()
     
-    flash(f'Encomenda {encomenda.numero} marcada como recebida e notificação enviada!', 'success')
+    flash(f'Encomenda {encomenda.numero} marcada como recebida e notificações enviadas!', 'success')
     return redirect(url_for('encomendas.listar_encomendas'))
 
 
@@ -192,8 +201,6 @@ def minhas_encomendas():
     """Lista encomendas do morador logado"""
     tenant_id = getattr(g, 'tenant_id', 1)
     
-    # Se for admin, mostrar todas. Se for morador, filtrar por morador
-    # Por enquanto, mostrar todas (será ajustado conforme necessário)
     query = Encomenda.query.filter_by(tenant_id=tenant_id)
     
     # Paginação

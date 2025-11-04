@@ -1,0 +1,38 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('configuracoes', 'sistema') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="fas fa-vote-yea text-warning"></i> Assembleias</h3>
+    <a class="btn btn-warning" href="{{ url_for('votacao.nova_assembleia') }}"><i class="fas fa-plus"></i> Nova</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if assembleias %}
+      <ul class="list-group">
+        {% for a in assembleias %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ a.titulo }}</strong><br>
+            <small class="text-muted">{{ a.inicio|datetimeformat }} → {{ a.fim|datetimeformat }}</small>
+          </div>
+          <div>
+            <span class="badge bg-secondary me-2">{{ a.status|title }}</span>
+            <a class="btn btn-sm btn-outline-warning" href="{{ url_for('votacao.detalhes_assembleia', id=a.id) }}">Detalhes</a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="alert alert-info">Nenhuma assembleia encontrada.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

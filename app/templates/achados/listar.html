@@ -1,0 +1,51 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('configuracoes', 'sistema') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="fas fa-search text-info"></i> Achados e Perdidos</h3>
+    <a class="btn btn-info" href="{{ url_for('achados.novo') }}"><i class="fas fa-plus"></i> Novo</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if itens %}
+      <div class="row">
+        {% for it in itens %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            {% if it.foto_nome %}
+            <img src="{{ url_for('achados.foto', filename=it.foto_nome) }}" class="card-img-top" style="height:200px;object-fit:cover;">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ it.titulo }}</h5>
+              <p class="text-muted small">{{ it.descricao[:100] if it.descricao else '' }}</p>
+              <span class="badge bg-secondary">{{ it.tipo|title }}</span>
+              <span class="badge bg-{{ 'success' if it.status=='devolvido' else 'warning' }}">{{ it.status|title }}</span>
+            </div>
+            <div class="card-footer">
+              <form method="POST" action="{{ url_for('achados.alterar_status', id=it.id) }}" class="d-flex gap-2">
+                <select name="status" class="form-select form-select-sm">
+                  <option value="aberto">Aberto</option>
+                  <option value="devolvido">Devolvido</option>
+                  <option value="resolvido">Resolvido</option>
+                </select>
+                <button class="btn btn-sm btn-primary">Atualizar</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-info">Nenhum registro encontrado.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

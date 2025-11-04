@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify, current_app, g
 from flask_login import login_required, current_user
 from app import db
-from app.models import EspacoComum, ReservaEspaco, Morador, Usuario
+from app.models import EspacoComum, ReservaEspaco, Morador, Usuario, ListaConvidado
 from app.forms import EspacoComumForm, ReservaEspacoForm, FiltroReservaForm
 from datetime import datetime, timedelta, time, date
 from sqlalchemy import and_, or_
@@ -228,11 +228,7 @@ def minhas_reservas():
     # Query base
     query = ReservaEspaco.query.filter_by(tenant_id=tenant_id)
     
-    # Se for morador, filtrar por morador
-    # Se for admin, mostrar todas
     if not current_user.is_admin():
-        # Assumindo que há um relacionamento entre Usuario e Morador
-        # Por enquanto, mostrar todas (será ajustado conforme necessário)
         pass
     
     # Aplicar filtros
@@ -316,9 +312,52 @@ def ver_reserva(id):
     tenant_id = getattr(g, 'tenant_id', 1)
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
+    convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+    
     return render_template('reservas/reserva_detalhes.html',
                          title=f'Reserva {reserva.numero}',
-                         reserva=reserva)
+                         reserva=reserva,
+                         convidados=convidados)
+
+
+@reservas_bp.route('/reserva/<int:id>/convidados', methods=['GET', 'POST'])
+@login_required
+def convidados_reserva(id):
+    """Gerenciar lista de convidados da reserva"""
+    tenant_id = getattr(g, 'tenant_id', 1)
+    reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        documento = request.form.get('documento')
+        if not nome:
+            flash('Nome do convidado é obrigatório', 'danger')
+            return redirect(url_for('reservas.convidados_reserva', id=id))
+        convidado = ListaConvidado(
+            tenant_id=tenant_id,
+            reserva_id=reserva.id,
+            nome=nome,
+            documento=documento,
+            autorizado=True
+        )
+        db.session.add(convidado)
+        db.session.commit()
+        flash('Convidado adicionado!', 'success')
+        return redirect(url_for('reservas.convidados_reserva', id=id))
+    
+    convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+    return render_template('reservas/convidados.html', reserva=reserva, convidados=convidados)
+
+
+@reservas_bp.route('/reserva/<int:id>/convidados/<int:convidado_id>/remover', methods=['POST'])
+@login_required
+def remover_convidado(id, convidado_id):
+    tenant_id = getattr(g, 'tenant_id', 1)
+    convidado = ListaConvidado.query.filter_by(id=convidado_id, reserva_id=id, tenant_id=tenant_id).first_or_404()
+    db.session.delete(convidado)
+    db.session.commit()
+    flash('Convidado removido.', 'info')
+    return redirect(url_for('reservas.convidados_reserva', id=id))
 
 
 @reservas_bp.route('/reserva/<int:id>/cancelar', methods=['POST'])

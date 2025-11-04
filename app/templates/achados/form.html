@@ -1,0 +1,49 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('configuracoes', 'sistema') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="card">
+    <div class="card-header bg-info text-white">
+      <h4 class="mb-0"><i class="fas fa-plus"></i> Novo Registro</h4>
+    </div>
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo" required>
+              <option value="achado">Achado</option>
+              <option value="perdido">Perdido</option>
+            </select>
+          </div>
+          <div class="col-md-8 mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" name="titulo" class="form-control" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descrição</label>
+          <textarea name="descricao" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Local (opcional)</label>
+          <input type="text" name="local" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Foto (opcional)</label>
+          <input type="file" name="foto" class="form-control">
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-info" type="submit">Salvar</button>
+          <a class="btn btn-secondary mt-2" href="{{ url_for('achados.listar') }}">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

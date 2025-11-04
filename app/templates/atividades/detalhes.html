@@ -1,0 +1,68 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('configuracoes', 'sistema') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="card mb-3">
+    <div class="card-body">
+      <h3 class="mb-1">{{ atividade.nome }}</h3>
+      <p class="text-muted">{{ atividade.descricao }}</p>
+      {% if atividade.exige_pagamento %}
+      <span class="badge bg-primary">Taxa: R$ {{ atividade.valor_taxa|default('0.00') }}</span>
+      {% else %}
+      <span class="badge bg-secondary">Gratuita</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Turmas</span>
+      <form method="POST" action="{{ url_for('atividades.nova_turma', atividade_id=atividade.id) }}" class="row g-2">
+        <div class="col-auto">
+          <input type="text" class="form-control" name="nome_turma" placeholder="Nome da turma" required>
+        </div>
+        <div class="col-auto">
+          <input type="text" class="form-control" name="horario" placeholder="Horário">
+        </div>
+        <div class="col-auto">
+          <input type="number" class="form-control" name="vagas" placeholder="Vagas">
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-success btn-sm">Adicionar</button>
+        </div>
+      </form>
+    </div>
+    <div class="card-body">
+      {% if atividade.turmas %}
+      <div class="list-group">
+        {% for t in atividade.turmas %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ t.nome_turma }}</strong>
+            <small class="text-muted ms-2">{{ t.horario }}</small>
+            <small class="text-muted ms-2">Vagas: {{ t.vagas }}</small>
+          </div>
+          <form method="POST" action="{{ url_for('atividades.inscrever', turma_id=t.id) }}" class="d-flex align-items-center gap-2">
+            {% if atividade.exige_pagamento %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="marcar_pago" id="pago_{{ t.id }}">
+              <label class="form-check-label" for="pago_{{ t.id }}">Marcar pago</label>
+            </div>
+            {% endif %}
+            <button class="btn btn-outline-success btn-sm">Inscrever</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-info">Nenhuma turma cadastrada.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

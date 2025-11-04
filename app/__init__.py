@@ -89,6 +89,19 @@ def create_app(config_class=Config):
     from app.classificados_routes import classificados_bp
     app.register_blueprint(classificados_bp)
     
+    # NOVOS MÓDULOS
+    from app.ocorrencias_routes import ocorrencias_bp
+    app.register_blueprint(ocorrencias_bp)
+    
+    from app.achados_routes import achados_bp
+    app.register_blueprint(achados_bp)
+    
+    from app.votacao_routes import votacao_bp
+    app.register_blueprint(votacao_bp)
+    
+    from app.atividades_routes import atividades_bp
+    app.register_blueprint(atividades_bp)
+    
     print("Blueprints registrados")
 
     # NOVO: Inicializar middleware de multi-tenancy

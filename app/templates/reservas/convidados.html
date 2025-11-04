@@ -1,0 +1,83 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('reservas', 'minhas') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-user-plus text-primary"></i>
+        Convidados — Reserva {{ reserva.numero }}
+      </h4>
+      <a href="{{ url_for('reservas.ver_reserva', id=reserva.id) }}" class="btn btn-secondary">Voltar</a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="POST">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Nome do Convidado</label>
+            <input type="text" name="nome" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Documento (opcional)</label>
+            <input type="text" name="documento" class="form-control" placeholder="RG/CPF">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if convidados %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Documento</th>
+              <th>Autorizado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in convidados %}
+            <tr>
+              <td>{{ c.nome }}</td>
+              <td>{{ c.documento or '-' }}</td>
+              <td>
+                <span class="badge bg-{{ 'success' if c.autorizado else 'secondary' }}">{{ 'Sim' if c.autorizado else 'Não' }}</span>
+              </td>
+              <td class="text-end">
+                <form method="POST" action="{{ url_for('reservas.remover_convidado', id=reserva.id, convidado_id=c.id) }}">
+                  <button class="btn btn-sm btn-danger" onclick="return confirm('Remover convidado?')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Nenhum convidado adicionado ainda.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
