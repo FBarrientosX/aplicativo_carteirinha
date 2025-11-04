@@ -293,18 +293,9 @@
     background-color: transparent;
 }
 
-/* Main Content */
-.main-content {
-    flex: 1;
-    margin-left: 280px;
-    padding: 20px;
-    background-color: white;
-    transition: margin-left 0.3s ease;
-    min-height: calc(100vh - 60px);
-}
-
+/* Main Content - SOBRESCRITO PELOS ESTILOS DE CENTRALIZAÇÃO ABAIXO */
 .main-content.expanded {
-    margin-left: 0;
+    margin-left: 0 !important;
 }
 
 /* Main Footer */
@@ -2309,6 +2300,7 @@ footer {
 
 /* ========== FIM LAYOUT PRINCIPAL ========== */
 
+/* ========== CENTRALIZAÇÃO DO LAYOUT ========== */
 /* Centralizar conteúdo das páginas */
 body {
     display: flex;
@@ -2317,20 +2309,24 @@ body {
 }
 
 .main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    padding: 2rem 0;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    padding: 2rem 0 !important;
+    margin-left: 0 !important;
+    background: #ffffff !important;
+    min-height: calc(100vh - 60px) !important;
 }
 
 .main-content > * {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 .container-fluid {
@@ -2729,22 +2725,7 @@ body {
     color: #1e293b;
 }
 
-/* Main Content */
-.main-content {
-    flex: 1;
-    padding: 2rem;
-    min-height: calc(100vh - 60px);
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.main-content > * {
-    width: 100%;
-    max-width: 1400px;
-}
+/* Main Content - SOBRESCRITO PELO ESTILO DE CENTRALIZAÇÃO ACIMA */
 
 /* Flash Messages */
 .flash-messages {
