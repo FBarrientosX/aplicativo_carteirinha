@@ -17,97 +17,6 @@
         </div>
     </div>
 
-    <!-- Cards de Estatísticas estilo MyCond -->
-    <div class="row mb-4">
-        <!-- Card Moradores -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card">
-                <div class="card-icon">
-                    <div>
-                        <div class="metric-large">{{ stats.total_moradores }}</div>
-                        <div class="metric-label">Moradores</div>
-                    </div>
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card Acessos Hoje -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card">
-                <div class="card-icon">
-                    <div>
-                        <div class="metric-large">{{ stats.entradas_hoje }}</div>
-                        <div class="metric-label">Acessos Hoje</div>
-                    </div>
-                    <i class="fas fa-swimming-pool"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card Na Piscina -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card">
-                <div class="card-icon">
-                    <div>
-                        <div class="metric-large">{{ stats.moradores_na_piscina }}</div>
-                        <div class="metric-label">Na Piscina Agora</div>
-                    </div>
-                    <i class="fas fa-life-ring"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card Salva-vidas -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card">
-                <div class="card-icon">
-                    <div>
-                        <div class="metric-large">{{ stats.salva_vidas_ativos }}</div>
-                        <div class="metric-label">Salva-vidas Ativos</div>
-                    </div>
-                    <i class="fas fa-user-md"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cards de Status das Carteirinhas -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="metric-medium text-success">{{ stats.regulares }}</div>
-                    <div class="metric-label">Regulares</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="metric-medium text-warning">{{ stats.a_vencer }}</div>
-                    <div class="metric-label">A Vencer (30 dias)</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="metric-medium text-danger">{{ stats.vencidas }}</div>
-                    <div class="metric-label">Vencidas</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="metric-medium text-secondary">{{ stats.sem_carteirinha }}</div>
-                    <div class="metric-label">Sem Carteirinha</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Seletor de Módulos -->
     <div class="row mb-5">
         <div class="col-12">
@@ -501,46 +410,6 @@
         </div>
     </div>
 
-    <!-- Estatísticas Gerais (se houver dados) -->
-    {% if current_user.is_authenticated %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-bar"></i> Resumo Geral do Sistema
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-primary mb-1">--</h4>
-                                <small class="text-muted">Moradores Ativos</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-success mb-1">--</h4>
-                                <small class="text-muted">Chamados Abertos</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-info mb-1">10</h4>
-                                <small class="text-muted">Módulos Ativos</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <h4 class="text-warning mb-1">{{ current_user.nome_completo }}</h4>
-                            <small class="text-muted">Usuário Logado</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <style>
@@ -557,32 +426,4 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    // Renderizar gráfico de status
-    var graphData = {{ graph_json|safe }};
-    Plotly.newPlot('grafico-status', graphData.data, graphData.layout, {
-        responsive: true,
-        displayModeBar: false
-    });
-    
-    // Função para executar notificações
-    function executarNotificacoes(btn) {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
-        btn.disabled = true;
-        
-        fetch('{{ url_for("main.executar_notificacoes") }}')
-            .then(response => response.json())
-            .then(data => {
-                alert(`Notificações enviadas:\n- 30 dias: ${data.notificacoes_30_dias}\n- Vencimento: ${data.notificacoes_vencimento}\n- Erros: ${data.erros.length}`);
-            })
-            .catch(error => {
-                alert('Erro ao enviar notificações: ' + error);
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-    }
-</script>
 {% endblock %}
