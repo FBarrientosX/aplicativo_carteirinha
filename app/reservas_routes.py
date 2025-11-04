@@ -15,7 +15,16 @@ def listar_espacos():
     """Lista todos os espaços comuns disponíveis"""
     tenant_id = getattr(g, 'tenant_id', 1)
     
-    espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
+    try:
+        espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
+    except Exception as e:
+        # Se a tabela não existe, mostrar mensagem amigável
+        if 'no such table: espacos_comuns' in str(e).lower():
+            flash('As tabelas de reservas ainda não foram criadas. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela espacos_comuns não existe: {e}')
+            espacos = []
+        else:
+            raise
     
     # Estatísticas
     total_espacos = len(espacos)
