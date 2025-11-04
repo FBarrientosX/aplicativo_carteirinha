@@ -319,23 +319,55 @@ def validar_carteirinha(id):
                          form=form)
 
 @bp.route('/morador/<int:id>/anexos')
+@login_required
 def listar_anexos(id):
     """Listar anexos do morador"""
-    morador = Morador.query.get_or_404(id)
-    return render_template('moradores/anexos.html',
-                         title='Anexos',
-                         morador=morador)
+    try:
+        tenant_id = getattr(g, 'tenant_id', 1)
+        morador = Morador.query.get_or_404(id)
+        
+        # Verificar tenant_id (se aplicável)
+        if hasattr(morador, 'tenant_id') and morador.tenant_id != tenant_id:
+            flash('Acesso negado.', 'error')
+            return redirect(url_for('main.listar_moradores'))
+        
+        return render_template('moradores/anexos.html',
+                             title='Anexos',
+                             morador=morador)
+    except Exception as e:
+        current_app.logger.error(f'Erro ao listar anexos do morador {id}: {str(e)}', exc_info=True)
+        flash(f'Erro ao carregar anexos: {str(e)}', 'error')
+        return redirect(url_for('main.listar_moradores'))
 
 @bp.route('/anexo/<int:id>')
+@login_required
 def baixar_anexo(id):
     """Download de anexo"""
-    anexo = AnexoMorador.query.get_or_404(id)
-    return send_from_directory(
-        os.path.dirname(anexo.caminho_arquivo),
-        os.path.basename(anexo.caminho_arquivo),
-        as_attachment=True,
-        download_name=anexo.nome_original
-    )
+    try:
+        anexo = AnexoMorador.query.get_or_404(id)
+        
+        # Verificar se o arquivo existe
+        if not anexo.caminho_arquivo or not os.path.exists(anexo.caminho_arquivo):
+            flash('Arquivo não encontrado.', 'error')
+            return redirect(url_for('main.listar_moradores'))
+        
+        # Verificar tenant_id (se aplicável)
+        tenant_id = getattr(g, 'tenant_id', 1)
+        if hasattr(anexo.morador, 'tenant_id') and anexo.morador.tenant_id != tenant_id:
+            flash('Acesso negado.', 'error')
+            return redirect(url_for('main.listar_moradores'))
+        
+        # Retornar arquivo
+        return send_from_directory(
+            os.path.dirname(anexo.caminho_arquivo),
+            os.path.basename(anexo.caminho_arquivo),
+            as_attachment=True,
+            download_name=anexo.nome_original
+        )
+    except Exception as e:
+        current_app.logger.error(f'Erro ao baixar anexo {id}: {str(e)}', exc_info=True)
+        flash(f'Erro ao baixar arquivo: {str(e)}', 'error')
+        return redirect(url_for('main.listar_moradores'))
 
 @bp.route('/relatorios')
 def relatorios():
