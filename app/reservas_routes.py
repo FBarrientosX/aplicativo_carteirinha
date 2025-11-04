@@ -135,25 +135,33 @@ def ver_espaco(id):
     espaco = EspacoComum.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     # Próximas reservas
-    proximas_reservas = ReservaEspaco.query.filter_by(
-        espaco_id=id,
-        tenant_id=tenant_id
-    ).filter(
-        or_(
-            ReservaEspaco.data_reserva > date.today(),
-            and_(
-                ReservaEspaco.data_reserva == date.today(),
-                ReservaEspaco.hora_inicio >= datetime.now().time()
+    try:
+        proximas_reservas = ReservaEspaco.query.filter_by(
+            espaco_id=id,
+            tenant_id=tenant_id
+        ).filter(
+            or_(
+                ReservaEspaco.data_reserva > date.today(),
+                and_(
+                    ReservaEspaco.data_reserva == date.today(),
+                    ReservaEspaco.hora_inicio >= datetime.now().time()
+                )
             )
-        )
-    ).order_by(ReservaEspaco.data_reserva, ReservaEspaco.hora_inicio).limit(10).all()
-    
-    # Reservas hoje
-    reservas_hoje = ReservaEspaco.query.filter_by(
-        espaco_id=id,
-        tenant_id=tenant_id,
-        data_reserva=date.today()
-    ).order_by(ReservaEspaco.hora_inicio).all()
+        ).order_by(ReservaEspaco.data_reserva, ReservaEspaco.hora_inicio).limit(10).all()
+        
+        # Reservas hoje
+        reservas_hoje = ReservaEspaco.query.filter_by(
+            espaco_id=id,
+            tenant_id=tenant_id,
+            data_reserva=date.today()
+        ).order_by(ReservaEspaco.hora_inicio).all()
+    except Exception as e:
+        if 'no such table: reservas_espacos' in str(e).lower():
+            current_app.logger.error(f'Tabela reservas_espacos não existe: {e}')
+            proximas_reservas = []
+            reservas_hoje = []
+        else:
+            raise
     
     return render_template('reservas/espaco_detalhes.html',
                          title=f'Espaço: {espaco.nome}',
