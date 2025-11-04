@@ -2322,10 +2322,10 @@ body {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: stretch !important;
     justify-content: flex-start !important;
-    width: auto !important;
-    padding: 2rem !important;
+    width: calc(100% - 280px) !important;
+    padding: 1.5rem !important;
     margin-left: 280px !important; /* Espaço para a sidebar */
     background: #ffffff !important;
     min-height: calc(100vh - 60px) !important;
@@ -2337,38 +2337,44 @@ body {
     margin-left: 0 !important;
 }
 
-.main-content > * {
+.sidebar-layout .main-content > .container-fluid {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 auto !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
-.container-fluid {
+.sidebar-layout .container-fluid {
     max-width: 100% !important;
-    margin: 0 auto !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     width: 100% !important;
 }
 
 /* Para telas maiores, usar toda largura disponível */
 @media (min-width: 1600px) {
-    .main-content > *,
-    .container-fluid {
-        max-width: 100% !important;
-        padding-left: 3rem !important;
-        padding-right: 3rem !important;
+    .sidebar-layout .main-content {
+        padding: 2rem !important;
+    }
+    
+    .sidebar-layout .main-content > .container-fluid,
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
 @media (min-width: 1920px) {
-    .main-content > *,
-    .container-fluid {
-        max-width: 100% !important;
-        padding-left: 4rem !important;
-        padding-right: 4rem !important;
+    .sidebar-layout .main-content {
+        padding: 2.5rem !important;
+    }
+    
+    .sidebar-layout .main-content > .container-fluid,
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
@@ -3093,7 +3099,13 @@ body {
     
     .sidebar-layout .main-content {
         margin-left: 300px !important;
-        padding: 3rem !important;
+        width: calc(100% - 300px) !important;
+        padding: 2.5rem !important;
+    }
+    
+    .sidebar-layout .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
