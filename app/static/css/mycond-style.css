@@ -490,9 +490,33 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--mycond-success);
 }
 
-/* Gap entre botões */
+/* Gap entre botões e espaçamento */
 .d-flex.gap-2 {
     gap: 0.5rem !important;
+}
+
+.d-flex.gap-3 {
+    gap: 1rem !important;
+}
+
+/* Melhorar espaçamento em headers de página */
+.d-flex.flex-column.flex-md-row.gap-3 {
+    gap: 1rem !important;
+}
+
+@media (max-width: 767px) {
+    .d-flex.flex-column.flex-md-row.gap-3 {
+        gap: 0.75rem !important;
+    }
+    
+    .d-flex.flex-wrap.gap-2 {
+        width: 100%;
+    }
+    
+    .d-flex.flex-wrap.gap-2 > .btn {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
 }
 
 /* Melhorias adicionais de UI/UX */
