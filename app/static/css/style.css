@@ -293,7 +293,16 @@
     background-color: transparent;
 }
 
-/* Main Content - SOBRESCRITO PELOS ESTILOS DE CENTRALIZAÇÃO ABAIXO */
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: 280px; /* Espaço para a sidebar (280px) */
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+    min-height: calc(100vh - 60px);
+}
+
+/* Quando a sidebar está colapsada, remover o margin-left */
 .main-content.expanded {
     margin-left: 0 !important;
 }
@@ -2308,17 +2317,24 @@ body {
     min-height: 100vh;
 }
 
-.main-content {
+/* Regras específicas para main-content - sobrescrever se necessário */
+.sidebar-layout .main-content {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: flex-start !important;
-    width: 100% !important;
-    padding: 2rem 0 !important;
-    margin-left: 0 !important;
+    width: auto !important;
+    padding: 2rem !important;
+    margin-left: 280px !important; /* Espaço para a sidebar */
     background: #ffffff !important;
     min-height: calc(100vh - 60px) !important;
+    transition: margin-left 0.3s ease !important;
+}
+
+/* Quando a sidebar está colapsada, remover o margin-left */
+.sidebar-layout .main-content.expanded {
+    margin-left: 0 !important;
 }
 
 .main-content > * {
@@ -3074,8 +3090,9 @@ body {
         padding: 1.5rem;
     }
     
-    .main-content {
-        padding: 3rem;
+    .sidebar-layout .main-content {
+        margin-left: 300px !important;
+        padding: 3rem !important;
     }
 }
 
