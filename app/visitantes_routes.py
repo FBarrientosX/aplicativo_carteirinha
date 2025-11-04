@@ -96,29 +96,37 @@ def novo_visitante():
     form.morador_id.choices = [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
     
     if form.validate_on_submit():
-        visitante = Visitante(
-            tenant_id=tenant_id,
-            nome_completo=form.nome_completo.data,
-            documento=form.documento.data,
-            tipo_documento=form.tipo_documento.data,
-            telefone=form.telefone.data,
-            veiculo_placa=form.veiculo_placa.data,
-            veiculo_modelo=form.veiculo_modelo.data,
-            tipo=form.tipo.data,
-            empresa=form.empresa.data,
-            morador_id=form.morador_id.data,
-            apartamento_destino=form.apartamento_destino.data,
-            data_saida_prevista=datetime.combine(form.data_saida_prevista.data, datetime.min.time()) if form.data_saida_prevista.data else None,
-            observacoes=form.observacoes.data,
-            entrada_autorizada=True,
-            autorizado_por=current_user.id
-        )
-        
-        db.session.add(visitante)
-        db.session.commit()
-        
-        flash(f'Visitante {visitante.nome_completo} registrado com sucesso!', 'success')
-        return redirect(url_for('visitantes.listar_visitantes'))
+        try:
+            visitante = Visitante(
+                tenant_id=tenant_id,
+                nome_completo=form.nome_completo.data,
+                documento=form.documento.data,
+                tipo_documento=form.tipo_documento.data,
+                telefone=form.telefone.data,
+                veiculo_placa=form.veiculo_placa.data,
+                veiculo_modelo=form.veiculo_modelo.data,
+                tipo=form.tipo.data,
+                empresa=form.empresa.data,
+                morador_id=form.morador_id.data,
+                apartamento_destino=form.apartamento_destino.data,
+                data_saida_prevista=datetime.combine(form.data_saida_prevista.data, datetime.min.time()) if form.data_saida_prevista.data else None,
+                observacoes=form.observacoes.data,
+                entrada_autorizada=True,
+                autorizado_por=current_user.id
+            )
+            
+            db.session.add(visitante)
+            db.session.commit()
+            
+            flash(f'Visitante {visitante.nome_completo} registrado com sucesso!', 'success')
+            return redirect(url_for('visitantes.listar_visitantes'))
+        except Exception as e:
+            if 'no such table: visitantes' in str(e).lower():
+                flash('A tabela de visitantes ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+                current_app.logger.error(f'Tabela visitantes não existe: {e}')
+            else:
+                flash(f'Erro ao registrar visitante: {str(e)}', 'danger')
+                current_app.logger.error(f'Erro ao registrar visitante: {e}', exc_info=True)
     
     return render_template('visitantes/form.html',
                          title='Registrar Visitante',
@@ -130,7 +138,16 @@ def novo_visitante():
 def ver_visitante(id):
     """Ver detalhes do visitante"""
     tenant_id = getattr(g, 'tenant_id', 1)
-    visitante = Visitante.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    try:
+        visitante = Visitante.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    except Exception as e:
+        if 'no such table: visitantes' in str(e).lower():
+            flash('A tabela de visitantes ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela visitantes não existe: {e}')
+            return redirect(url_for('visitantes.listar_visitantes'))
+        else:
+            raise
     
     return render_template('visitantes/detalhes.html',
                          title=f'Visitante: {visitante.nome_completo}',
