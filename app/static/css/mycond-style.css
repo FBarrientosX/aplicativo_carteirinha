@@ -369,6 +369,30 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
+.btn-outline-secondary {
+    background-color: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.btn-success {
+    background-color: var(--mycond-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #229954;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
 /* Cards de formulário */
 .card-body {
     padding: 1.5rem;
