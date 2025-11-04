@@ -18,49 +18,79 @@ def listar_encomendas():
     tenant_id = getattr(g, 'tenant_id', 1)
     form = FiltroEncomendaForm(request.args)
     
-    # Query base
-    query = Encomenda.query.filter_by(tenant_id=tenant_id)
-    
-    # Aplicar filtros
-    if form.status.data:
-        query = query.filter_by(status=form.status.data)
-    
-    if form.morador_id.data:
-        query = query.filter_by(morador_id=form.morador_id.data)
-    
-    if form.transportadora.data:
-        query = query.filter(Encomenda.transportadora.contains(form.transportadora.data))
-    
-    if form.busca.data:
-        query = query.filter(
-            or_(
-                Encomenda.numero.contains(form.busca.data),
-                Encomenda.codigo_rastreamento.contains(form.busca.data),
-                Encomenda.descricao.contains(form.busca.data)
+    try:
+        # Query base
+        query = Encomenda.query.filter_by(tenant_id=tenant_id)
+        
+        # Aplicar filtros
+        if form.status.data:
+            query = query.filter_by(status=form.status.data)
+        
+        if form.morador_id.data:
+            query = query.filter_by(morador_id=form.morador_id.data)
+        
+        if form.transportadora.data:
+            query = query.filter(Encomenda.transportadora.contains(form.transportadora.data))
+        
+        if form.busca.data:
+            query = query.filter(
+                or_(
+                    Encomenda.numero.contains(form.busca.data),
+                    Encomenda.codigo_rastreamento.contains(form.busca.data),
+                    Encomenda.descricao.contains(form.busca.data)
+                )
             )
+        
+        # Configurar choices do formulário
+        moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+        form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
+        
+        # Paginação
+        page = request.args.get('page', 1, type=int)
+        encomendas = query.order_by(Encomenda.data_cadastro.desc()).paginate(
+            page=page, per_page=20, error_out=False
         )
-    
-    # Configurar choices do formulário
-    moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
-    form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
-    
-    # Paginação
-    page = request.args.get('page', 1, type=int)
-    encomendas = query.order_by(Encomenda.data_cadastro.desc()).paginate(
-        page=page, per_page=20, error_out=False
-    )
-    
-    # Estatísticas
-    aguardando = Encomenda.query.filter_by(tenant_id=tenant_id, status='aguardando').count()
-    recebidas = Encomenda.query.filter_by(tenant_id=tenant_id, status='recebida').count()
-    retiradas = Encomenda.query.filter_by(tenant_id=tenant_id, status='retirada').count()
-    
-    stats = {
-        'total': encomendas.total,
-        'aguardando': aguardando,
-        'recebidas': recebidas,
-        'retiradas': retiradas
-    }
+        
+        # Estatísticas
+        aguardando = Encomenda.query.filter_by(tenant_id=tenant_id, status='aguardando').count()
+        recebidas = Encomenda.query.filter_by(tenant_id=tenant_id, status='recebida').count()
+        retiradas = Encomenda.query.filter_by(tenant_id=tenant_id, status='retirada').count()
+        
+        stats = {
+            'total': encomendas.total,
+            'aguardando': aguardando,
+            'recebidas': recebidas,
+            'retiradas': retiradas
+        }
+    except Exception as e:
+        # Se a tabela não existe, mostrar mensagem amigável
+        if 'no such table: encomendas' in str(e).lower():
+            flash('A tabela de encomendas ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            # Criar objeto paginação vazio usando um mock simples
+            class PaginationMock:
+                def __init__(self):
+                    self.items = []
+                    self.page = 1
+                    self.per_page = 20
+                    self.total = 0
+                    self.pages = 0
+                    self.has_prev = False
+                    self.has_next = False
+                    self.prev_num = None
+                    self.next_num = None
+            
+            encomendas = PaginationMock()
+            stats = {
+                'total': 0,
+                'aguardando': 0,
+                'recebidas': 0,
+                'retiradas': 0
+            }
+            moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+            form.morador_id.choices = [('', 'Todos')] + [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
+        else:
+            raise
     
     return render_template('encomendas/listar.html',
                          title='Portal de Encomendas',
@@ -81,25 +111,33 @@ def nova_encomenda():
     form.morador_id.choices = [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
     
     if form.validate_on_submit():
-        encomenda = Encomenda(
-            tenant_id=tenant_id,
-            morador_id=form.morador_id.data,
-            transportadora=form.transportadora.data,
-            codigo_rastreamento=form.codigo_rastreamento.data,
-            descricao=form.descricao.data,
-            quantidade_pacotes=form.quantidade_pacotes.data or 1,
-            local_armazenamento=form.local_armazenamento.data,
-            observacoes=form.observacoes.data,
-            status='aguardando'
-        )
-        
-        encomenda.numero = encomenda.gerar_numero()
-        
-        db.session.add(encomenda)
-        db.session.commit()
-        
-        flash(f'Encomenda {encomenda.numero} registrada com sucesso!', 'success')
-        return redirect(url_for('encomendas.listar_encomendas'))
+        try:
+            encomenda = Encomenda(
+                tenant_id=tenant_id,
+                morador_id=form.morador_id.data,
+                transportadora=form.transportadora.data,
+                codigo_rastreamento=form.codigo_rastreamento.data,
+                descricao=form.descricao.data,
+                quantidade_pacotes=form.quantidade_pacotes.data or 1,
+                local_armazenamento=form.local_armazenamento.data,
+                observacoes=form.observacoes.data,
+                status='aguardando'
+            )
+            
+            encomenda.numero = encomenda.gerar_numero()
+            
+            db.session.add(encomenda)
+            db.session.commit()
+            
+            flash(f'Encomenda {encomenda.numero} registrada com sucesso!', 'success')
+            return redirect(url_for('encomendas.listar_encomendas'))
+        except Exception as e:
+            if 'no such table: encomendas' in str(e).lower():
+                flash('A tabela de encomendas ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+                current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            else:
+                flash(f'Erro ao registrar encomenda: {str(e)}', 'danger')
+                current_app.logger.error(f'Erro ao registrar encomenda: {e}', exc_info=True)
     
     return render_template('encomendas/form.html',
                          title='Registrar Encomenda',
@@ -111,7 +149,16 @@ def nova_encomenda():
 def ver_encomenda(id):
     """Ver detalhes da encomenda"""
     tenant_id = getattr(g, 'tenant_id', 1)
-    encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    try:
+        encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    except Exception as e:
+        if 'no such table: encomendas' in str(e).lower():
+            flash('A tabela de encomendas ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            return redirect(url_for('encomendas.listar_encomendas'))
+        else:
+            raise
     
     return render_template('encomendas/detalhes.html',
                          title=f'Encomenda {encomenda.numero}',
@@ -123,7 +170,16 @@ def ver_encomenda(id):
 def marcar_recebida(id):
     """Marcar encomenda como recebida"""
     tenant_id = getattr(g, 'tenant_id', 1)
-    encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    try:
+        encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    except Exception as e:
+        if 'no such table: encomendas' in str(e).lower():
+            flash('A tabela de encomendas ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            return redirect(url_for('encomendas.listar_encomendas'))
+        else:
+            raise
     
     if encomenda.status != 'aguardando':
         flash('Encomenda já foi processada!', 'warning')
@@ -169,7 +225,16 @@ def marcar_recebida(id):
 def registrar_retirada(id):
     """Registrar retirada da encomenda"""
     tenant_id = getattr(g, 'tenant_id', 1)
-    encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    try:
+        encomenda = Encomenda.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    except Exception as e:
+        if 'no such table: encomendas' in str(e).lower():
+            flash('A tabela de encomendas ainda não foi criada. Por favor, execute a migration do banco de dados.', 'warning')
+            current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            return redirect(url_for('encomendas.listar_encomendas'))
+        else:
+            raise
     
     if request.method == 'POST':
         retirado_por = request.form.get('retirado_por', '')
@@ -201,13 +266,33 @@ def minhas_encomendas():
     """Lista encomendas do morador logado"""
     tenant_id = getattr(g, 'tenant_id', 1)
     
-    query = Encomenda.query.filter_by(tenant_id=tenant_id)
-    
-    # Paginação
-    page = request.args.get('page', 1, type=int)
-    encomendas = query.order_by(Encomenda.data_cadastro.desc()).paginate(
-        page=page, per_page=15, error_out=False
-    )
+    try:
+        query = Encomenda.query.filter_by(tenant_id=tenant_id)
+        
+        # Paginação
+        page = request.args.get('page', 1, type=int)
+        encomendas = query.order_by(Encomenda.data_cadastro.desc()).paginate(
+            page=page, per_page=15, error_out=False
+        )
+    except Exception as e:
+        if 'no such table: encomendas' in str(e).lower():
+            current_app.logger.error(f'Tabela encomendas não existe: {e}')
+            # Criar objeto paginação vazio usando um mock simples
+            class PaginationMock:
+                def __init__(self):
+                    self.items = []
+                    self.page = 1
+                    self.per_page = 15
+                    self.total = 0
+                    self.pages = 0
+                    self.has_prev = False
+                    self.has_next = False
+                    self.prev_num = None
+                    self.next_num = None
+            
+            encomendas = PaginationMock()
+        else:
+            raise
     
     return render_template('encomendas/minhas.html',
                          title='Minhas Encomendas',
