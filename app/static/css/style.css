@@ -3068,8 +3068,9 @@ body {
         padding: 1.25rem;
     }
     
-    .main-content {
-        padding: 2.5rem;
+    .sidebar-layout .main-content {
+        margin-left: 280px !important;
+        padding: 2.5rem !important;
     }
 }
 
