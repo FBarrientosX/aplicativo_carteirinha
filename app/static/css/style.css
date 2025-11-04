@@ -2389,6 +2389,47 @@ body {
     padding-right: calc(var(--bs-gutter-x) * 0.5);
 }
 
+/* Centralizar cards dos módulos no dashboard */
+.container-fluid .row.justify-content-center {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+}
+
+.container-fluid .row.justify-content-center > [class*="col-"] {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Garantir que o container dos módulos esteja centralizado */
+.container-fluid > .row > .col-12 {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.container-fluid > .row > .col-12 > .row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    justify-content: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+
+/* Específico para a seção de módulos no index.html */
+.container-fluid .row.mb-5 .col-12 .row.justify-content-center {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    margin: 0 auto !important;
+    max-width: 1400px !important;
+}
+
 /* Sidebar */
 .sidebar {
     position: fixed;
