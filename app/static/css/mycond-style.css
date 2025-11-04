@@ -466,6 +466,82 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--mycond-success);
 }
 
+/* Gap entre botões */
+.d-flex.gap-2 {
+    gap: 0.5rem !important;
+}
+
+/* Melhorias adicionais de UI/UX */
+.form-control:disabled,
+.form-select:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.form-control:read-only {
+    background-color: #f8f9fa;
+}
+
+/* Inputs com ícones */
+.input-group {
+    position: relative;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid var(--mycond-border);
+    border-radius: 8px 0 0 8px;
+    padding: 0.625rem 0.875rem;
+}
+
+.input-group .form-control {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Melhorar espaçamento em cards de formulário */
+.card-body form {
+    margin: 0;
+}
+
+.card-body .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Ajustar altura dos inputs para melhor alinhamento */
+.form-control,
+.form-select {
+    min-height: 38px;
+    line-height: 1.5;
+}
+
+/* Melhorar visualização de foco em inputs */
+.form-control:focus,
+.form-select:focus {
+    border-width: 2px;
+}
+
+/* Placeholder mais legível */
+.form-control::placeholder {
+    font-size: 0.9375rem;
+    color: #6c757d;
+}
+
+/* Melhorar espaçamento entre campos em grid */
+.row.g-3 > .col-md-3,
+.row.g-3 > .col-md-4,
+.row.g-3 > .col-md-6 {
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+    .row.g-3 > .col-md-3,
+    .row.g-3 > .col-md-4,
+    .row.g-3 > .col-md-6 {
+        margin-bottom: 0;
+    }
+}
+
 .display-4 {
     font-weight: 700;
     color: var(--mycond-text);
