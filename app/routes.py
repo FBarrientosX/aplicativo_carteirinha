@@ -1633,6 +1633,7 @@ def historico_morador(morador_id):
                          esta_na_piscina=esta_na_piscina)
 
 @bp.route('/acesso-piscina/por-unidade')
+@login_required
 def historico_por_unidade():
     """Histórico de acesso agrupado por unidade (bloco-apto)"""
     from app.models import RegistroAcesso, Morador
@@ -1650,8 +1651,8 @@ def historico_por_unidade():
         Morador.bloco,
         Morador.apartamento,
         func.count(RegistroAcesso.id).label('total_acessos'),
-        func.count(case((RegistroAcesso.tipo == 'entrada', 1))).label('entradas'),
-        func.count(case((RegistroAcesso.tipo == 'saida', 1))).label('saidas'),
+        func.sum(case([(RegistroAcesso.tipo == 'entrada', 1)], else_=0)).label('entradas'),
+        func.sum(case([(RegistroAcesso.tipo == 'saida', 1)], else_=0)).label('saidas'),
         func.max(RegistroAcesso.data_hora).label('ultimo_acesso')
     ).join(
         RegistroAcesso, Morador.id == RegistroAcesso.morador_id
