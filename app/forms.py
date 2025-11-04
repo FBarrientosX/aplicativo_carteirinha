@@ -403,7 +403,7 @@ class FiltroVisitanteForm(FlaskForm):
                               ('prestador', 'Prestador')])
     status = SelectField('Status',
                         choices=[('', 'Todos'), ('em_visita', 'Em Visita'), ('saiu', 'Saiu'), ('expirado', 'Expirado')])
-    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=int)
+    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=coerce_int_or_none)
     busca = StringField('Buscar')
 
 
@@ -412,7 +412,7 @@ class FiltroEncomendaForm(FlaskForm):
     status = SelectField('Status',
                         choices=[('', 'Todas'), ('aguardando', 'Aguardando'), ('recebida', 'Recebida'),
                                 ('entregue', 'Entregue'), ('retirada', 'Retirada'), ('devolvida', 'Devolvida')])
-    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=int)
+    morador_id = SelectField('Morador', choices=[('', 'Todos')], coerce=coerce_int_or_none)
     transportadora = StringField('Transportadora', validators=[Optional()])
     busca = StringField('Buscar')
 
