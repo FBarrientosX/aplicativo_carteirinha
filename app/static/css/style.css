@@ -2323,45 +2323,45 @@ body {
 
 .main-content > * {
     width: 100% !important;
-    max-width: 98% !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 .container-fluid {
-    max-width: 98% !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
     width: 100% !important;
 }
 
-/* Para telas maiores, usar quase toda largura */
+/* Para telas maiores, usar toda largura disponível */
 @media (min-width: 1600px) {
     .main-content > *,
     .container-fluid {
-        max-width: 96% !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        max-width: 100% !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
     }
 }
 
 @media (min-width: 1920px) {
     .main-content > *,
     .container-fluid {
-        max-width: 94% !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        max-width: 100% !important;
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
     }
 }
 
 @media (max-width: 1400px) {
     .main-content > *,
     .container-fluid {
-        max-width: 98% !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        max-width: 100% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
     }
 }
 
@@ -2397,11 +2397,13 @@ body {
     }
 }
 
-/* Garantir que rows dentro de container-fluid ocupem toda largura */
+/* Garantir que rows dentro de container-fluid ocupem toda largura e centralizem */
 .container-fluid .row {
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
 }
 
 .container-fluid .row > * {
@@ -2413,6 +2415,22 @@ body {
 .container-fluid .row .col-12 {
     width: 100% !important;
     max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Centralizar e esticar cards de estatísticas */
+.container-fluid .row .col-md-3,
+.container-fluid .row .col-md-6,
+.container-fluid .row .col-md-4 {
+    display: flex !important;
+}
+
+.container-fluid .row .col-md-3 .card,
+.container-fluid .row .col-md-6 .card,
+.container-fluid .row .col-md-4 .card {
+    width: 100% !important;
+    flex: 1 !important;
 }
 
 /* Centralizar cards dos módulos no dashboard */
@@ -2453,7 +2471,31 @@ body {
     justify-content: center !important;
     align-items: stretch !important;
     margin: 0 auto !important;
-    max-width: 1400px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Centralizar conteúdo dentro de cards e seções */
+.container-fluid .card,
+.container-fluid .card-body {
+    width: 100% !important;
+}
+
+/* Garantir que listas e tabelas ocupem toda largura */
+.container-fluid .list-group,
+.container-fluid .table,
+.container-fluid .card-header {
+    width: 100% !important;
+}
+
+/* Centralizar títulos e botões */
+.container-fluid h1,
+.container-fluid h2,
+.container-fluid h3,
+.container-fluid h4,
+.container-fluid h5,
+.container-fluid .d-flex {
+    width: 100% !important;
 }
 
 /* Sidebar */
