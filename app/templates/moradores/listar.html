@@ -38,23 +38,31 @@
             </div>
             <div class="card-body">
                 <form method="GET" action="{{ url_for('main.listar_moradores') }}">
-                    <div class="row">
+                    <div class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            {{ form.bloco.label(class="form-label") }}
-                            {{ form.bloco(class="form-select") }}
+                            <div class="form-group">
+                                {{ form.bloco.label(class="form-label") }}
+                                {{ form.bloco(class="form-select") }}
+                            </div>
                         </div>
                         <div class="col-md-3">
-                            {{ form.status.label(class="form-label") }}
-                            {{ form.status(class="form-select") }}
+                            <div class="form-group">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select") }}
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            {{ form.busca.label(class="form-label") }}
-                            {{ form.busca(class="form-control", placeholder="Digite o nome do morador") }}
+                            <div class="form-group">
+                                {{ form.busca.label(class="form-label") }}
+                                {{ form.busca(class="form-control", placeholder="Digite o nome do morador") }}
+                            </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-grid">
-                                {{ form.submit(class="btn btn-primary") }}
+                            <div class="form-group">
+                                <label class="form-label d-block">&nbsp;</label>
+                                <div class="d-grid">
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
                             </div>
                         </div>
                     </div>

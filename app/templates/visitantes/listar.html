@@ -60,25 +60,33 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET">
-                <div class="row g-3">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        {{ form.tipo.label(class="form-label") }}
-                        {{ form.tipo(class="form-select") }}
+                        <div class="form-group">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select") }}
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        {{ form.status.label(class="form-label") }}
-                        {{ form.status(class="form-select") }}
+                        <div class="form-group">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        {{ form.morador_id.label(class="form-label") }}
-                        {{ form.morador_id(class="form-select") }}
+                        <div class="form-group">
+                            {{ form.morador_id.label(class="form-label") }}
+                            {{ form.morador_id(class="form-select") }}
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        {{ form.busca.label(class="form-label") }}
-                        {{ form.busca(class="form-control", placeholder="Buscar por nome...") }}
+                        <div class="form-group">
+                            {{ form.busca.label(class="form-label") }}
+                            {{ form.busca(class="form-control", placeholder="Buscar por nome...") }}
+                        </div>
                     </div>
                 </div>
-                <div class="mt-3">
+                <div class="mt-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> Filtrar
                     </button>

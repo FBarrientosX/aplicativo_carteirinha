@@ -40,29 +40,44 @@
             </h5>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-3">
-                    <label for="morador_id" class="form-label">Morador</label>
-                    {{ form.morador_id(class="form-select") }}
-                </div>
-                <div class="col-md-2">
-                    <label for="data_inicio" class="form-label">Data Início</label>
-                    {{ form.data_inicio(class="form-control") }}
-                </div>
-                <div class="col-md-2">
-                    <label for="data_fim" class="form-label">Data Fim</label>
-                    {{ form.data_fim(class="form-control") }}
-                </div>
-                <div class="col-md-2">
-                    <label for="tipo" class="form-label">Tipo</label>
-                    {{ form.tipo(class="form-select") }}
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    {{ form.submit(class="btn btn-primary me-2") }}
-                    <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-eraser me-1"></i>
-                        Limpar
-                    </a>
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="morador_id" class="form-label">Morador</label>
+                            {{ form.morador_id(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            {{ form.data_inicio(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            {{ form.data_fim(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="tipo" class="form-label">Tipo</label>
+                            {{ form.tipo(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label d-block">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                {{ form.submit(class="btn btn-primary") }}
+                                <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-secondary">
+                                    <i class="fas fa-eraser me-1"></i>
+                                    Limpar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

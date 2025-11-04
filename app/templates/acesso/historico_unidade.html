@@ -44,42 +44,57 @@
             </h5>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-3">
-                    <label for="bloco" class="form-label">Bloco</label>
-                    <select name="bloco" id="bloco" class="form-select">
-                        <option value="">Todos os blocos</option>
-                        {% for bloco in blocos %}
-                            <option value="{{ bloco }}" {% if bloco_filtro == bloco %}selected{% endif %}>
-                                {{ bloco }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="apartamento" class="form-label">Apartamento</label>
-                    <input type="text" name="apartamento" id="apartamento" class="form-control" 
-                           value="{{ apartamento_filtro }}" placeholder="Ex: 101">
-                </div>
-                <div class="col-md-2">
-                    <label for="data_inicio" class="form-label">Data Início</label>
-                    <input type="date" name="data_inicio" id="data_inicio" class="form-control" 
-                           value="{{ data_inicio }}">
-                </div>
-                <div class="col-md-2">
-                    <label for="data_fim" class="form-label">Data Fim</label>
-                    <input type="date" name="data_fim" id="data_fim" class="form-control" 
-                           value="{{ data_fim }}">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search me-1"></i>
-                        Filtrar
-                    </button>
-                    <a href="{{ url_for('main.historico_por_unidade') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-eraser me-1"></i>
-                        Limpar
-                    </a>
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="bloco" class="form-label">Bloco</label>
+                            <select name="bloco" id="bloco" class="form-select">
+                                <option value="">Todos os blocos</option>
+                                {% for bloco in blocos %}
+                                    <option value="{{ bloco }}" {% if bloco_filtro == bloco %}selected{% endif %}>
+                                        {{ bloco }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="apartamento" class="form-label">Apartamento</label>
+                            <input type="text" name="apartamento" id="apartamento" class="form-control" 
+                                   value="{{ apartamento_filtro }}" placeholder="Ex: 101">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            <input type="date" name="data_inicio" id="data_inicio" class="form-control" 
+                                   value="{{ data_inicio }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            <input type="date" name="data_fim" id="data_fim" class="form-control" 
+                                   value="{{ data_fim }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label d-block">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    Filtrar
+                                </button>
+                                <a href="{{ url_for('main.historico_por_unidade') }}" class="btn btn-secondary">
+                                    <i class="fas fa-eraser me-1"></i>
+                                    Limpar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
