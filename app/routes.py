@@ -1332,12 +1332,25 @@ def controle_acesso():
         # Criar objetos mock de RegistroAcesso sem usar o ORM (evita erro de tenant_id)
         ultimos_registros = []
         for row in result:
+            # Converter data_hora para datetime se necessário
+            data_hora = row[3]
+            if isinstance(data_hora, str):
+                from datetime import datetime
+                try:
+                    data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S.%f')
+                    except ValueError:
+                        # Se não conseguir converter, manter como string
+                        pass
+            
             # Criar objeto simples sem usar RegistroAcesso() que tenta incluir tenant_id
             registro = type('RegistroAcesso', (), {
                 'id': row[0],
                 'morador_id': row[1],
                 'tipo': row[2],
-                'data_hora': row[3],
+                'data_hora': data_hora,
                 'metodo': row[4],
                 'guardiao': row[5],
                 'observacoes': row[6],
@@ -1366,7 +1379,32 @@ def controle_acesso():
                 })
                 entrada_row = entrada_result.fetchone()
                 if entrada_row:
-                    registro.duracao_permanencia = registro.data_hora - entrada_row[0]
+                    # Converter strings para datetime se necessário
+                    data_saida = registro.data_hora
+                    data_entrada = entrada_row[0]
+                    
+                    # Se forem strings, converter para datetime
+                    if isinstance(data_saida, str):
+                        try:
+                            data_saida = datetime.strptime(data_saida, '%Y-%m-%d %H:%M:%S')
+                        except ValueError:
+                            try:
+                                data_saida = datetime.strptime(data_saida, '%Y-%m-%d %H:%M:%S.%f')
+                            except ValueError:
+                                data_saida = None
+                    
+                    if isinstance(data_entrada, str):
+                        try:
+                            data_entrada = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S')
+                        except ValueError:
+                            try:
+                                data_entrada = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S.%f')
+                            except ValueError:
+                                data_entrada = None
+                    
+                    # Só calcular se ambas as datas forem datetime válidas
+                    if data_saida and data_entrada and isinstance(data_saida, datetime) and isinstance(data_entrada, datetime):
+                        registro.duracao_permanencia = data_saida - data_entrada
             
             ultimos_registros.append(registro)
     
