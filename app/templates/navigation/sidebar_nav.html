@@ -52,6 +52,12 @@
                     </a>
                 </li>
             </ul>
+            <div class="nav-footer" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="{{ url_for('main.index') }}" class="nav-link-footer" style="color: white; display: flex; align-items: center; padding: 12px 20px;">
+                    <i class="fas fa-home nav-link-icon"></i>
+                    <span class="nav-link-text">Voltar ao Dashboard</span>
+                </a>
+            </div>
         </div>
 
     {% elif current_module == 'manutencao' %}
