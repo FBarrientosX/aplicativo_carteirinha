@@ -1299,7 +1299,7 @@ def ver_logs():
 @bp.route('/acesso-piscina')
 def controle_acesso():
     """Página principal do controle de acesso"""
-    from app.models import RegistroAcesso
+    from app.models import RegistroAcesso, Morador
     from sqlalchemy import text
     
     # Verificar se tenant_id existe na tabela
@@ -1312,27 +1312,59 @@ def controle_acesso():
     # Moradores atualmente na piscina
     moradores_dentro = RegistroAcesso.obter_moradores_na_piscina()
     
-    # Últimos 10 registros - filtrar por tenant_id se existir
-    query_registros = RegistroAcesso.query
+    # Últimos 10 registros - usar query customizada se tenant_id não existir
     if has_tenant_id:
+        query_registros = RegistroAcesso.query
         tenant_id = getattr(g, 'tenant_id', 1)
         query_registros = query_registros.filter(RegistroAcesso.tenant_id == tenant_id)
+        ultimos_registros = query_registros.order_by(
+            RegistroAcesso.data_hora.desc()
+        ).limit(10).all()
+    else:
+        # Usar query SQL direta sem tenant_id
+        result = db.session.execute(text("""
+            SELECT id, morador_id, tipo, data_hora, metodo, guardiao, observacoes, ip_origem
+            FROM registro_acesso 
+            ORDER BY data_hora DESC 
+            LIMIT 10
+        """))
+        
+        # Criar objetos mock de RegistroAcesso
+        ultimos_registros = []
+        for row in result:
+            registro = RegistroAcesso()
+            registro.id = row[0]
+            registro.morador_id = row[1]
+            registro.tipo = row[2]
+            registro.data_hora = row[3]
+            registro.metodo = row[4]
+            registro.guardiao = row[5]
+            registro.observacoes = row[6]
+            registro.ip_origem = row[7]
+            
+            # Carregar morador relacionado
+            registro.morador = Morador.query.get(registro.morador_id)
+            ultimos_registros.append(registro)
     
-    ultimos_registros = query_registros.order_by(
-        RegistroAcesso.data_hora.desc()
-    ).limit(10).all()
-    
-    # Estatísticas do dia - filtrar por tenant_id se existir
+    # Estatísticas do dia - usar query customizada se tenant_id não existir
     hoje = datetime.now().date()
-    query_entradas = RegistroAcesso.query.filter(
-        db.func.date(RegistroAcesso.data_hora) == hoje,
-        RegistroAcesso.tipo == 'entrada'
-    )
     if has_tenant_id:
+        query_entradas = RegistroAcesso.query.filter(
+            db.func.date(RegistroAcesso.data_hora) == hoje,
+            RegistroAcesso.tipo == 'entrada'
+        )
         tenant_id = getattr(g, 'tenant_id', 1)
         query_entradas = query_entradas.filter(RegistroAcesso.tenant_id == tenant_id)
-    
-    entradas_hoje = query_entradas.count()
+        entradas_hoje = query_entradas.count()
+    else:
+        # Usar query SQL direta
+        result = db.session.execute(text("""
+            SELECT COUNT(*) 
+            FROM registro_acesso 
+            WHERE DATE(data_hora) = :hoje 
+            AND tipo = 'entrada'
+        """), {"hoje": hoje})
+        entradas_hoje = result.scalar() or 0
     
     return render_template('acesso/index.html',
                          moradores_dentro=moradores_dentro,
