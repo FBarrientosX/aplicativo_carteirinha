@@ -1329,21 +1329,45 @@ def controle_acesso():
             LIMIT 10
         """))
         
-        # Criar objetos mock de RegistroAcesso
+        # Criar objetos mock de RegistroAcesso sem usar o ORM (evita erro de tenant_id)
         ultimos_registros = []
         for row in result:
-            registro = RegistroAcesso()
-            registro.id = row[0]
-            registro.morador_id = row[1]
-            registro.tipo = row[2]
-            registro.data_hora = row[3]
-            registro.metodo = row[4]
-            registro.guardiao = row[5]
-            registro.observacoes = row[6]
-            registro.ip_origem = row[7]
+            # Criar objeto simples sem usar RegistroAcesso() que tenta incluir tenant_id
+            registro = type('RegistroAcesso', (), {
+                'id': row[0],
+                'morador_id': row[1],
+                'tipo': row[2],
+                'data_hora': row[3],
+                'metodo': row[4],
+                'guardiao': row[5],
+                'observacoes': row[6],
+                'ip_origem': row[7],
+                'morador': None,
+                'duracao_permanencia': None
+            })()
             
             # Carregar morador relacionado
             registro.morador = Morador.query.get(registro.morador_id)
+            
+            # Calcular duração de permanência se for saída
+            if registro.tipo == 'saida' and registro.data_hora:
+                # Buscar última entrada usando SQL direto
+                entrada_result = db.session.execute(text("""
+                    SELECT data_hora 
+                    FROM registro_acesso 
+                    WHERE morador_id = :morador_id 
+                    AND tipo = 'entrada' 
+                    AND data_hora < :data_hora
+                    ORDER BY data_hora DESC 
+                    LIMIT 1
+                """), {
+                    "morador_id": registro.morador_id,
+                    "data_hora": registro.data_hora
+                })
+                entrada_row = entrada_result.fetchone()
+                if entrada_row:
+                    registro.duracao_permanencia = registro.data_hora - entrada_row[0]
+            
             ultimos_registros.append(registro)
     
     # Estatísticas do dia - usar query customizada se tenant_id não existir
