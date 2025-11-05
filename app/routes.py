@@ -1300,21 +1300,39 @@ def ver_logs():
 def controle_acesso():
     """Página principal do controle de acesso"""
     from app.models import RegistroAcesso
+    from sqlalchemy import text
+    
+    # Verificar se tenant_id existe na tabela
+    try:
+        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+        has_tenant_id = True
+    except Exception:
+        has_tenant_id = False
     
     # Moradores atualmente na piscina
     moradores_dentro = RegistroAcesso.obter_moradores_na_piscina()
     
-    # Últimos 10 registros
-    ultimos_registros = RegistroAcesso.query.order_by(
+    # Últimos 10 registros - filtrar por tenant_id se existir
+    query_registros = RegistroAcesso.query
+    if has_tenant_id:
+        tenant_id = getattr(g, 'tenant_id', 1)
+        query_registros = query_registros.filter(RegistroAcesso.tenant_id == tenant_id)
+    
+    ultimos_registros = query_registros.order_by(
         RegistroAcesso.data_hora.desc()
     ).limit(10).all()
     
-    # Estatísticas do dia
+    # Estatísticas do dia - filtrar por tenant_id se existir
     hoje = datetime.now().date()
-    entradas_hoje = RegistroAcesso.query.filter(
+    query_entradas = RegistroAcesso.query.filter(
         db.func.date(RegistroAcesso.data_hora) == hoje,
         RegistroAcesso.tipo == 'entrada'
-    ).count()
+    )
+    if has_tenant_id:
+        tenant_id = getattr(g, 'tenant_id', 1)
+        query_entradas = query_entradas.filter(RegistroAcesso.tenant_id == tenant_id)
+    
+    entradas_hoje = query_entradas.count()
     
     return render_template('acesso/index.html',
                          moradores_dentro=moradores_dentro,
