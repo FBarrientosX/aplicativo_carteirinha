@@ -1731,28 +1731,91 @@ def historico_acesso():
 def historico_morador(morador_id):
     """Histórico específico de um morador"""
     from app.models import RegistroAcesso, Morador
+    from sqlalchemy import text
     
     morador = Morador.query.get_or_404(morador_id)
     
+    # Verificar se tenant_id existe na tabela
+    try:
+        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+        has_tenant_id = True
+    except Exception:
+        has_tenant_id = False
+    
     # Registros do morador
-    registros = RegistroAcesso.query.filter_by(
-        morador_id=morador_id
-    ).order_by(RegistroAcesso.data_hora.desc()).limit(50).all()
+    if has_tenant_id:
+        tenant_id = getattr(g, 'tenant_id', 1)
+        registros = RegistroAcesso.query.filter_by(
+            morador_id=morador_id,
+            tenant_id=tenant_id
+        ).order_by(RegistroAcesso.data_hora.desc()).limit(50).all()
+        
+        # Estatísticas
+        total_entradas = RegistroAcesso.query.filter_by(
+            morador_id=morador_id, tipo='entrada', tenant_id=tenant_id
+        ).count()
+        
+        # Frequência nos últimos 30 dias
+        trinta_dias_atras = datetime.now() - timedelta(days=30)
+        entradas_30_dias = RegistroAcesso.query.filter(
+            RegistroAcesso.morador_id == morador_id,
+            RegistroAcesso.tipo == 'entrada',
+            RegistroAcesso.data_hora >= trinta_dias_atras,
+            RegistroAcesso.tenant_id == tenant_id
+        ).count()
+    else:
+        # Usar query SQL direta
+        result = db.session.execute(text("""
+            SELECT id, morador_id, tipo, data_hora, metodo, guardiao, observacoes, ip_origem
+            FROM registro_acesso
+            WHERE morador_id = :morador_id
+            ORDER BY data_hora DESC
+            LIMIT 50
+        """), {"morador_id": morador_id})
+        
+        registros = []
+        for row in result:
+            data_hora = row[3]
+            if isinstance(data_hora, str):
+                try:
+                    data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S.%f')
+                    except ValueError:
+                        pass
+            
+            registro = type('RegistroAcesso', (), {
+                'id': row[0],
+                'morador_id': row[1],
+                'tipo': row[2],
+                'data_hora': data_hora,
+                'metodo': row[4],
+                'guardiao': row[5],
+                'observacoes': row[6],
+                'ip_origem': row[7],
+                'morador': morador,
+                'duracao_permanencia': None
+            })()
+            registros.append(registro)
+        
+        # Estatísticas usando SQL direto
+        total_entradas_result = db.session.execute(text("""
+            SELECT COUNT(*) FROM registro_acesso
+            WHERE morador_id = :morador_id AND tipo = 'entrada'
+        """), {"morador_id": morador_id})
+        total_entradas = total_entradas_result.scalar() or 0
+        
+        trinta_dias_atras = datetime.now() - timedelta(days=30)
+        entradas_30_dias_result = db.session.execute(text("""
+            SELECT COUNT(*) FROM registro_acesso
+            WHERE morador_id = :morador_id 
+            AND tipo = 'entrada'
+            AND data_hora >= :trinta_dias_atras
+        """), {"morador_id": morador_id, "trinta_dias_atras": trinta_dias_atras})
+        entradas_30_dias = entradas_30_dias_result.scalar() or 0
     
-    # Estatísticas
-    total_entradas = RegistroAcesso.query.filter_by(
-        morador_id=morador_id, tipo='entrada'
-    ).count()
-    
-    # Frequência nos últimos 30 dias
-    trinta_dias_atras = datetime.now() - timedelta(days=30)
-    entradas_30_dias = RegistroAcesso.query.filter(
-        RegistroAcesso.morador_id == morador_id,
-        RegistroAcesso.tipo == 'entrada',
-        RegistroAcesso.data_hora >= trinta_dias_atras
-    ).count()
-    
-    # Verificar se está na piscina
+    # Verificar se está na piscina (já tem verificação interna de tenant_id)
     esta_na_piscina = RegistroAcesso.morador_esta_na_piscina(morador_id)
     
     return render_template('acesso/historico_morador.html',
