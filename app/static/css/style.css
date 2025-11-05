@@ -191,6 +191,25 @@
 
 .sidebar.collapsed {
     transform: translateX(-100%);
+    width: 0;
+    overflow: hidden;
+}
+
+/* Main Content quando sidebar está colapsada */
+.main-content.expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+/* Ajustar sidebar-layout quando colapsado */
+.sidebar-layout .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 0 !important;
+}
+
+.sidebar-layout .main-content.expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
 }
 
 .sidebar-content {
