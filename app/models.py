@@ -467,11 +467,19 @@ class RegistroAcesso(db.Model):
             has_tenant_id = False
         
         if not has_tenant_id:
-            # Versão sem tenant_id
-            ultimo_registro = RegistroAcesso.query.filter_by(
-                morador_id=morador_id
-            ).order_by(RegistroAcesso.data_hora.desc()).first()
-            return ultimo_registro and ultimo_registro.tipo == 'entrada'
+            # Versão sem tenant_id - usar SQL direto
+            result = db.session.execute(text("""
+                SELECT tipo, data_hora
+                FROM registro_acesso
+                WHERE morador_id = :morador_id
+                ORDER BY data_hora DESC
+                LIMIT 1
+            """), {"morador_id": morador_id})
+            
+            row = result.fetchone()
+            if row:
+                return row[0] == 'entrada'  # tipo == 'entrada'
+            return False
         
         # Usar tenant_id do contexto se não fornecido
         if tenant_id is None:

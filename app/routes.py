@@ -1458,22 +1458,47 @@ def registrar_acesso():
             flash(f'{morador.nome_completo} não está na piscina!', 'warning')
             return render_template('acesso/registrar.html', form=form, morador=morador)
         
-        # Criar registro
-        registro = RegistroAcesso(
-            morador_id=morador.id,
-            tipo=form.tipo.data,
-            metodo='manual',
-            guardiao=form.guardiao.data,
-            observacoes=form.observacoes.data,
-            ip_origem=request.remote_addr,
-            tenant_id=tenant_id
-        )
+        # Verificar se tenant_id existe na tabela antes de criar registro
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+            has_tenant_id = True
+        except Exception:
+            has_tenant_id = False
         
-        db.session.add(registro)
-        db.session.commit()
+        # Criar registro
+        if has_tenant_id:
+            registro = RegistroAcesso(
+                morador_id=morador.id,
+                tipo=form.tipo.data,
+                metodo='manual',
+                guardiao=form.guardiao.data,
+                observacoes=form.observacoes.data,
+                ip_origem=request.remote_addr,
+                tenant_id=tenant_id
+            )
+            db.session.add(registro)
+            db.session.commit()
+        else:
+            # Criar registro sem tenant_id usando SQL direto
+            data_hora = datetime.now()
+            result = db.session.execute(text("""
+                INSERT INTO registro_acesso (morador_id, tipo, data_hora, metodo, guardiao, observacoes, ip_origem)
+                VALUES (:morador_id, :tipo, :data_hora, :metodo, :guardiao, :observacoes, :ip_origem)
+            """), {
+                "morador_id": morador.id,
+                "tipo": form.tipo.data,
+                "data_hora": data_hora,
+                "metodo": 'manual',
+                "guardiao": form.guardiao.data or None,
+                "observacoes": form.observacoes.data or None,
+                "ip_origem": request.remote_addr or None
+            })
+            db.session.commit()
         
         acao = 'entrou na' if form.tipo.data == 'entrada' else 'saiu da'
-        flash(f'✅ {morador.nome_completo} {acao} piscina às {registro.data_hora.strftime("%H:%M")}', 'success')
+        hora_atual = datetime.now().strftime("%H:%M")
+        flash(f'✅ {morador.nome_completo} {acao} piscina às {hora_atual}', 'success')
         
         return redirect(url_for('main.controle_acesso'))
     
