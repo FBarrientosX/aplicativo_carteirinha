@@ -1582,6 +1582,7 @@ def historico_acesso():
     """Histórico de acessos com filtros"""
     from app.forms import FiltroAcessoForm
     from app.models import RegistroAcesso, Morador
+    from sqlalchemy import text
     
     form = FiltroAcessoForm()
     
@@ -1591,33 +1592,135 @@ def historico_acesso():
         for m in Morador.query.order_by(Morador.nome_completo).all()
     ]
     
+    # Verificar se tenant_id existe na tabela
+    try:
+        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
+        has_tenant_id = True
+    except Exception:
+        has_tenant_id = False
+    
     # Construir query
-    query = RegistroAcesso.query
+    if has_tenant_id:
+        query = RegistroAcesso.query
+        tenant_id = getattr(g, 'tenant_id', 1)
+        query = query.filter(RegistroAcesso.tenant_id == tenant_id)
+    else:
+        # Usar query SQL direta sem tenant_id
+        query = None  # Será construída via SQL direto
     
     # Aplicar filtros se fornecidos
+    morador_id_filter = None
+    data_inicio_filter = None
+    data_fim_filter = None
+    tipo_filter = None
+    
     if request.args.get('morador_id') and int(request.args.get('morador_id')) > 0:
-        query = query.filter(RegistroAcesso.morador_id == request.args.get('morador_id'))
-        form.morador_id.data = int(request.args.get('morador_id'))
+        morador_id_filter = int(request.args.get('morador_id'))
+        form.morador_id.data = morador_id_filter
+        if has_tenant_id:
+            query = query.filter(RegistroAcesso.morador_id == morador_id_filter)
     
     if request.args.get('data_inicio'):
-        data_inicio = datetime.strptime(request.args.get('data_inicio'), '%Y-%m-%d').date()
-        query = query.filter(db.func.date(RegistroAcesso.data_hora) >= data_inicio)
-        form.data_inicio.data = data_inicio
+        data_inicio_filter = datetime.strptime(request.args.get('data_inicio'), '%Y-%m-%d').date()
+        form.data_inicio.data = data_inicio_filter
+        if has_tenant_id:
+            query = query.filter(db.func.date(RegistroAcesso.data_hora) >= data_inicio_filter)
     
     if request.args.get('data_fim'):
-        data_fim = datetime.strptime(request.args.get('data_fim'), '%Y-%m-%d').date()
-        query = query.filter(db.func.date(RegistroAcesso.data_hora) <= data_fim)
-        form.data_fim.data = data_fim
+        data_fim_filter = datetime.strptime(request.args.get('data_fim'), '%Y-%m-%d').date()
+        form.data_fim.data = data_fim_filter
+        if has_tenant_id:
+            query = query.filter(db.func.date(RegistroAcesso.data_hora) <= data_fim_filter)
     
     if request.args.get('tipo'):
-        query = query.filter(RegistroAcesso.tipo == request.args.get('tipo'))
-        form.tipo.data = request.args.get('tipo')
+        tipo_filter = request.args.get('tipo')
+        form.tipo.data = tipo_filter
+        if has_tenant_id:
+            query = query.filter(RegistroAcesso.tipo == tipo_filter)
     
     # Paginação
     page = request.args.get('page', 1, type=int)
-    registros = query.order_by(RegistroAcesso.data_hora.desc()).paginate(
-        page=page, per_page=20, error_out=False
-    )
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    if has_tenant_id:
+        registros = query.order_by(RegistroAcesso.data_hora.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+    else:
+        # Construir query SQL direta
+        where_clauses = []
+        params = {}
+        
+        if morador_id_filter:
+            where_clauses.append("morador_id = :morador_id")
+            params['morador_id'] = morador_id_filter
+        
+        if data_inicio_filter:
+            where_clauses.append("DATE(data_hora) >= :data_inicio")
+            params['data_inicio'] = data_inicio_filter
+        
+        if data_fim_filter:
+            where_clauses.append("DATE(data_hora) <= :data_fim")
+            params['data_fim'] = data_fim_filter
+        
+        if tipo_filter:
+            where_clauses.append("tipo = :tipo")
+            params['tipo'] = tipo_filter
+        
+        where_sql = " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        
+        # Contar total
+        count_result = db.session.execute(text(f"SELECT COUNT(*) FROM registro_acesso{where_sql}"), params)
+        total = count_result.scalar() or 0
+        
+        # Buscar registros
+        result = db.session.execute(text(f"""
+            SELECT id, morador_id, tipo, data_hora, metodo, guardiao, observacoes, ip_origem
+            FROM registro_acesso
+            {where_sql}
+            ORDER BY data_hora DESC
+            LIMIT :limit OFFSET :offset
+        """), {**params, 'limit': per_page, 'offset': offset})
+        
+        # Criar objetos mock
+        items = []
+        for row in result:
+            data_hora = row[3]
+            if isinstance(data_hora, str):
+                try:
+                    data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        data_hora = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S.%f')
+                    except ValueError:
+                        pass
+            
+            registro = type('RegistroAcesso', (), {
+                'id': row[0],
+                'morador_id': row[1],
+                'tipo': row[2],
+                'data_hora': data_hora,
+                'metodo': row[4],
+                'guardiao': row[5],
+                'observacoes': row[6],
+                'ip_origem': row[7],
+                'morador': Morador.query.get(row[1]),
+                'duracao_permanencia': None
+            })()
+            items.append(registro)
+        
+        # Criar objeto de paginação mock
+        from flask import _app_ctx_stack
+        from flask_sqlalchemy import Pagination
+        
+        registros = Pagination(
+            query=None,
+            page=page,
+            per_page=per_page,
+            total=total,
+            items=items
+        )
     
     return render_template('acesso/historico.html', 
                          registros=registros, 
