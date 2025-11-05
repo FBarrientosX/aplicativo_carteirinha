@@ -408,21 +408,10 @@ class RegistroAcesso(db.Model):
     observacoes = db.Column(db.Text)
     ip_origem = db.Column(db.String(45))  # IP de onde foi registrado
     
-    # Multi-tenancy - verificar se coluna existe antes de usar
-    # tenant_id será adicionado via migração
-    try:
-        # Tentar verificar se a coluna existe verificando o schema
-        from sqlalchemy import inspect
-        from app import db as _db
-        
-        # Verificar se tenant_id existe (apenas para validação)
-        # A coluna será adicionada dinamicamente se não existir
-        _has_tenant_id = None
-    except:
-        _has_tenant_id = None
-    
-    # Definir tenant_id como opcional - será verificado em runtime
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1, info={'check_exists': True})
+    # Multi-tenancy
+    # NOTA: tenant_id será adicionado via migração
+    # Se a coluna não existir ainda, o código deve usar queries SQL diretas
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
     
     # Relacionamento
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
