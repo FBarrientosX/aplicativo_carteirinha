@@ -6,242 +6,130 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
-                <div class="flex-grow-1">
-                    <h2 class="mb-1">
-                        <i class="fas fa-swimming-pool text-info"></i>
-                        Acesso à Piscina
-                    </h2>
-                    <p class="text-muted mb-0">Gerencie o acesso à piscina</p>
-                </div>
-                <div class="d-flex flex-wrap flex-nowrap flex-lg-wrap gap-2 align-items-center">
-                    <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-primary">
-                        <i class="fas fa-qrcode me-1"></i>
-                        QR Code
-                    </a>
-                    <a href="{{ url_for('main.registrar_acesso') }}" class="btn btn-success">
-                        <i class="fas fa-plus me-1"></i>
-                        Registrar Manual
-                    </a>
-                </div>
-            </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/piscina-module.css') }}">
+<div class="piscina-module">
+    <section class="section-header">
+        <h2>Controle do Acesso à Piscina</h2>
+        <div class="actions">
+            <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-qr-code">
+                <i class="fas fa-qrcode"></i> QR Code
+            </a>
+            <a href="{{ url_for('main.registrar_acesso') }}" class="btn btn-manual">
+                <i class="fas fa-plus"></i> Registrar Manual
+            </a>
         </div>
-    </div>
+    </section>
 
     <!-- Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card stats-card-wireframe" style="background: #3498db; color: white; border-radius: 12px; position: relative; overflow: hidden;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h4 class="mb-0" style="font-size: 2rem; font-weight: 600;">{{ entradas_hoje }}</h4>
-                            <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">Entradas Hoje</p>
-                        </div>
-                    </div>
-                    <div style="position: absolute; bottom: 8px; right: 12px; opacity: 0.3;">
-                        <i class="fas fa-users" style="font-size: 3rem;"></i>
-                    </div>
-                    <div style="position: absolute; bottom: 12px; right: 15px; opacity: 0.8;">
-                        <i class="fas fa-arrow-right" style="font-size: 1.2rem;"></i>
-                    </div>
-                </div>
+    <section class="summary-cards">
+        <div class="card card-access-info card-blue">
+            <div class="icon-section"><i class="fas fa-users"></i></div>
+            <div class="info-section">
+                <span class="number">{{ total_dentro }}</span>
+                <span class="label">Moradores na Piscina</span>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card stats-card-wireframe" style="background: #3498db; color: white; border-radius: 12px; position: relative; overflow: hidden;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h4 class="mb-0" style="font-size: 2rem; font-weight: 600;">{{ ultimos_registros|length }}</h4>
-                            <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">Últimos Registros</p>
-                    </div>
-                    <div style="position: absolute; bottom: 8px; right: 12px; opacity: 0.3;">
-                        <i class="fas fa-history" style="font-size: 3rem;"></i>
-                    </div>
-                    <div style="position: absolute; bottom: 12px; right: 15px; opacity: 0.8;">
-                        <i class="fas fa-sync-alt" style="font-size: 1.2rem;"></i>
-                    </div>
-                </div>
+        <div class="card card-stats card-green">
+            <div class="info-section">
+                <span class="number">{{ entradas_hoje }}</span>
+                <span class="label">Entradas Hoje</span>
             </div>
+            <div class="icon-section"><i class="fas fa-arrow-right"></i></div>
         </div>
-        <div class="col-md-4">
-            <div class="card stats-card-wireframe" style="background: #f39c12; color: white; border-radius: 12px; position: relative; overflow: hidden;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h4 class="mb-0" style="font-size: 1.5rem; font-weight: 600;">Relatórios</h4>
-                            <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">Ver Histórico</p>
-                        </div>
-                        <div style="position: absolute; bottom: 10px; right: 15px; opacity: 0.8;">
-                            <i class="fas fa-chart-line" style="font-size: 1.5rem;"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="card card-stats card-blue-light">
+            <div class="info-section">
+                <span class="number">{{ ultimos_registros|length }}</span>
+                <span class="label">Últimos Registros</span>
             </div>
+            <div class="icon-section"><i class="fas fa-redo"></i></div>
         </div>
-    </div>
+        <div class="card card-stats card-yellow">
+            <div class="info-section">
+                <span class="label">Relatórios</span>
+                <a href="{{ url_for('main.historico_acesso') }}" class="btn-history">Ver Histórico</a>
+            </div>
+            <div class="icon-section"><i class="fas fa-chart-line"></i></div>
+        </div>
+    </section>
 
-    <div class="row">
-        <!-- Moradores na Piscina -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-users me-2"></i>
-                        Moradores na Piscina ({{ total_dentro }})
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if moradores_dentro %}
-                        <div class="list-group list-group-flush">
-                            {% for morador in moradores_dentro %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ morador.nome_completo }}</h6>
-                                    <small class="text-muted">{{ morador.bloco }}-{{ morador.apartamento }}</small>
-                                </div>
-                                <div>
-                                    <a href="{{ url_for('main.processar_acesso_rapido', morador_id=morador.id, tipo='saida') }}" 
-                                       class="btn btn-sm btn-outline-danger"
-                                       onclick="return confirm('Registrar saída de {{ morador.nome_completo }}?')">
-                                        <i class="fas fa-sign-out-alt me-1"></i>
-                                        Saída
-                                    </a>
-                                    <a href="{{ url_for('main.historico_morador', morador_id=morador.id) }}" 
-                                       class="btn btn-sm btn-outline-info ms-1">
-                                        <i class="fas fa-history"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            {% endfor %}
+    <section class="detailed-records-grid">
+        <div class="card detailed-card card-no-access">
+            {% if moradores_dentro %}
+                <div class="list-group list-group-flush">
+                    {% for morador in moradores_dentro %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ morador.nome_completo }}</h6>
+                            <small class="text-muted">{{ morador.bloco }}-{{ morador.apartamento }}</small>
                         </div>
-                    {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-swimming-pool fa-4x mb-3" style="opacity: 0.3;"></i>
-                            <p>({{ total_dentro }}) um morador na piscina no momento</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Últimos Registros -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-history me-2"></i>
-                        Últimos Registros
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if ultimos_registros %}
-                        <div class="list-group list-group-flush">
-                            {% for registro in ultimos_registros %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ registro.morador.nome_completo }}</h6>
-                                        <p class="mb-1">
-                                            <span class="badge bg-{% if registro.tipo == 'entrada' %}success{% else %}danger{% endif %}">
-                                                {% if registro.tipo == 'entrada' %}
-                                                    <i class="fas fa-sign-in-alt me-1"></i>Entrada
-                                                {% else %}
-                                                    <i class="fas fa-sign-out-alt me-1"></i>Saída
-                                                {% endif %}
-                                            </span>
-                                            <small class="text-muted ms-2">
-                                                via {{ registro.metodo|title }}
-                                                {% if registro.guardiao and registro.guardiao != 'Sistema QR Code' %}
-                                                    - {{ registro.guardiao }}
-                                                {% endif %}
-                                            </small>
-                                        </p>
-                                        {% if registro.duracao_permanencia and registro.tipo == 'saida' %}
-                                            <small class="text-info">
-                                                <i class="fas fa-clock me-1"></i>
-                                                Permanência: {{ registro.duracao_permanencia }}
-                                            </small>
-                                        {% endif %}
-                                    </div>
-                                    <small class="text-muted">
-                                        {{ registro.data_hora.strftime('%H:%M') }}
-                                        <br>
-                                        {{ registro.data_hora.strftime('%d/%m') }}
-                                    </small>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="text-center mt-3">
-                            <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-list me-1"></i>
-                                Ver Histórico Completo
+                        <div>
+                            <a href="{{ url_for('main.processar_acesso_rapido', morador_id=morador.id, tipo='saida') }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Registrar saída de {{ morador.nome_completo }}?')">
+                                <i class="fas fa-sign-out-alt me-1"></i>
+                                Saída
                             </a>
                         </div>
-                    {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-history fa-3x mb-3"></i>
-                            <p>Nenhum registro encontrado</p>
-                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-quote-left"></i>
+                    <p>Nenhum morador na piscina no momento</p>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card detailed-card card-latest-records">
+            <h3>Últimos Registros</h3>
+            {% if ultimos_registros %}
+                {% for registro in ultimos_registros %}
+                <div class="record-item">
+                    <span class="name">{{ registro.morador.nome_completo }}</span>
+                    <span class="time">{{ registro.data_hora.strftime('%H:%M') }}</span>
+                    <span class="date">{{ registro.data_hora.strftime('%d/%m') }}</span>
+                    <div class="details">
+                        <span class="status status-{% if registro.tipo == 'entrada' %}entry{% else %}exit{% endif %}">
+                            {% if registro.tipo == 'entrada' %}Entrada{% else %}Saída{% endif %}
+                        </span> via {{ registro.metodo|title }}{% if registro.guardiao and registro.guardiao != 'Sistema QR Code' %} - {{ registro.guardiao }}{% endif %}
+                    </div>
+                    {% if registro.duracao_permanencia and registro.tipo == 'saida' %}
+                    <div class="details-extra">Permanência: {{ registro.duracao_permanencia }}</div>
                     {% endif %}
                 </div>
-            </div>
+                {% if not loop.last %}
+                <hr>
+                {% endif %}
+                {% endfor %}
+                <a href="{{ url_for('main.historico_acesso') }}" class="btn btn-full-history">Ver Histórico Completo</a>
+            {% else %}
+                <p>Nenhum registro encontrado</p>
+            {% endif %}
         </div>
-    </div>
+    </section>
 
     <!-- Ações Rápidas -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.controle_acesso') }}" class="card stats-card-wireframe text-decoration-none action-card-link" style="border-radius: 12px; border: 1px solid #e0e0e0; background: white; transition: all 0.3s;">
-                                <div class="card-body text-center py-4">
-                                    <i class="fas fa-eye fa-2x mb-3" style="color: #3498db;"></i>
-                                    <h5 class="mb-2" style="color: #2c3e50; font-weight: 600;">Controle de Acesso</h5>
-                                    <p class="mb-0 small text-muted">Acesso automático</p>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.registrar_acesso') }}" class="card stats-card-wireframe text-decoration-none action-card-link" style="border-radius: 12px; border: 1px solid #e0e0e0; background: white; transition: all 0.3s;">
-                                <div class="card-body text-center py-4">
-                                    <i class="fas fa-edit fa-2x mb-3" style="color: #27ae60;"></i>
-                                    <h5 class="mb-2" style="color: #2c3e50; font-weight: 600;">Registro Manual</h5>
-                                    <p class="mb-0 small text-muted">Entrada/saída manual</p>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.historico_acesso') }}" class="card stats-card-wireframe text-decoration-none action-card-link" style="border-radius: 12px; border: 1px solid #e0e0e0; background: white; transition: all 0.3s;">
-                                <div class="card-body text-center py-4">
-                                    <i class="fas fa-chart-line fa-2x mb-3" style="color: #3498db;"></i>
-                                    <h5 class="mb-2" style="color: #2c3e50; font-weight: 600;">Relatórios</h5>
-                                    <p class="mb-0 small text-muted">Histórico e estatísticas</p>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('main.listar_moradores') }}" class="card stats-card-wireframe text-decoration-none action-card-link" style="border-radius: 12px; border: 1px solid #e0e0e0; background: white; transition: all 0.3s;">
-                                <div class="card-body text-center py-4">
-                                    <i class="fas fa-users fa-2x mb-3" style="color: #f39c12;"></i>
-                                    <h5 class="mb-2" style="color: #2c3e50; font-weight: 600;">Moradores</h5>
-                                    <p class="mb-0 small text-muted">Gerenciar carteirinhas</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <section class="quick-actions">
+        <a href="{{ url_for('main.controle_acesso') }}" class="quick-action-card card-grey">
+            <i class="fas fa-fingerprint"></i>
+            <span>Acesso automático</span>
+        </a>
+        <a href="{{ url_for('main.registrar_acesso') }}" class="quick-action-card card-green-light">
+            <i class="fas fa-edit"></i>
+            <span>Registro Manual</span>
+            <small>Entrada/saída manual</small>
+        </a>
+        <a href="{{ url_for('main.historico_acesso') }}" class="quick-action-card card-blue-light">
+            <i class="fas fa-chart-bar"></i>
+            <span>Relatórios</span>
+            <small>Histórico e estatísticas</small>
+        </a>
+        <a href="{{ url_for('main.listar_moradores') }}" class="quick-action-card card-yellow-light">
+            <i class="fas fa-users"></i>
+            <span>Moradores</span>
+            <small>Gerenciar carteirinhas</small>
+        </a>
+    </section>
 </div>
 
 <script>
