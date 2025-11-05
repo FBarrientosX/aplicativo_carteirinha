@@ -1711,8 +1711,7 @@ def historico_acesso():
             items.append(registro)
         
         # Criar objeto de paginação mock
-        from flask import _app_ctx_stack
-        from flask_sqlalchemy import Pagination
+        from flask_sqlalchemy.pagination import Pagination
         
         registros = Pagination(
             query=None,
