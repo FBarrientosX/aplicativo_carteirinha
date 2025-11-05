@@ -1711,15 +1711,19 @@ def historico_acesso():
             items.append(registro)
         
         # Criar objeto de paginação mock
-        from flask_sqlalchemy.pagination import Pagination
+        class PaginationMock:
+            def __init__(self, page, per_page, total, items):
+                self.page = page
+                self.per_page = per_page
+                self.total = total
+                self.items = items
+                self.pages = (total + per_page - 1) // per_page if per_page > 0 else 0
+                self.has_prev = page > 1
+                self.has_next = page < self.pages
+                self.prev_num = page - 1 if page > 1 else None
+                self.next_num = page + 1 if page < self.pages else None
         
-        registros = Pagination(
-            query=None,
-            page=page,
-            per_page=per_page,
-            total=total,
-            items=items
-        )
+        registros = PaginationMock(page, per_page, total, items)
     
     return render_template('acesso/historico.html', 
                          registros=registros, 
