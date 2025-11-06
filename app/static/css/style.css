@@ -197,9 +197,16 @@
     left: 0;
     height: calc(100vh - 60px);
     overflow-y: auto;
-    z-index: 999;
+    z-index: 1000; /* Aumentado para garantir que fique acima do conteúdo */
     display: block;
     visibility: visible;
+}
+
+/* Mobile: sidebar precisa de z-index maior */
+@media (max-width: 768px) {
+    .sidebar {
+        z-index: 1050; /* Acima de modais do Bootstrap (1030) */
+    }
 }
 
 .sidebar.collapsed {
