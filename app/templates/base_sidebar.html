@@ -134,47 +134,83 @@
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.querySelector('.main-content');
             
-            // Verificar estado salvo no localStorage
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isCollapsed) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
+            // Verificar se elementos existem
+            if (!sidebarToggle || !sidebar || !mainContent) {
+                console.error('Elementos do sidebar não encontrados');
+                return;
             }
             
-            // Toggle sidebar
+            // Função para verificar se está em mobile
+            function isMobile() {
+                return window.innerWidth <= 768;
+            }
+            
+            // Função para aplicar estado da sidebar
+            function applySidebarState(collapsed) {
+                if (collapsed) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                }
+            }
+            
+            // Estado inicial: em desktop, sidebar começa expandida (a menos que salvo no localStorage)
+            // Em mobile, sidebar começa colapsada
+            if (isMobile()) {
+                // Mobile: começar colapsada
+                applySidebarState(true);
+            } else {
+                // Desktop: verificar localStorage
+                const savedState = localStorage.getItem('sidebarCollapsed');
+                if (savedState === 'true') {
+                    applySidebarState(true);
+                } else {
+                    // Por padrão, expandida em desktop
+                    applySidebarState(false);
+                }
+            }
+            
+            // Toggle sidebar ao clicar no botão
             sidebarToggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
+                const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
                 
-                // Salvar estado no localStorage
-                const collapsed = sidebar.classList.contains('collapsed');
-                localStorage.setItem('sidebarCollapsed', collapsed);
+                // Toggle estado
+                applySidebarState(!isCurrentlyCollapsed);
+                
+                // Salvar estado no localStorage (apenas em desktop)
+                if (!isMobile()) {
+                    localStorage.setItem('sidebarCollapsed', !isCurrentlyCollapsed);
+                }
             });
             
             // Fechar sidebar no mobile ao clicar fora
             document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    if (sidebar && !sidebar.contains(e.target) && 
-                        sidebarToggle && !sidebarToggle.contains(e.target) &&
+                if (isMobile() && sidebar && sidebarToggle) {
+                    if (!sidebar.contains(e.target) && 
+                        !sidebarToggle.contains(e.target) &&
                         !sidebar.classList.contains('collapsed')) {
-                        sidebar.classList.add('collapsed');
-                        mainContent.classList.add('expanded');
-                        localStorage.setItem('sidebarCollapsed', 'true');
+                        applySidebarState(true);
                     }
                 }
             });
             
-            // Handle window resize - manter estado em desktop
+            // Handle window resize
             window.addEventListener('resize', function() {
-                // Não resetar automaticamente em desktop, manter o estado do usuário
-                if (window.innerWidth <= 768) {
-                    // Em mobile, fechar se estiver aberto
-                    if (!sidebar.classList.contains('collapsed')) {
-                        sidebar.classList.add('collapsed');
-                        mainContent.classList.add('expanded');
+                if (isMobile()) {
+                    // Em mobile, sempre começar colapsada
+                    applySidebarState(true);
+                } else {
+                    // Em desktop, restaurar estado salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed');
+                    if (savedState === 'true') {
+                        applySidebarState(true);
+                    } else {
+                        applySidebarState(false);
                     }
                 }
             });
