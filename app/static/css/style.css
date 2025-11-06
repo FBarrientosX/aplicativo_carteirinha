@@ -198,6 +198,8 @@
     height: calc(100vh - 60px);
     overflow-y: auto;
     z-index: 999;
+    display: block;
+    visibility: visible;
 }
 
 .sidebar.collapsed {
