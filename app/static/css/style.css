@@ -203,9 +203,17 @@
 }
 
 .sidebar.collapsed {
-    transform: translateX(-100%);
-    width: 0;
-    overflow: hidden;
+    transform: translateX(-100%) !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Desktop: sidebar não colapsada deve estar visível */
+@media (min-width: 769px) {
+    .sidebar:not(.collapsed) {
+        transform: translateX(0) !important;
+        width: 280px !important;
+    }
 }
 
 /* Main Content quando sidebar está colapsada */
@@ -377,18 +385,32 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    /* Em mobile, sidebar começa escondida */
+    /* Em mobile, sidebar começa escondida por padrão */
     .sidebar {
         transform: translateX(-100%);
+        width: 280px;
     }
     
-    /* Em mobile, quando não está colapsada, mostrar */
+    /* Em mobile, quando não está colapsada (classe collapsed removida), mostrar */
     .sidebar:not(.collapsed) {
-        transform: translateX(0);
+        transform: translateX(0) !important;
+        width: 280px !important;
+    }
+    
+    /* Em mobile, quando colapsada, esconder */
+    .sidebar.collapsed {
+        transform: translateX(-100%) !important;
+        width: 0 !important;
     }
     
     .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .main-content.expanded {
+        margin-left: 0 !important;
+        width: 100% !important;
     }
     
     .header-center {

@@ -156,19 +156,20 @@
                 }
             }
             
-            // Estado inicial: em desktop, sidebar começa expandida (a menos que salvo no localStorage)
-            // Em mobile, sidebar começa colapsada
+            // Estado inicial
             if (isMobile()) {
-                // Mobile: começar colapsada
-                applySidebarState(true);
+                // Mobile: começar colapsada (escondida)
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
             } else {
-                // Desktop: verificar localStorage
+                // Desktop: verificar localStorage ou começar expandida
                 const savedState = localStorage.getItem('sidebarCollapsed');
                 if (savedState === 'true') {
-                    applySidebarState(true);
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
                 } else {
-                    // Por padrão, expandida em desktop
-                    applySidebarState(false);
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
                 }
             }
             
@@ -180,39 +181,63 @@
                 const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
                 
                 // Toggle estado
-                applySidebarState(!isCurrentlyCollapsed);
+                if (isCurrentlyCollapsed) {
+                    // Se está colapsada, expandir
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                } else {
+                    // Se está expandida, colapsar
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                }
                 
                 // Salvar estado no localStorage (apenas em desktop)
                 if (!isMobile()) {
-                    localStorage.setItem('sidebarCollapsed', !isCurrentlyCollapsed);
+                    const newState = sidebar.classList.contains('collapsed');
+                    localStorage.setItem('sidebarCollapsed', newState);
                 }
             });
             
             // Fechar sidebar no mobile ao clicar fora
             document.addEventListener('click', function(e) {
                 if (isMobile() && sidebar && sidebarToggle) {
+                    // Se clicou fora da sidebar e do botão, e a sidebar está visível
                     if (!sidebar.contains(e.target) && 
                         !sidebarToggle.contains(e.target) &&
                         !sidebar.classList.contains('collapsed')) {
-                        applySidebarState(true);
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('expanded');
                     }
                 }
             });
             
             // Handle window resize
+            let resizeTimeout;
             window.addEventListener('resize', function() {
-                if (isMobile()) {
-                    // Em mobile, sempre começar colapsada
-                    applySidebarState(true);
-                } else {
-                    // Em desktop, restaurar estado salvo
-                    const savedState = localStorage.getItem('sidebarCollapsed');
-                    if (savedState === 'true') {
-                        applySidebarState(true);
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    if (isMobile()) {
+                        // Em mobile, sempre começar colapsada ao redimensionar
+                        if (!sidebar.classList.contains('collapsed')) {
+                            sidebar.classList.add('collapsed');
+                            mainContent.classList.add('expanded');
+                        }
                     } else {
-                        applySidebarState(false);
+                        // Em desktop, restaurar estado salvo
+                        const savedState = localStorage.getItem('sidebarCollapsed');
+                        if (savedState === 'true') {
+                            if (!sidebar.classList.contains('collapsed')) {
+                                sidebar.classList.add('collapsed');
+                                mainContent.classList.add('expanded');
+                            }
+                        } else {
+                            if (sidebar.classList.contains('collapsed')) {
+                                sidebar.classList.remove('collapsed');
+                                mainContent.classList.remove('expanded');
+                            }
+                        }
                     }
-                }
+                }, 100);
             });
         });
     </script>
