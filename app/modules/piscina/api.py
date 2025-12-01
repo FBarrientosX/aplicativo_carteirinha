@@ -17,15 +17,14 @@ def _get_tenant_id():
 def api_contador_atual():
     """Retorna número de pessoas na piscina (para atualizações via fetch)"""
     tenant_id = _get_tenant_id()
-    entradas = RegistroAcessoPiscina.query.filter_by(tenant_id=tenant_id, tipo='entrada').count()
-    saidas = RegistroAcessoPiscina.query.filter_by(tenant_id=tenant_id, tipo='saida').count()
-    total = max(0, entradas - saidas)
+    moradores = RegistroAcessoPiscina.obter_moradores_na_piscina(tenant_id)
+    total = len(moradores)
     
-    plantao = PlantaoSalvaVidas.plantao_ativo(tenant_id)
+    plantao = PlantaoSalvaVidas.obter_plantao_ativo(tenant_id)
     
     return jsonify({
         'total': total,
-        'plantao': plantao.salva_vidas.nome_completo if plantao else None
+        'plantao': plantao.salva_vidas.nome_completo if plantao and plantao.salva_vidas else None
     })
 
 

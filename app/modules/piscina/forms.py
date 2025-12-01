@@ -1,48 +1,4 @@
 """
-Formulários do módulo Piscina
-"""
-from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, TextAreaField, HiddenField, SubmitField
-from wtforms.validators import DataRequired, Optional
-
-
-class RegistroAcessoPiscinaForm(FlaskForm):
-    morador_id = HiddenField('Morador ID', validators=[DataRequired()])
-    morador_nome = StringField('Morador', render_kw={'readonly': True})
-    tipo = SelectField('Tipo de Registro',
-                      choices=[('entrada', 'Entrada'), ('saida', 'Saída')],
-                      validators=[DataRequired()],
-                      default='entrada')
-    metodo = SelectField('Método',
-                        choices=[('manual', 'Registro Manual'), ('qr_code', 'QR Code')],
-                        default='manual')
-    observacoes = TextAreaField('Observações', validators=[Optional(),])
-    submit = SubmitField('Confirmar Registro')
-
-
-class OcorrenciaPiscinaForm(FlaskForm):
-    morador_id = HiddenField('Morador ID', validators=[Optional()])
-    tipo = SelectField('Tipo',
-                      choices=[
-                          ('acidente', 'Acidente'),
-                          ('incidente', 'Incidente'),
-                          ('advertencia', 'Advertência'),
-                          ('outro', 'Outro')
-                      ],
-                      validators=[DataRequired()])
-    severidade = SelectField('Severidade',
-                            choices=[
-                                ('baixa', 'Baixa'),
-                                ('media', 'Média'),
-                                ('alta', 'Alta'),
-                                ('critica', 'Crítica')
-                            ],
-                            validators=[DataRequired()],
-                            default='baixa')
-    titulo = StringField('Título', validators=[DataRequired()])
-    descricao = TextAreaField('Descrição', validators=[DataRequired()])
-    submit = SubmitField('Registrar Ocorrência')
-"""
 Formulários do Módulo Piscina
 """
 from flask_wtf import FlaskForm

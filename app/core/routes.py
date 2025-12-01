@@ -8,11 +8,7 @@ from app import db
 from app.models import Condominio, Unidade, Usuario
 from app.forms import ConfiguracaoCondominioForm
 from app.core.permissions import require_permission, admin_required
-from flask import g
-
-def get_tenant_id():
-    """Helper para obter tenant_id do contexto"""
-    return getattr(g, 'tenant_id', 1)
+from app.core.utils import get_tenant_id
 from datetime import datetime
 
 core_bp = Blueprint('core', __name__)
