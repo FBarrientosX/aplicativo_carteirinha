@@ -77,14 +77,6 @@ def create_app(config_class=Config):
     from app.core.routes import core_bp
     app.register_blueprint(core_bp)
     
-    # Blueprint módulo Piscina (novo)
-    from app.modules.piscina import piscina_bp
-    app.register_blueprint(piscina_bp)
-    
-    # Blueprint módulo Piscina
-    from app.modules.piscina import piscina_bp
-    app.register_blueprint(piscina_bp)
-    
     # Blueprint módulo Piscina
     from app.modules.piscina import piscina_bp
     app.register_blueprint(piscina_bp)
