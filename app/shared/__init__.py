@@ -1,0 +1,4 @@
+"""
+Componentes e helpers compartilhados
+"""
+

@@ -1,0 +1,113 @@
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{% include 'navigation/sidebar_nav.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Piscina', 'url': url_for('piscina.dashboard')},
+    {'text': 'Ocorrências', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                    Ocorrências
+                </h2>
+                <p class="text-muted mb-0">Registros de ocorrências na piscina</p>
+            </div>
+            {% if current_user.is_salva_vidas() %}
+            <a href="{{ url_for('piscina.nova_ocorrencia') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Nova Ocorrência
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if ocorrencias %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Severidade</th>
+                                    <th>Morador</th>
+                                    <th>Registrado por</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ocorrencia in ocorrencias %}
+                                <tr>
+                                    <td>{{ ocorrencia.data_ocorrencia.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td><strong>{{ ocorrencia.titulo }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ ocorrencia.tipo }}</span>
+                                    </td>
+                                    <td>
+                                        {% if ocorrencia.severidade == 'critica' %}
+                                            <span class="badge bg-danger">Crítica</span>
+                                        {% elif ocorrencia.severidade == 'alta' %}
+                                            <span class="badge bg-warning">Alta</span>
+                                        {% elif ocorrencia.severidade == 'media' %}
+                                            <span class="badge bg-info">Média</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Baixa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ocorrencia.morador %}
+                                            {{ ocorrencia.morador.nome_completo }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ ocorrencia.salva_vidas.nome_completo }}</td>
+                                    <td>
+                                        {% if ocorrencia.status == 'aberta' %}
+                                            <span class="badge bg-warning">Aberta</span>
+                                        {% elif ocorrencia.status == 'resolvida' %}
+                                            <span class="badge bg-success">Resolvida</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Arquivada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4>Nenhuma ocorrência registrada</h4>
+                        <p class="text-muted">As ocorrências registradas aparecerão aqui</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -218,29 +218,82 @@ class Condominio(db.Model):
     __tablename__ = 'condominio'
     
     id = db.Column(db.Integer, primary_key=True)
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True, default=1)
+    
+    # Dados básicos
     nome = db.Column(db.String(200), nullable=False)
-    cnpj = db.Column(db.String(18))
-    endereco = db.Column(db.Text)
-    telefone = db.Column(db.String(20))
-    email_administracao = db.Column(db.String(120))
-    whatsapp = db.Column(db.String(20))
-    horario_funcionamento = db.Column(db.String(100))
+    cnpj = db.Column(db.String(18), unique=True, nullable=True)
+    endereco = db.Column(db.Text, nullable=False)
+    telefone = db.Column(db.String(20), nullable=True)
+    
+    # E-mails de configuração
+    email_administracao = db.Column(db.String(120), nullable=False)
+    email_portaria = db.Column(db.String(120), nullable=True)
+    email_sindico = db.Column(db.String(120), nullable=True)
+    whatsapp = db.Column(db.String(20), nullable=True)
+    
+    # Documentos (JSON com URLs ou paths)
+    documentos = db.Column(db.JSON, default=[])
     
     # Personalização visual
-    logo_filename = db.Column(db.String(100))
+    logo_filename = db.Column(db.String(100), nullable=True)
     cor_primaria = db.Column(db.String(7), default='#007bff')
     cor_secundaria = db.Column(db.String(7), default='#6c757d')
     
     # Configurações específicas
+    horario_funcionamento = db.Column(db.String(100), nullable=True)
     dias_aviso_vencimento = db.Column(db.Integer, default=30)
     meses_validade_padrao = db.Column(db.Integer, default=12)
     permitir_dependentes = db.Column(db.Boolean, default=True)
     
+    # Timestamps
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     ativo = db.Column(db.Boolean, default=True)
     
     # Relacionamentos
+    unidades = db.relationship('Unidade', backref='condominio', lazy=True, cascade='all, delete-orphan')
     moradores = db.relationship('Morador', backref='condominio_rel', lazy=True)
+    
+    def __repr__(self):
+        return f'<Condominio {self.nome}>'
+
+
+class Unidade(db.Model):
+    """Unidades do condomínio (Apartamentos, Coberturas, Lojas)"""
+    __tablename__ = 'unidades'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True, default=1)
+    condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'), nullable=False)
+    
+    bloco = db.Column(db.String(10), nullable=False)
+    apartamento = db.Column(db.String(10), nullable=False)
+    
+    # Metadados
+    tipo = db.Column(db.String(20), default='apartamento')  # apartamento, cobertura, loja
+    area_util = db.Column(db.Numeric(10, 2), nullable=True)  # m²
+    vagas_garagem = db.Column(db.Integer, default=0)
+    
+    # Status
+    ocupada = db.Column(db.Boolean, default=False)
+    
+    # Timestamps
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Índice único por tenant
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'bloco', 'apartamento', name='uq_unidade_tenant'),
+    )
+    
+    def __repr__(self):
+        return f'<Unidade {self.bloco}/{self.apartamento}>'
+    
+    @property
+    def bloco_apto(self):
+        """Retorna bloco/apto formatado"""
+        return f"{self.bloco}/{self.apartamento}"
 
 class Usuario(UserMixin, db.Model):
     """Modelo de usuário para autenticação"""
@@ -250,18 +303,25 @@ class Usuario(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    tipo_usuario = db.Column(db.String(20), nullable=False)  # 'admin' ou 'salva_vidas'
+    tipo_usuario = db.Column(db.String(20), nullable=False)  
+    # Valores: 'admin', 'sindico', 'morador', 'portaria', 'funcionario', 'salva_vidas'
     nome_completo = db.Column(db.String(200), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
+    email_verificado = db.Column(db.Boolean, default=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_ultimo_login = db.Column(db.DateTime)
+    data_ultimo_login = db.Column(db.DateTime, nullable=True)
+    data_ultimo_acesso = db.Column(db.DateTime, nullable=True)
     
-    # NOVO: Multi-tenancy
+    # Multi-tenancy
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
     
-    # NOVO: Sistema de permissões
+    # Sistema de permissões
     permissoes = db.Column(db.JSON, default={})
     cargo = db.Column(db.String(100), nullable=True)
+    
+    # Relacionamento com Unidade (se for morador)
+    unidade_id = db.Column(db.Integer, db.ForeignKey('unidades.id'), nullable=True)
+    unidade = db.relationship('Unidade', backref='usuarios')
     
     # Relacionamento com salva-vidas (se aplicável)
     salva_vidas_id = db.Column(db.Integer, db.ForeignKey('salva_vidas.id'), nullable=True)
@@ -282,6 +342,22 @@ class Usuario(UserMixin, db.Model):
     def is_salva_vidas(self):
         """Verifica se o usuário é salva-vidas"""
         return self.tipo_usuario == 'salva_vidas'
+    
+    def is_sindico(self):
+        """Verifica se o usuário é síndico"""
+        return self.tipo_usuario == 'sindico'
+    
+    def is_portaria(self):
+        """Verifica se o usuário é portaria"""
+        return self.tipo_usuario == 'portaria'
+    
+    def is_funcionario(self):
+        """Verifica se o usuário é funcionário"""
+        return self.tipo_usuario == 'funcionario'
+    
+    def is_morador(self):
+        """Verifica se o usuário é morador"""
+        return self.tipo_usuario == 'morador'
     
     def can(self, permission):
         """Verifica se usuário tem permissão específica"""
@@ -1393,6 +1469,9 @@ class Voto(db.Model):
 
     def __repr__(self):
         return f'<Voto {self.escolha}>'
+
+# Importa modelos dos módulos para que o Alembic os reconheça
+from app.modules.piscina import models as piscina_models  # noqa: F401,E402
 
 
 # ======= Atividades/Inscrições =======

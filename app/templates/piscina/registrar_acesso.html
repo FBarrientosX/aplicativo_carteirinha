@@ -1,0 +1,319 @@
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('piscina', 'registrar') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Piscina', 'url': url_for('piscina.dashboard')},
+    {'text': 'Registrar Acesso', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-clipboard-check text-primary me-2"></i>
+                    Registrar Acesso
+                </h2>
+                <p class="text-muted mb-0">Interface otimizada para tablets e compatível com PythonAnywhere</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    Buscar Morador
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="mb-3">
+                    {{ busca_form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ busca_form.busca(class="form-control", placeholder="Nome, bloco ou apto") }}
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <small class="text-muted d-block mb-3">
+                    Use a busca rápida ou o leitor de QR Code (em breve) para selecionar um morador
+                </small>
+                {% if moradores %}
+                    <div class="list-group small">
+                        {% for morador in moradores %}
+                            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center morador-item"
+                                    data-id="{{ morador.id }}"
+                                    data-nome="{{ morador.nome_completo }}"
+                                    data-bloco="{{ morador.bloco }}"
+                                    data-apartamento="{{ morador.apartamento }}">
+                                <div>
+                                    <strong>{{ morador.nome_completo }}</strong>
+                                    <br>
+                                    <small class="text-muted">Bloco {{ morador.bloco }} / Apt {{ morador.apartamento }}</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">Nenhum morador encontrado.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-pencil-alt me-2"></i>
+                    Detalhes do Registro
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="registro-form">
+                    {{ form.hidden_tag() }}
+                    {{ form.morador_id }}
+                    
+                    <div class="mb-3">
+                        {{ form.morador_nome.label(class="form-label") }}
+                        {{ form.morador_nome(class="form-control", placeholder="Selecione um morador", readonly=True) }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.metodo.label(class="form-label") }}
+                            {{ form.metodo(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.observacoes.label(class="form-label") }}
+                        {{ form.observacoes(class="form-control", rows="3", placeholder="Observações (opcional)") }}
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+                        <a href="{{ url_for('piscina.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>
+                            Confirmar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.querySelectorAll('.morador-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelector('input[name="morador_id"]').value = btn.dataset.id;
+        document.querySelector('input[name="morador_nome"]').value = `${btn.dataset.nome} (Bloco ${btn.dataset.bloco} / Apt ${btn.dataset.apartamento})`;
+    });
+});
+
+// Fallback para evitar submit sem morador
+document.getElementById('registro-form').addEventListener('submit', (event) => {
+    const moradorId = document.querySelector('input[name="morador_id"]').value;
+    if (!moradorId) {
+        event.preventDefault();
+        alert('Selecione um morador antes de registrar o acesso.');
+    }
+});
+</script>
+{% endblock %}
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{% include 'navigation/sidebar_nav.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Piscina', 'url': url_for('piscina.dashboard')},
+    {'text': 'Registrar Acesso', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-1">
+            <i class="fas fa-swimming-pool text-primary"></i>
+            Registrar Acesso
+        </h2>
+        <p class="text-muted mb-0">Registre entrada ou saída na piscina</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Buscar Morador
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Busca por QR Code ou Manual -->
+                <div class="row mb-4">
+                    <div class="col-12 col-md-6 mb-2">
+                        <button class="btn btn-primary btn-lg w-100" id="scanQRBtn" type="button">
+                            <i class="fas fa-qrcode me-2"></i>
+                            Escanear QR Code
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-6 mb-2">
+                        <button class="btn btn-secondary btn-lg w-100" id="searchManualBtn" type="button">
+                            <i class="fas fa-search me-2"></i>
+                            Buscar Manualmente
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Formulário -->
+                <form method="POST" id="registroForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Campo de busca (aparece ao clicar em Buscar Manualmente) -->
+                    <div class="mb-3" id="searchField" style="display: none;">
+                        <label class="form-label">Buscar Morador</label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="moradorSearch"
+                               placeholder="Digite nome ou apartamento...">
+                        <div id="moradorResults" class="list-group mt-2" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                    
+                    {{ form.morador_id() }}
+                    
+                    <!-- Informações do morador selecionado -->
+                    <div id="moradorInfo" class="alert alert-info" style="display: none;">
+                        <h6>Morador Selecionado:</h6>
+                        <p id="moradorNome" class="mb-0"></p>
+                        <small id="moradorApto" class="text-muted"></small>
+                    </div>
+                    
+                    <!-- Tipo de registro -->
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Registro</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo" id="tipoEntrada" value="entrada" checked>
+                            <label class="btn btn-outline-success" for="tipoEntrada">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrada
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="tipo" id="tipoSaida" value="saida">
+                            <label class="btn btn-outline-danger" for="tipoSaida">
+                                <i class="fas fa-sign-out-alt me-2"></i>Saída
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Método -->
+                    <div class="mb-3">
+                        {{ form.metodo.label(class="form-label") }}
+                        {{ form.metodo(class="form-select") }}
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="mb-3">
+                        {{ form.observacoes.label(class="form-label") }}
+                        {{ form.observacoes(class="form-control", rows="3", placeholder="Observações opcionais...") }}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                            <i class="fas fa-check me-2"></i>
+                            Confirmar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Busca manual
+document.getElementById('searchManualBtn').addEventListener('click', function() {
+    document.getElementById('searchField').style.display = 'block';
+    document.getElementById('moradorSearch').focus();
+});
+
+// Busca em tempo real
+let searchTimeout;
+document.getElementById('moradorSearch').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+        document.getElementById('moradorResults').innerHTML = '';
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`{{ url_for('main.buscar_moradores') }}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('moradorResults');
+                resultsDiv.innerHTML = '';
+                
+                if (data.moradores && data.moradores.length > 0) {
+                    data.moradores.forEach(morador => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${morador.nome_completo}</h6>
+                            </div>
+                            <p class="mb-1">${morador.bloco}/${morador.apartamento}</p>
+                        `;
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            document.getElementById('morador_id').value = morador.id;
+                            document.getElementById('moradorNome').textContent = morador.nome_completo;
+                            document.getElementById('moradorApto').textContent = `${morador.bloco}/${morador.apartamento}`;
+                            document.getElementById('moradorInfo').style.display = 'block';
+                            document.getElementById('submitBtn').disabled = false;
+                            document.getElementById('searchField').style.display = 'none';
+                        });
+                        resultsDiv.appendChild(item);
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<div class="list-group-item text-muted">Nenhum morador encontrado</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na busca:', error);
+            });
+    }, 300);
+});
+</script>
+{% endblock %}
+

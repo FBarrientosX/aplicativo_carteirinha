@@ -1,0 +1,23 @@
+{% macro render_breadcrumbs(items) %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('main.index') }}">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </li>
+        {% for item in items %}
+            {% if loop.last %}
+                <li class="breadcrumb-item active" aria-current="page">
+                    {{ item.text }}
+                </li>
+            {% else %}
+                <li class="breadcrumb-item">
+                    <a href="{{ item.url }}">{{ item.text }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endmacro %}
+

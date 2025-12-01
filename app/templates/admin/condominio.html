@@ -1,0 +1,227 @@
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('admin', 'condominio') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Administração', 'url': url_for('main.index')},
+    {'text': 'Configurações do Condomínio', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-building text-primary me-2"></i>
+                    Configurações do Condomínio
+                </h2>
+                <p class="text-muted mb-0">Atualize os dados institucionais do condomínio</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <!-- Informações Básicas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações Básicas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        {{ form.nome.label(class="form-label") }}
+                        {{ form.nome(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.cnpj.label(class="form-label") }}
+                            {{ form.cnpj(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.telefone.label(class="form-label") }}
+                            {{ form.telefone(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.endereco.label(class="form-label") }}
+                        {{ form.endereco(class="form-control", rows="3") }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contatos -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-address-book me-2"></i>
+                        Contatos Oficiais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.email_administracao.label(class="form-label") }}
+                            {{ form.email_administracao(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.whatsapp.label(class="form-label") }}
+                            {{ form.whatsapp(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.email_portaria.label(class="form-label") }}
+                            {{ form.email_portaria(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email_sindico.label(class="form-label") }}
+                            {{ form.email_sindico(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.horario_funcionamento.label(class="form-label") }}
+                        {{ form.horario_funcionamento(class="form-control") }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações Operacionais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sliders-h me-2"></i>
+                        Configurações Operacionais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.dias_aviso_vencimento.label(class="form-label") }}
+                            {{ form.dias_aviso_vencimento(class="form-control") }}
+                            <small class="text-muted">Dias antes do vencimento para avisar</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.meses_validade_padrao.label(class="form-label") }}
+                            {{ form.meses_validade_padrao(class="form-control") }}
+                            <small class="text-muted">Validade padrão das carteirinhas</small>
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-center">
+                            <div class="form-check mt-4">
+                                {{ form.permitir_dependentes(class="form-check-input") }}
+                                {{ form.permitir_dependentes.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Personalização Visual -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-palette me-2"></i>
+                        Personalização Visual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.cor_primaria.label(class="form-label") }}
+                            {{ form.cor_primaria(class="form-control form-control-color") }}
+                            <small class="text-muted">Aplicada em botões principais</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.cor_secundaria.label(class="form-label") }}
+                            {{ form.cor_secundaria(class="form-control form-control-color") }}
+                            <small class="text-muted">Aplicada em menus e textos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>
+                    Salvar Configurações
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-12 col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    Preview
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if condominio %}
+                    <div class="mb-3">
+                        <div class="mx-auto mb-2" style="width: 64px; height:64px; border-radius:50%; background-color: {{ condominio.cor_primaria or '#007bff' }}; display:flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-building text-white"></i>
+                        </div>
+                        <h5 class="mb-0">{{ condominio.nome or 'Nome do Condomínio' }}</h5>
+                        <small class="text-muted">{{ condominio.horario_funcionamento or 'Horário não informado' }}</small>
+                    </div>
+                    <hr>
+                    <div class="text-start small">
+                        <p class="mb-2"><strong>CNPJ:</strong> {{ condominio.cnpj or '-' }}</p>
+                        <p class="mb-2"><strong>Telefone:</strong> {{ condominio.telefone or '-' }}</p>
+                        <p class="mb-2"><strong>Email Adm:</strong> {{ condominio.email_administracao or '-' }}</p>
+                        <p class="mb-2"><strong>Email Portaria:</strong> {{ condominio.email_portaria or '-' }}</p>
+                        <p class="mb-2"><strong>Email Síndico:</strong> {{ condominio.email_sindico or '-' }}</p>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Nenhum dado configurado ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Dicas
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Utilize emails institucionais para cada área
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mantenha telefone e WhatsApp atualizados
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Ajuste as cores conforme a identidade visual
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

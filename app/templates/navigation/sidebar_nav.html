@@ -9,10 +9,16 @@
                 <span class="nav-title">Controle de Piscina</span>
             </div>
             <ul class="nav-menu">
-                <li class="nav-item {{ 'active' if current_page == 'controle' else '' }}">
-                    <a href="{{ url_for('main.controle_acesso') }}" class="nav-link">
-                        <i class="fas fa-eye nav-link-icon"></i>
-                        <span class="nav-link-text">Controle de Acesso</span>
+                <li class="nav-item {{ 'active' if current_page == 'dashboard' else '' }}">
+                    <a href="{{ url_for('piscina.dashboard') }}" class="nav-link">
+                        <i class="fas fa-tachometer-alt nav-link-icon"></i>
+                        <span class="nav-link-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'registrar' else '' }}">
+                    <a href="{{ url_for('piscina.registrar_acesso') }}" class="nav-link">
+                        <i class="fas fa-clipboard-check nav-link-icon"></i>
+                        <span class="nav-link-text">Registrar Acesso</span>
                     </a>
                 </li>
                 <li class="nav-item {{ 'active' if current_page == 'moradores' else '' }}">
@@ -118,7 +124,19 @@
                 <li class="nav-item {{ 'active' if current_page == 'condominios' else '' }}">
                     <a href="{{ url_for('admin.listar_tenants') }}" class="nav-link">
                         <i class="fas fa-building nav-link-icon"></i>
-                        <span class="nav-link-text">Condomínios</span>
+                        <span class="nav-link-text">Condomínios (SaaS)</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'condominio' else '' }}">
+                    <a href="{{ url_for('core.configurar_condominio') }}" class="nav-link">
+                        <i class="fas fa-city nav-link-icon"></i>
+                        <span class="nav-link-text">Meu Condomínio</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ 'active' if current_page == 'funcionarios' else '' }}">
+                    <a href="{{ url_for('core.listar_funcionarios') }}" class="nav-link">
+                        <i class="fas fa-user-tie nav-link-icon"></i>
+                        <span class="nav-link-text">Funcionários</span>
                     </a>
                 </li>
                 <li class="nav-item {{ 'active' if current_page == 'modulos' else '' }}">

@@ -1,0 +1,122 @@
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('admin', 'funcionarios') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Administração', 'url': url_for('main.index')},
+    {'text': 'Funcionários', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-users text-primary"></i>
+                    Funcionários
+                </h2>
+                <p class="text-muted mb-0">Gerenciar funcionários do condomínio</p>
+            </div>
+            <a href="{{ url_for('core.novo_funcionario') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Novo Funcionário
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Funcionários
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if funcionarios %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Email</th>
+                                    <th>Cargo</th>
+                                    <th>Status</th>
+                                    <th>Último Acesso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for funcionario in funcionarios %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ funcionario.nome_completo }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ funcionario.username }}</small>
+                                    </td>
+                                    <td>
+                                        {% if funcionario.tipo_usuario == 'portaria' %}
+                                            <span class="badge bg-warning">Portaria</span>
+                                        {% elif funcionario.tipo_usuario == 'funcionario' %}
+                                            <span class="badge bg-info">Funcionário</span>
+                                        {% elif funcionario.tipo_usuario == 'salva_vidas' %}
+                                            <span class="badge bg-primary">Salva-vidas</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ funcionario.tipo_usuario }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ funcionario.email }}</td>
+                                    <td>{{ funcionario.cargo or '-' }}</td>
+                                    <td>
+                                        {% if funcionario.ativo %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if funcionario.data_ultimo_acesso %}
+                                            {{ funcionario.data_ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                            <span class="text-muted">Nunca</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('core.editar_funcionario', id=funcionario.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h4>Nenhum funcionário cadastrado</h4>
+                        <p class="text-muted">Comece cadastrando seu primeiro funcionário</p>
+                        <a href="{{ url_for('core.novo_funcionario') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Cadastrar Funcionário
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

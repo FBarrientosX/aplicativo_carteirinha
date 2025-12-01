@@ -90,6 +90,10 @@ class ConfiguracaoCondominioForm(FlaskForm):
                           render_kw={'placeholder': '(11) 3333-4444'})
     email_administracao = StringField('Email da Administração', validators=[Email()],
                                      render_kw={'placeholder': 'admin@condominio.com'})
+    email_portaria = StringField('Email da Portaria', validators=[Optional(), Email()],
+                                render_kw={'placeholder': 'portaria@condominio.com'})
+    email_sindico = StringField('Email do Síndico', validators=[Optional(), Email()],
+                               render_kw={'placeholder': 'sindico@condominio.com'})
     whatsapp = StringField('WhatsApp', 
                           render_kw={'placeholder': '(11) 99999-9999'})
     horario_funcionamento = StringField('Horário de Funcionamento',
@@ -482,4 +486,56 @@ class FiltroClassificadoForm(FlaskForm):
                          choices=[('recentes', 'Mais Recentes'), ('visualizacoes', 'Mais Visualizados'),
                                 ('avaliacao', 'Melhor Avaliados'), ('preco_menor', 'Menor Preço'),
                                 ('preco_maior', 'Maior Preço')],
-                         default='recentes') 
+                         default='recentes')
+    submit = SubmitField('Filtrar')
+
+
+class FuncionarioForm(FlaskForm):
+    """Formulário para cadastro/edição de funcionários"""
+    tipo_usuario = SelectField('Tipo de Usuário',
+                              choices=[
+                                  ('portaria', 'Portaria'),
+                                  ('funcionario', 'Funcionário'),
+                                  ('salva_vidas', 'Salva-vidas')
+                              ],
+                              validators=[DataRequired()])
+    nome_completo = StringField('Nome Completo', validators=[DataRequired(), Length(min=2, max=200)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    username = StringField('Usuário', validators=[DataRequired(), Length(min=3, max=80)])
+    password = PasswordField('Senha', validators=[Optional(), Length(min=6)])
+    cargo = StringField('Cargo', validators=[Optional(), Length(max=100)])
+    ativo = BooleanField('Ativo', default=True)
+    submit = SubmitField('Salvar')
+
+
+class OcorrenciaPiscinaForm(FlaskForm):
+    """Formulário para registro de ocorrências na piscina"""
+    tipo = SelectField('Tipo de Ocorrência',
+                      choices=[
+                          ('acidente', 'Acidente'),
+                          ('incidente', 'Incidente'),
+                          ('advertencia', 'Advertência'),
+                          ('outro', 'Outro')
+                      ],
+                      validators=[DataRequired()])
+    severidade = SelectField('Severidade',
+                            choices=[
+                                ('baixa', 'Baixa'),
+                                ('media', 'Média'),
+                                ('alta', 'Alta'),
+                                ('critica', 'Crítica')
+                            ],
+                            validators=[DataRequired()],
+                            default='media')
+    morador_id = SelectField('Morador Envolvido (Opcional)',
+                            choices=[],
+                            validators=[Optional()],
+                            coerce=coerce_int_or_none)
+    titulo = StringField('Título', validators=[DataRequired(), Length(min=3, max=200)])
+    descricao = TextAreaField('Descrição', validators=[DataRequired(), Length(min=10)])
+    fotos = FileField('Fotos (Opcional)',
+                     validators=[
+                         Optional(),
+                         FileAllowed(['jpg', 'jpeg', 'png'], 'Apenas imagens: jpg, jpeg, png')
+                     ])
+    submit = SubmitField('Salvar Ocorrência') 

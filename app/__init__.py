@@ -53,6 +53,7 @@ def create_app(config_class=Config):
 
     # Importar modelos para que sejam conhecidos pelo Alembic
     from app import models
+    from app.modules.piscina import models as piscina_models
     print("Modelos importados")
 
     # Registrar blueprints
@@ -71,6 +72,22 @@ def create_app(config_class=Config):
     # NOVO: Blueprint administrativo
     from app.admin_routes import admin_bp
     app.register_blueprint(admin_bp)
+    
+    # Blueprint core (condomínio, funcionários)
+    from app.core.routes import core_bp
+    app.register_blueprint(core_bp)
+    
+    # Blueprint módulo Piscina (novo)
+    from app.modules.piscina import piscina_bp
+    app.register_blueprint(piscina_bp)
+    
+    # Blueprint módulo Piscina
+    from app.modules.piscina import piscina_bp
+    app.register_blueprint(piscina_bp)
+    
+    # Blueprint módulo Piscina
+    from app.modules.piscina import piscina_bp
+    app.register_blueprint(piscina_bp)
     
     # NOVO: Blueprint financeiro
     from app.financeiro_routes import financeiro_bp

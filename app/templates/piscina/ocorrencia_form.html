@@ -1,0 +1,110 @@
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{% include 'navigation/sidebar_nav.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Piscina', 'url': url_for('piscina.dashboard')},
+    {'text': 'Nova Ocorrência', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-1">
+            <i class="fas fa-exclamation-triangle text-warning"></i>
+            Registrar Ocorrência
+        </h2>
+        <p class="text-muted mb-0">Registre uma ocorrência na piscina</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Dados da Ocorrência</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-6">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select") }}
+                            {% if form.tipo.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.tipo.errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            {{ form.severidade.label(class="form-label") }}
+                            {{ form.severidade(class="form-select") }}
+                            {% if form.severidade.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.severidade.errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.morador_id.label(class="form-label") }}
+                        {{ form.morador_id(class="form-select") }}
+                        {% if form.morador_id.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.morador_id.errors %}<div>{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.titulo.label(class="form-label") }}
+                        {{ form.titulo(class="form-control") }}
+                        {% if form.titulo.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.titulo.errors %}<div>{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.descricao.label(class="form-label") }}
+                        {{ form.descricao(class="form-control", rows="5") }}
+                        {% if form.descricao.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.descricao.errors %}<div>{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.fotos.label(class="form-label") }}
+                        {{ form.fotos(class="form-control") }}
+                        <small class="form-text text-muted">Apenas imagens (JPG, PNG, GIF)</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('piscina.dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Salvar Ocorrência
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
