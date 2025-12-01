@@ -1302,12 +1302,9 @@ def controle_acesso():
     from app.models import RegistroAcesso, Morador
     from sqlalchemy import text
     
-    # Verificar se tenant_id existe na tabela
-    try:
-        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-        has_tenant_id = True
-    except Exception:
-        has_tenant_id = False
+    # Verificar se tenant_id existe na tabela usando método seguro do modelo
+    from app.models import RegistroAcesso
+    has_tenant_id = RegistroAcesso._has_tenant_id_column()
     
     # Moradores atualmente na piscina
     moradores_dentro = RegistroAcesso.obter_moradores_na_piscina()
@@ -1459,14 +1456,9 @@ def registrar_acesso():
             return render_template('acesso/registrar.html', form=form, morador=morador)
         
         # Verificar se tenant_id existe na tabela antes de criar registro
-        from sqlalchemy import text
-        try:
-            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-            has_tenant_id = True
-        except Exception:
-            has_tenant_id = False
+        has_tenant_id = RegistroAcesso._has_tenant_id_column()
         
-        # Criar registro
+        # Criar registro usando SQL direto se tenant_id não existir
         if has_tenant_id:
             registro = RegistroAcesso(
                 morador_id=morador.id,
@@ -1617,12 +1609,9 @@ def historico_acesso():
         for m in Morador.query.order_by(Morador.nome_completo).all()
     ]
     
-    # Verificar se tenant_id existe na tabela
-    try:
-        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-        has_tenant_id = True
-    except Exception:
-        has_tenant_id = False
+    # Verificar se tenant_id existe na tabela usando método seguro do modelo
+    from app.models import RegistroAcesso
+    has_tenant_id = RegistroAcesso._has_tenant_id_column()
     
     # Construir query
     if has_tenant_id:
@@ -1763,12 +1752,9 @@ def historico_morador(morador_id):
     
     morador = Morador.query.get_or_404(morador_id)
     
-    # Verificar se tenant_id existe na tabela
-    try:
-        db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-        has_tenant_id = True
-    except Exception:
-        has_tenant_id = False
+    # Verificar se tenant_id existe na tabela usando método seguro do modelo
+    from app.models import RegistroAcesso
+    has_tenant_id = RegistroAcesso._has_tenant_id_column()
     
     # Registros do morador
     if has_tenant_id:

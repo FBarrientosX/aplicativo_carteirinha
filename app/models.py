@@ -487,17 +487,31 @@ class RegistroAcesso(db.Model):
     # Multi-tenancy
     # NOTA: tenant_id será adicionado via migração
     # Se a coluna não existir ainda, o código deve usar queries SQL diretas
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    # Usando nullable=True e sem default no SQLAlchemy para evitar erros se a coluna não existir
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # Relacionamento
     morador = db.relationship('Morador', backref=db.backref('registros_acesso', lazy=True, order_by='RegistroAcesso.data_hora.desc()'))
     
+    @staticmethod
+    def _has_tenant_id_column():
+        """Verifica se a coluna tenant_id existe na tabela"""
+        try:
+            from sqlalchemy import inspect, text
+            conn = db.session.bind
+            inspector = inspect(conn)
+            columns = [col['name'] for col in inspector.get_columns('registro_acesso')]
+            return 'tenant_id' in columns
+        except Exception:
+            return False
+    
     def __init__(self, **kwargs):
-        """Construtor que garante tenant_id"""
-        # Garantir que tenant_id seja definido
-        if 'tenant_id' not in kwargs:
-            from flask import g
-            kwargs['tenant_id'] = getattr(g, 'tenant_id', 1)
+        """Construtor que garante tenant_id apenas se a coluna existir"""
+        # Só definir tenant_id se a coluna existir
+        if self._has_tenant_id_column():
+            if 'tenant_id' not in kwargs:
+                from flask import g
+                kwargs['tenant_id'] = getattr(g, 'tenant_id', 1)
         
         # Chamar construtor pai
         super().__init__(**kwargs)
@@ -517,16 +531,49 @@ class RegistroAcesso(db.Model):
     def duracao_permanencia(self):
         """Calcula duração da permanência se houver entrada e saída"""
         if self.tipo == 'saida':
-            # Buscar última entrada
-            entrada = RegistroAcesso.query.filter_by(
-                morador_id=self.morador_id,
-                tipo='entrada'
-            ).filter(
-                RegistroAcesso.data_hora < self.data_hora
-            ).order_by(RegistroAcesso.data_hora.desc()).first()
+            from sqlalchemy import text
+            from datetime import datetime
             
-            if entrada:
-                return self.data_hora - entrada.data_hora
+            # Usar SQL direto para evitar problemas com tenant_id
+            result = db.session.execute(text("""
+                SELECT data_hora
+                FROM registro_acesso
+                WHERE morador_id = :morador_id
+                AND tipo = 'entrada'
+                AND data_hora < :data_hora
+                ORDER BY data_hora DESC
+                LIMIT 1
+            """), {
+                "morador_id": self.morador_id,
+                "data_hora": self.data_hora
+            })
+            
+            row = result.fetchone()
+            if row:
+                data_entrada = row[0]
+                # Converter string para datetime se necessário
+                if isinstance(data_entrada, str):
+                    try:
+                        data_entrada = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        try:
+                            data_entrada = datetime.strptime(data_entrada, '%Y-%m-%d %H:%M:%S.%f')
+                        except ValueError:
+                            return None
+                
+                # Garantir que data_hora também seja datetime
+                data_saida = self.data_hora
+                if isinstance(data_saida, str):
+                    try:
+                        data_saida = datetime.strptime(data_saida, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        try:
+                            data_saida = datetime.strptime(data_saida, '%Y-%m-%d %H:%M:%S.%f')
+                        except ValueError:
+                            return None
+                
+                if isinstance(data_saida, datetime) and isinstance(data_entrada, datetime):
+                    return data_saida - data_entrada
         return None
     
     @staticmethod
@@ -535,14 +582,25 @@ class RegistroAcesso(db.Model):
         from flask import g
         from sqlalchemy import text
         
-        # Verificar se tenant_id existe na tabela (PATCH EMERGÊNCIA)
-        try:
-            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-            has_tenant_id = True
-        except Exception:
-            has_tenant_id = False
-        
-        if not has_tenant_id:
+        # Sempre usar SQL direto para evitar problemas com tenant_id
+        # Isso garante compatibilidade mesmo se a coluna não existir
+        if RegistroAcesso._has_tenant_id_column():
+            # Se tenant_id existe, usar na query
+            if tenant_id is None:
+                tenant_id = getattr(g, 'tenant_id', 1)
+            
+            result = db.session.execute(text("""
+                SELECT tipo, data_hora
+                FROM registro_acesso
+                WHERE morador_id = :morador_id
+                AND tenant_id = :tenant_id
+                ORDER BY data_hora DESC
+                LIMIT 1
+            """), {
+                "morador_id": morador_id,
+                "tenant_id": tenant_id
+            })
+        else:
             # Versão sem tenant_id - usar SQL direto
             result = db.session.execute(text("""
                 SELECT tipo, data_hora
@@ -551,22 +609,11 @@ class RegistroAcesso(db.Model):
                 ORDER BY data_hora DESC
                 LIMIT 1
             """), {"morador_id": morador_id})
-            
-            row = result.fetchone()
-            if row:
-                return row[0] == 'entrada'  # tipo == 'entrada'
-            return False
         
-        # Usar tenant_id do contexto se não fornecido
-        if tenant_id is None:
-            tenant_id = getattr(g, 'tenant_id', 1)
-        
-        ultimo_registro = RegistroAcesso.query.filter_by(
-            morador_id=morador_id,
-            tenant_id=tenant_id
-        ).order_by(RegistroAcesso.data_hora.desc()).first()
-        
-        return ultimo_registro and ultimo_registro.tipo == 'entrada' 
+        row = result.fetchone()
+        if row:
+            return row[0] == 'entrada'  # tipo == 'entrada'
+        return False 
 
     @staticmethod
     def obter_moradores_na_piscina(tenant_id=None):
@@ -574,32 +621,45 @@ class RegistroAcesso(db.Model):
         from flask import g
         from sqlalchemy import text
         
-        # Verificar se tenant_id existe na tabela (PATCH EMERGÊNCIA)
-        try:
-            db.session.execute(text("SELECT tenant_id FROM registro_acesso LIMIT 1"))
-            has_tenant_id = True
-        except Exception:
-            has_tenant_id = False
-        
-        if not has_tenant_id:
-            # Versão sem tenant_id (compatibilidade)
-            subq = db.session.query(
-                RegistroAcesso.morador_id,
-                db.func.max(RegistroAcesso.data_hora).label('ultima_data')
-            ).group_by(RegistroAcesso.morador_id).subquery()
+        # Sempre usar SQL direto para evitar problemas com tenant_id
+        if RegistroAcesso._has_tenant_id_column():
+            # Se tenant_id existe, usar na query
+            if tenant_id is None:
+                tenant_id = getattr(g, 'tenant_id', 1)
             
-            moradores_dentro = db.session.query(Morador).join(
-                RegistroAcesso, Morador.id == RegistroAcesso.morador_id
-            ).join(
-                subq, db.and_(
-                    RegistroAcesso.morador_id == subq.c.morador_id,
-                    RegistroAcesso.data_hora == subq.c.ultima_data
+            result = db.session.execute(text("""
+                WITH ultimos_registros AS (
+                    SELECT morador_id, tipo, data_hora,
+                           ROW_NUMBER() OVER (PARTITION BY morador_id ORDER BY data_hora DESC) as rn
+                    FROM registro_acesso
+                    WHERE tenant_id = :tenant_id
                 )
-            ).filter(RegistroAcesso.tipo == 'entrada').all()
-            
-            return moradores_dentro
+                SELECT m.id, m.nome_completo, m.bloco, m.apartamento
+                FROM moradores m
+                INNER JOIN ultimos_registros ur ON m.id = ur.morador_id
+                WHERE ur.rn = 1 AND ur.tipo = 'entrada'
+            """), {"tenant_id": tenant_id})
+        else:
+            # Versão sem tenant_id
+            result = db.session.execute(text("""
+                WITH ultimos_registros AS (
+                    SELECT morador_id, tipo, data_hora,
+                           ROW_NUMBER() OVER (PARTITION BY morador_id ORDER BY data_hora DESC) as rn
+                    FROM registro_acesso
+                )
+                SELECT m.id, m.nome_completo, m.bloco, m.apartamento
+                FROM moradores m
+                INNER JOIN ultimos_registros ur ON m.id = ur.morador_id
+                WHERE ur.rn = 1 AND ur.tipo = 'entrada'
+            """))
         
-        # Usar tenant_id do contexto se não fornecido
+        # Converter resultados em objetos Morador
+        moradores_ids = [row[0] for row in result.fetchall()]
+        if moradores_ids:
+            return Morador.query.filter(Morador.id.in_(moradores_ids)).all()
+        return []
+        
+        # Usar tenant_id do contexto se não fornecido (código antigo - não usado mais)
         if tenant_id is None:
             tenant_id = getattr(g, 'tenant_id', 1)
         
