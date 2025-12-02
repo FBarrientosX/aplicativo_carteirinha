@@ -7,9 +7,15 @@ from wtforms import StringField, TextAreaField, SelectField, SubmitField, Intege
 from wtforms.validators import DataRequired, Optional, Length, NumberRange
 
 
+class BuscaMoradorForm(FlaskForm):
+    """Formulário simples para busca de morador"""
+    busca = StringField('Buscar', validators=[Optional()])
+
+
 class RegistroAcessoForm(FlaskForm):
     """Formulário para registro de acesso"""
     morador_id = HiddenField('Morador ID', validators=[DataRequired()])
+    morador_nome = StringField('Morador', validators=[Optional()])
     tipo = SelectField('Tipo', 
                       choices=[('entrada', 'Entrada'), ('saida', 'Saída')],
                       validators=[DataRequired()])

@@ -181,8 +181,46 @@ def api_contador_pessoas():
 @require_permission('piscina', 'create')
 def registrar_acesso():
     """Registro de acesso otimizado para tablet"""
+    from app.modules.piscina.forms import BuscaMoradorForm
+    from app.models import Morador
+    
     tenant_id = get_tenant_id_safe()
     form = RegistroAcessoForm()
+    busca_form = BuscaMoradorForm()
+    moradores = []
+    
+    # Buscar moradores se houver termo de busca
+    busca_termo = request.args.get('busca', '').strip()
+    if busca_termo:
+        busca_form.busca.data = busca_termo
+        # Verificar se tenant_id existe na tabela moradores
+        from sqlalchemy import inspect
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            columns = [col['name'] for col in inspector.get_columns('moradores')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
+        
+        like_term = f"%{busca_termo}%"
+        if has_tenant_id:
+            moradores = Morador.query.filter(
+                Morador.tenant_id == tenant_id,
+                db.or_(
+                    Morador.nome_completo.ilike(like_term),
+                    Morador.bloco.ilike(like_term),
+                    Morador.apartamento.ilike(like_term)
+                )
+            ).order_by(Morador.nome_completo).limit(20).all()
+        else:
+            moradores = Morador.query.filter(
+                db.or_(
+                    Morador.nome_completo.ilike(like_term),
+                    Morador.bloco.ilike(like_term),
+                    Morador.apartamento.ilike(like_term)
+                )
+            ).order_by(Morador.nome_completo).limit(20).all()
     
     if form.validate_on_submit():
         morador_id = int(form.morador_id.data)
@@ -199,7 +237,7 @@ def registrar_acesso():
             tables = inspector.get_table_names()
             if 'carteirinhas_piscina' not in tables:
                 flash('Sistema de carteirinhas não configurado ainda!', 'warning')
-                return render_template('piscina/registrar_acesso.html', form=form)
+                return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
             
             columns = [col['name'] for col in inspector.get_columns('carteirinhas_piscina')]
             has_tenant_id = 'tenant_id' in columns
@@ -220,22 +258,22 @@ def registrar_acesso():
                 ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
         except Exception:
             flash('Erro ao verificar carteirinha!', 'danger')
-            return render_template('piscina/registrar_acesso.html', form=form)
+            return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
         
         if not carteirinha or not carteirinha.esta_valida:
             flash('Carteirinha inválida ou vencida!', 'danger')
-            return render_template('piscina/registrar_acesso.html', form=form)
+            return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
         
         # Verificar se já está dentro (para entrada) ou fora (para saída)
         esta_dentro = RegistroAcessoPiscina.morador_esta_na_piscina(morador_id, tenant_id)
         
         if tipo == 'entrada' and esta_dentro:
             flash(f'{morador.nome_completo} já está na piscina!', 'warning')
-            return render_template('piscina/registrar_acesso.html', form=form)
+            return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
         
         if tipo == 'saida' and not esta_dentro:
             flash(f'{morador.nome_completo} não está na piscina!', 'warning')
-            return render_template('piscina/registrar_acesso.html', form=form)
+            return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
         
         # Verificar se tenant_id existe na tabela registros_acesso_piscina
         from sqlalchemy import inspect
@@ -309,7 +347,7 @@ def registrar_acesso():
         flash(f'✅ {morador.nome_completo} {tipo} piscina!', 'success')
         return redirect(url_for('piscina.registrar_acesso'))
     
-    return render_template('piscina/registrar_acesso.html', form=form)
+    return render_template('piscina/registrar_acesso.html', form=form, busca_form=busca_form, moradores=moradores)
 
 
 @piscina_bp.route('/plantao/iniciar', methods=['POST'])
