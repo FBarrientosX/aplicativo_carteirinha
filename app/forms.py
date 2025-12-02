@@ -391,13 +391,23 @@ class EncomendaForm(FlaskForm):
 
 class FiltroReservaForm(FlaskForm):
     """Formulário para filtros de reservas"""
-    espaco_id = SelectField('Espaço', choices=[('', 'Todos')], coerce=int)
+    def _coerce_espaco_id(value):
+        """Coerce que aceita string vazia e retorna None"""
+        if value == '' or value is None:
+            return None
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
+    
+    espaco_id = SelectField('Espaço', choices=[('', 'Todos')], coerce=_coerce_espaco_id, validators=[Optional()])
     status = SelectField('Status',
                         choices=[('', 'Todos'), ('pendente', 'Pendente'), ('aprovado', 'Aprovado'),
-                                ('recusado', 'Recusado'), ('cancelado', 'Cancelado'), ('concluido', 'Concluído')])
+                                ('recusado', 'Recusado'), ('cancelado', 'Cancelado'), ('concluido', 'Concluído')],
+                        validators=[Optional()])
     data_inicio = DateField('Data Início', validators=[Optional()])
     data_fim = DateField('Data Fim', validators=[Optional()])
-    busca = StringField('Buscar')
+    busca = StringField('Buscar', validators=[Optional()])
 
 
 class FiltroVisitanteForm(FlaskForm):
