@@ -303,10 +303,25 @@ def minhas_reservas():
     # Verificar se tabelas existem
     if not _has_table('reservas_espacos'):
         flash('As tabelas de reservas ainda não foram criadas.', 'warning')
-        from flask_paginate import Pagination
+        # Criar objeto paginação vazio usando um mock simples
+        class PaginationMock:
+            def __init__(self):
+                self.items = []
+                self.page = 1
+                self.per_page = 15
+                self.total = 0
+                self.pages = 0
+                self.has_prev = False
+                self.has_next = False
+                self.prev_num = None
+                self.next_num = None
+                def iter_pages(self, left_edge=2, right_edge=2, left_current=2, right_current=2):
+                    return []
+                self.iter_pages = iter_pages
+        
         return render_template('reservas/listar.html',
                              title='Minhas Reservas',
-                             reservas=Pagination(page=1, per_page=15, total=0, items=[]),
+                             reservas=PaginationMock(),
                              form=form)
     
     if not _has_table('espacos_comuns'):
@@ -326,10 +341,25 @@ def minhas_reservas():
         query = ReservaEspaco.query.filter_by(tenant_id=tenant_id)
     except Exception as e:
         current_app.logger.error(f'Erro ao criar query: {e}')
-        from flask_paginate import Pagination
+        # Criar objeto paginação vazio usando um mock simples
+        class PaginationMock:
+            def __init__(self):
+                self.items = []
+                self.page = 1
+                self.per_page = 15
+                self.total = 0
+                self.pages = 0
+                self.has_prev = False
+                self.has_next = False
+                self.prev_num = None
+                self.next_num = None
+                def iter_pages(self, left_edge=2, right_edge=2, left_current=2, right_current=2):
+                    return []
+                self.iter_pages = iter_pages
+        
         return render_template('reservas/listar.html',
                              title='Minhas Reservas',
-                             reservas=Pagination(page=1, per_page=15, total=0, items=[]),
+                             reservas=PaginationMock(),
                              form=form)
     
     if not current_user.is_admin():
@@ -356,8 +386,23 @@ def minhas_reservas():
         )
     except Exception as e:
         current_app.logger.error(f'Erro ao paginar reservas: {e}')
-        from flask_paginate import Pagination
-        reservas = Pagination(page=1, per_page=15, total=0, items=[])
+        # Criar objeto paginação vazio usando um mock simples
+        class PaginationMock:
+            def __init__(self):
+                self.items = []
+                self.page = 1
+                self.per_page = 15
+                self.total = 0
+                self.pages = 0
+                self.has_prev = False
+                self.has_next = False
+                self.prev_num = None
+                self.next_num = None
+                def iter_pages(self, left_edge=2, right_edge=2, left_current=2, right_current=2):
+                    return []
+                self.iter_pages = iter_pages
+        
+        reservas = PaginationMock()
     
     return render_template('reservas/listar.html',
                          title='Minhas Reservas',
