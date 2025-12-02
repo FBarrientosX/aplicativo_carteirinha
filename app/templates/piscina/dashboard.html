@@ -2,133 +2,6 @@
 {% from 'components/breadcrumbs.html' import render_breadcrumbs %}
 
 {% block sidebar_nav %}
-{{ render_sidebar_nav('piscina', 'dashboard') }}
-{% endblock %}
-
-{% block breadcrumbs %}
-{{ render_breadcrumbs([
-    {'text': 'Piscina', 'url': '#'},
-    {'text': 'Dashboard', 'url': '#'}
-]) }}
-{% endblock %}
-
-{% block content %}
-<div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="text-muted text-uppercase">👥 Na Piscina</h6>
-                <h2 id="contadorPessoas">{{ moradores_na_piscina }}</h2>
-                <small class="text-muted">Atualiza automaticamente a cada 10s</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="text-muted text-uppercase">⏱️ Tempo médio (24h)</h6>
-                <h2>{{ tempo_medio }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="text-muted text-uppercase">🏊 Plantão</h6>
-                {% if plantao %}
-                    <h5 class="mb-0">{{ plantao.salva_vidas.nome_completo }}</h5>
-                    <small class="text-muted">Desde {{ plantao.data_inicio.strftime('%H:%M') }}</small>
-                {% else %}
-                    <p class="text-muted mb-0">Nenhum plantão ativo</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">📊 Movimentação (últimas 12h)</h5>
-        <small class="text-muted">Atualização via AJAX (compatível com PythonAnywhere)</small>
-    </div>
-    <div class="card-body">
-        <canvas id="graficoMovimento" height="120"></canvas>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">⚡ Ações Rápidas</h5>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-12 col-md-4">
-                <a href="{{ url_for('piscina.registrar_acesso') }}" class="btn btn-primary w-100">
-                    <i class="fas fa-clipboard-check me-2"></i>
-                    Registrar Acesso
-                </a>
-            </div>
-            <div class="col-12 col-md-4">
-                <a href="{{ url_for('main.listar_moradores') }}" class="btn btn-outline-primary w-100">
-                    <i class="fas fa-users me-2"></i>
-                    Moradores
-                </a>
-            </div>
-            <div class="col-12 col-md-4">
-                <a href="{{ url_for('main.acesso_qrcode') }}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-qrcode me-2"></i>
-                    Scanner QR
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const ctx = document.getElementById('graficoMovimento').getContext('2d');
-const grafico = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: {{ horas|tojson }},
-        datasets: [{
-            label: 'Registros por hora',
-            data: {{ contagem|tojson }},
-            backgroundColor: 'rgba(52, 152, 219, 0.3)',
-            borderColor: 'rgba(52, 152, 219, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
-
-// Atualização incremental via fetch (compatível PythonAnywhere)
-async function atualizarContador() {
-    try {
-        const response = await fetch('{{ url_for("piscina.api_contador_atual") }}');
-        if (!response.ok) return;
-        const data = await response.json();
-        document.getElementById('contadorPessoas').textContent = data.total;
-    } catch (error) {
-        console.warn('Erro ao atualizar contador', error);
-    }
-}
-
-setInterval(atualizarContador, 10000);
-</script>
-{% endblock %}
-{% extends "base_sidebar.html" %}
-{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
-
-{% block sidebar_nav %}
 {% include 'navigation/sidebar_nav.html' %}
 {% endblock %}
 
@@ -168,9 +41,11 @@ setInterval(atualizarContador, 10000);
                 <h5 class="card-title">👥 Na Piscina</h5>
                 <h2 class="display-4" id="contadorPessoas">{{ moradores_na_piscina }}</h2>
                 <p class="text-muted mb-0">pessoas</p>
+                {% if lista_moradores %}
                 <a href="{{ url_for('piscina.listar_moradores_dentro') }}" class="btn btn-sm btn-outline-primary mt-2">
                     Ver Lista
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -190,7 +65,7 @@ setInterval(atualizarContador, 10000);
             <div class="card-body">
                 <h5 class="card-title">🏊 Salva-vidas</h5>
                 {% if plantao %}
-                    <h4>{{ plantao.salva_vidas.nome_completo }}</h4>
+                    <h4>{{ plantao.salva_vidas.nome_completo if plantao.salva_vidas else 'N/A' }}</h4>
                     <p class="text-muted mb-2">Desde {{ plantao.data_inicio.strftime('%H:%M') }}</p>
                     {% if current_user.is_salva_vidas() and plantao.salva_vidas_id == current_user.id %}
                         <form method="POST" action="{{ url_for('piscina.finalizar_plantao') }}" class="d-inline">
@@ -259,15 +134,20 @@ setInterval(atualizarContador, 10000);
                                 <td>{{ morador.nome_completo }}</td>
                                 <td>{{ morador.bloco }}/{{ morador.apartamento }}</td>
                                 <td>
-                                    {% set ultimo_registro = morador.registros_piscina|selectattr('tipo', 'equalto', 'entrada')|first %}
-                                    {% if ultimo_registro %}
-                                        {{ ultimo_registro.timestamp.strftime('%H:%M') }}
+                                    {% if morador.registros_piscina %}
+                                        {% set ultimo_registro = morador.registros_piscina|selectattr('tipo', 'equalto', 'entrada')|first %}
+                                        {% if ultimo_registro %}
+                                            {{ ultimo_registro.timestamp.strftime('%H:%M') }}
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if ultimo_registro %}
-                                        {% set tempo = (now() - ultimo_registro.timestamp) %}
-                                        {{ (tempo.total_seconds() / 3600)|int }}h {{ ((tempo.total_seconds() % 3600) / 60)|int }}min
+                                    {% if morador.registros_piscina %}
+                                        {% set ultimo_registro = morador.registros_piscina|selectattr('tipo', 'equalto', 'entrada')|first %}
+                                        {% if ultimo_registro %}
+                                            {% set tempo = (now() - ultimo_registro.timestamp) %}
+                                            {{ (tempo.total_seconds() / 3600)|int }}h {{ ((tempo.total_seconds() % 3600) / 60)|int }}min
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>
@@ -287,50 +167,54 @@ setInterval(atualizarContador, 10000);
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 // Dados do gráfico
-const dadosGrafico = {{ dados_grafico | tojson }};
+const dadosGrafico = {{ dados_grafico | tojson if dados_grafico else '[]' }};
 
-// Criar gráfico
-const ctx = document.getElementById('graficoPessoasPorHora').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: dadosGrafico.map(d => d.hora + ':00'),
-        datasets: [{
-            label: 'Pessoas na Piscina',
-            data: dadosGrafico.map(d => d.pessoas),
-            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
+// Criar gráfico apenas se houver dados
+if (dadosGrafico && dadosGrafico.length > 0) {
+    const ctx = document.getElementById('graficoPessoasPorHora').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dadosGrafico.map(d => d.hora + ':00'),
+            datasets: [{
+                label: 'Pessoas na Piscina',
+                data: dadosGrafico.map(d => d.pessoas),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
-        },
-        plugins: {
-            legend: {
-                display: false
-            }
         }
-    }
-});
+    });
+}
 
 // Atualizar contador em tempo real (a cada 10s)
 setInterval(() => {
     fetch('{{ url_for("piscina.api_contador_pessoas") }}')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('contadorPessoas').textContent = data.contador;
+            const contadorEl = document.getElementById('contadorPessoas');
+            if (contadorEl) {
+                contadorEl.textContent = data.total || 0;
+            }
         })
         .catch(error => console.error('Erro ao atualizar contador:', error));
 }, 10000);
 </script>
 {% endblock %}
-
