@@ -109,26 +109,55 @@ class RegistroAcessoPiscina(db.Model):
     def calcular_tempo_permanencia(morador_id, entrada_id, saida_id, tenant_id=None):
         """Calcula tempo de permanência entre entrada e saída"""
         from flask import g
+        from sqlalchemy import inspect
         tenant_id = tenant_id or getattr(g, 'tenant_id', 1)
         
-        entrada = RegistroAcessoPiscina.query.filter_by(
-            id=entrada_id,
-            tenant_id=tenant_id
-        ).first()
-        saida = RegistroAcessoPiscina.query.filter_by(
-            id=saida_id,
-            tenant_id=tenant_id
-        ).first()
+        # Verificar se a tabela existe
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'registros_acesso_piscina' not in tables:
+                return None
+        except Exception:
+            return None
         
-        if entrada and saida and entrada.tipo == 'entrada' and saida.tipo == 'saida':
-            diferenca = saida.timestamp - entrada.timestamp
-            minutos = int(diferenca.total_seconds() / 60)
+        # Verificar se tenant_id existe na tabela
+        try:
+            columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
+        
+        try:
+            if has_tenant_id:
+                entrada = RegistroAcessoPiscina.query.filter_by(
+                    id=entrada_id,
+                    tenant_id=tenant_id
+                ).first()
+                saida = RegistroAcessoPiscina.query.filter_by(
+                    id=saida_id,
+                    tenant_id=tenant_id
+                ).first()
+            else:
+                entrada = RegistroAcessoPiscina.query.filter_by(
+                    id=entrada_id
+                ).first()
+                saida = RegistroAcessoPiscina.query.filter_by(
+                    id=saida_id
+                ).first()
             
-            saida.tempo_permanencia_minutos = minutos
-            db.session.commit()
-            
-            return minutos
-        return None
+            if entrada and saida and entrada.tipo == 'entrada' and saida.tipo == 'saida':
+                diferenca = saida.timestamp - entrada.timestamp
+                minutos = int(diferenca.total_seconds() / 60)
+                
+                saida.tempo_permanencia_minutos = minutos
+                db.session.commit()
+                
+                return minutos
+            return None
+        except Exception:
+            return None
     
     @staticmethod
     def morador_esta_na_piscina(morador_id, tenant_id=None):
@@ -306,12 +335,38 @@ class PlantaoSalvaVidas(db.Model):
     def obter_plantao_ativo(tenant_id=None):
         """Retorna plantão ativo do tenant (apenas um por vez)"""
         from flask import g
+        from sqlalchemy import inspect
         tenant_id = tenant_id or getattr(g, 'tenant_id', 1)
         
-        return PlantaoSalvaVidas.query.filter_by(
-            tenant_id=tenant_id,
-            status='ativo'
-        ).first()
+        # Verificar se a tabela existe
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'plantoes_salva_vidas' not in tables:
+                return None
+        except Exception:
+            return None
+        
+        # Verificar se tenant_id existe na tabela
+        try:
+            columns = [col['name'] for col in inspector.get_columns('plantoes_salva_vidas')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
+        
+        try:
+            if has_tenant_id:
+                return PlantaoSalvaVidas.query.filter_by(
+                    tenant_id=tenant_id,
+                    status='ativo'
+                ).first()
+            else:
+                return PlantaoSalvaVidas.query.filter_by(
+                    status='ativo'
+                ).first()
+        except Exception:
+            return None
     
     def finalizar(self):
         """Finaliza o plantão"""

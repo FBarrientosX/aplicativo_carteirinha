@@ -22,9 +22,14 @@ def api_contador_atual():
     
     plantao = PlantaoSalvaVidas.obter_plantao_ativo(tenant_id)
     
+    # Verificar se plantao existe e tem salva_vidas relacionado
+    plantao_nome = None
+    if plantao and hasattr(plantao, 'salva_vidas') and plantao.salva_vidas:
+        plantao_nome = plantao.salva_vidas.nome_completo
+    
     return jsonify({
         'total': total,
-        'plantao': plantao.salva_vidas.nome_completo if plantao and plantao.salva_vidas else None
+        'plantao': plantao_nome
     })
 
 

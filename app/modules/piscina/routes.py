@@ -147,31 +147,36 @@ def registrar_acesso():
         # Verificar carteirinha válida
         morador = Morador.query.get_or_404(morador_id)
         
-        # Verificar se tenant_id existe na tabela carteirinhas_piscina
+        # Verificar se a tabela carteirinhas_piscina existe
         from sqlalchemy import inspect
         try:
             conn = db.session.bind
             inspector = inspect(conn)
             tables = inspector.get_table_names()
-            if 'carteirinhas_piscina' in tables:
-                columns = [col['name'] for col in inspector.get_columns('carteirinhas_piscina')]
-                has_tenant_id = 'tenant_id' in columns
-            else:
-                has_tenant_id = False
+            if 'carteirinhas_piscina' not in tables:
+                flash('Sistema de carteirinhas não configurado ainda!', 'warning')
+                return render_template('piscina/registrar_acesso.html', form=form)
+            
+            columns = [col['name'] for col in inspector.get_columns('carteirinhas_piscina')]
+            has_tenant_id = 'tenant_id' in columns
         except Exception:
             has_tenant_id = False
         
-        if has_tenant_id:
-            carteirinha = CarteirinhaPiscina.query.filter_by(
-                morador_id=morador_id,
-                tenant_id=tenant_id,
-                ativa=True
-            ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
-        else:
-            carteirinha = CarteirinhaPiscina.query.filter_by(
-                morador_id=morador_id,
-                ativa=True
-            ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
+        try:
+            if has_tenant_id:
+                carteirinha = CarteirinhaPiscina.query.filter_by(
+                    morador_id=morador_id,
+                    tenant_id=tenant_id,
+                    ativa=True
+                ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
+            else:
+                carteirinha = CarteirinhaPiscina.query.filter_by(
+                    morador_id=morador_id,
+                    ativa=True
+                ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
+        except Exception:
+            flash('Erro ao verificar carteirinha!', 'danger')
+            return render_template('piscina/registrar_acesso.html', form=form)
         
         if not carteirinha or not carteirinha.esta_valida:
             flash('Carteirinha inválida ou vencida!', 'danger')
@@ -346,25 +351,27 @@ def listar_ocorrencias():
     """Listar ocorrências"""
     tenant_id = get_tenant_id_safe()
     
-    # Verificar se tenant_id existe na tabela ocorrencias_piscina
+    # Verificar se a tabela ocorrencias_piscina existe
     from sqlalchemy import inspect
     try:
         conn = db.session.bind
         inspector = inspect(conn)
         tables = inspector.get_table_names()
-        if 'ocorrencias_piscina' in tables:
+        if 'ocorrencias_piscina' not in tables:
+            # Tabela não existe, retornar lista vazia
+            ocorrencias = []
+        else:
             columns = [col['name'] for col in inspector.get_columns('ocorrencias_piscina')]
             has_tenant_id_ocorrencia = 'tenant_id' in columns
-        else:
-            has_tenant_id_ocorrencia = False
+            
+            if has_tenant_id_ocorrencia:
+                ocorrencias = OcorrenciaPiscina.query.filter_by(
+                    tenant_id=tenant_id
+                ).order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
+            else:
+                ocorrencias = OcorrenciaPiscina.query.order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
     except Exception:
-        has_tenant_id_ocorrencia = False
-    
-    if has_tenant_id_ocorrencia:
-        ocorrencias = OcorrenciaPiscina.query.filter_by(
-            tenant_id=tenant_id
-        ).order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
-    else:
-        ocorrencias = OcorrenciaPiscina.query.order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
+        # Se houver erro, retornar lista vazia
+        ocorrencias = []
     
     return render_template('piscina/ocorrencias.html', ocorrencias=ocorrencias)
