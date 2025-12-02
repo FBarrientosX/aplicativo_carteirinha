@@ -269,11 +269,31 @@ def registrar_acesso():
         
         # Se for saída, calcular tempo de permanência
         if tipo == 'saida':
-            entrada = RegistroAcessoPiscina.query.filter_by(
-                morador_id=morador_id,
-                tipo='entrada',
-                tenant_id=tenant_id
-            ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+            # Verificar se a tabela existe
+            from sqlalchemy import inspect
+            try:
+                conn = db.session.bind
+                inspector = inspect(conn)
+                tables = inspector.get_table_names()
+                if 'registros_acesso_piscina' not in tables:
+                    entrada = None
+                else:
+                    columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+                    has_tenant_id_registro = 'tenant_id' in columns
+                    
+                    if has_tenant_id_registro:
+                        entrada = RegistroAcessoPiscina.query.filter_by(
+                            morador_id=morador_id,
+                            tipo='entrada',
+                            tenant_id=tenant_id
+                        ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+                    else:
+                        entrada = RegistroAcessoPiscina.query.filter_by(
+                            morador_id=morador_id,
+                            tipo='entrada'
+                        ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+            except Exception:
+                entrada = None
             
             if entrada:
                 db.session.add(registro)
