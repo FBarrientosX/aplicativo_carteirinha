@@ -125,7 +125,8 @@ def create_app(config_class=Config):
     @login.user_loader
     def load_user(user_id):
         from app.models import Usuario
-        return Usuario.query.get(int(user_id))
+        # Usar método seguro que verifica colunas existentes
+        return Usuario.get_safe(int(user_id))
     
     print("User loader configurado")
     

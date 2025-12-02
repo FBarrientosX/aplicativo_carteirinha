@@ -307,6 +307,7 @@ class Usuario(UserMixin, db.Model):
     # Valores: 'admin', 'sindico', 'morador', 'portaria', 'funcionario', 'salva_vidas'
     nome_completo = db.Column(db.String(200), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
+    # Colunas opcionais - podem não existir no banco
     email_verificado = db.Column(db.Boolean, nullable=True)  # nullable=True para compatibilidade
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_ultimo_login = db.Column(db.DateTime, nullable=True)
@@ -326,6 +327,73 @@ class Usuario(UserMixin, db.Model):
     # Relacionamento com salva-vidas (se aplicável)
     salva_vidas_id = db.Column(db.Integer, db.ForeignKey('salva_vidas.id'), nullable=True)
     salva_vidas = db.relationship('SalvaVidas', backref='usuario', uselist=False)
+    
+    @staticmethod
+    def _get_existing_columns():
+        """Retorna lista de colunas que existem na tabela usuarios"""
+        try:
+            from sqlalchemy import inspect
+            if hasattr(db, 'session') and db.session.bind:
+                conn = db.session.bind
+                inspector = inspect(conn)
+                columns = [col['name'] for col in inspector.get_columns('usuarios')]
+                return set(columns)
+        except Exception:
+            pass
+        # Se não conseguir verificar, retorna colunas básicas
+        return {'id', 'username', 'email', 'password_hash', 'tipo_usuario', 'nome_completo', 'ativo', 'data_criacao'}
+    
+    @classmethod
+    def get_safe(cls, user_id):
+        """Busca usuário usando SQL direto para evitar problemas com colunas faltantes"""
+        try:
+            from sqlalchemy import text
+            existing_cols = cls._get_existing_columns()
+            
+            # Colunas obrigatórias que sempre devem existir
+            base_cols = ['id', 'username', 'email', 'password_hash', 'tipo_usuario', 'nome_completo', 'ativo', 'data_criacao']
+            
+            # Adicionar colunas opcionais se existirem
+            optional_cols = ['email_verificado', 'data_ultimo_login', 'data_ultimo_acesso', 
+                           'tenant_id', 'permissoes', 'cargo', 'unidade_id', 'salva_vidas_id']
+            
+            cols_to_select = [col for col in base_cols if col in existing_cols]
+            cols_to_select.extend([col for col in optional_cols if col in existing_cols])
+            
+            # Construir query SQL
+            cols_str = ', '.join(cols_to_select)
+            sql = text(f"SELECT {cols_str} FROM usuarios WHERE id = :user_id")
+            result = db.session.execute(sql, {'user_id': user_id}).fetchone()
+            
+            if not result:
+                return None
+            
+            # Criar instância do modelo com os dados
+            user = cls()
+            for i, col in enumerate(cols_to_select):
+                setattr(user, col, result[i])
+            
+            return user
+        except Exception:
+            # Último recurso: buscar apenas colunas básicas
+            try:
+                from sqlalchemy import text
+                sql = text("SELECT id, username, email, password_hash, tipo_usuario, nome_completo, ativo, data_criacao FROM usuarios WHERE id = :user_id")
+                result = db.session.execute(sql, {'user_id': user_id}).fetchone()
+                if result:
+                    user = cls()
+                    user.id = result[0]
+                    user.username = result[1]
+                    user.email = result[2]
+                    user.password_hash = result[3]
+                    user.tipo_usuario = result[4]
+                    user.nome_completo = result[5]
+                    user.ativo = result[6] if result[6] is not None else True
+                    user.data_criacao = result[7] if result[7] is not None else datetime.utcnow()
+                    return user
+            except Exception:
+                pass
+            return None
     
     
     def set_password(self, password):
