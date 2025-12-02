@@ -33,34 +33,40 @@ def dashboard():
     moradores_na_piscina = RegistroAcessoPiscina.obter_moradores_na_piscina(tenant_id)
     total_na_piscina = len(moradores_na_piscina)
     
-    # Verificar se tenant_id existe na tabela registros_acesso_piscina
+    # Verificar se a tabela registros_acesso_piscina existe
     from sqlalchemy import inspect
     try:
         conn = db.session.bind
         inspector = inspect(conn)
         tables = inspector.get_table_names()
-        if 'registros_acesso_piscina' in tables:
+        if 'registros_acesso_piscina' not in tables:
+            # Tabela não existe, usar valores padrão
+            registros_24h = []
+            has_tenant_id_registro = False
+        else:
             columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
             has_tenant_id_registro = 'tenant_id' in columns
-        else:
-            has_tenant_id_registro = False
+            
+            # Tempo médio de permanência (últimas 24h)
+            try:
+                if has_tenant_id_registro:
+                    registros_24h = RegistroAcessoPiscina.query.filter(
+                        RegistroAcessoPiscina.tenant_id == tenant_id,
+                        RegistroAcessoPiscina.tipo == 'saida',
+                        RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
+                        RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
+                    ).all()
+                else:
+                    registros_24h = RegistroAcessoPiscina.query.filter(
+                        RegistroAcessoPiscina.tipo == 'saida',
+                        RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
+                        RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
+                    ).all()
+            except Exception:
+                registros_24h = []
     except Exception:
+        registros_24h = []
         has_tenant_id_registro = False
-    
-    # Tempo médio de permanência (últimas 24h)
-    if has_tenant_id_registro:
-        registros_24h = RegistroAcessoPiscina.query.filter(
-            RegistroAcessoPiscina.tenant_id == tenant_id,
-            RegistroAcessoPiscina.tipo == 'saida',
-            RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
-            RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
-        ).all()
-    else:
-        registros_24h = RegistroAcessoPiscina.query.filter(
-            RegistroAcessoPiscina.tipo == 'saida',
-            RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
-            RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
-        ).all()
     
     tempo_medio = 0
     if registros_24h:
@@ -82,40 +88,78 @@ def dashboard():
 
 def obter_dados_grafico_por_hora(tenant_id, data=None):
     """Retorna dados para gráfico de pessoas por hora"""
+    from sqlalchemy import inspect
+    
+    # Verificar se a tabela existe
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        tables = inspector.get_table_names()
+        if 'registros_acesso_piscina' not in tables:
+            # Tabela não existe, retornar dados vazios
+            return {'horas': [], 'entradas': [], 'saidas': []}
+    except Exception:
+        return {'horas': [], 'entradas': [], 'saidas': []}
+    
     if not data:
         data = datetime.now().date()
     
-    # Agrupar por hora
-    registros = db.session.query(
-        func.extract('hour', RegistroAcessoPiscina.timestamp).label('hora'),
-        RegistroAcessoPiscina.tipo,
-        func.count(RegistroAcessoPiscina.id).label('quantidade')
-    ).filter(
-        RegistroAcessoPiscina.tenant_id == tenant_id,
-        func.date(RegistroAcessoPiscina.timestamp) == data
-    ).group_by(
-        'hora', 'tipo'
-    ).all()
+    # Verificar se tenant_id existe na tabela
+    try:
+        columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+        has_tenant_id = 'tenant_id' in columns
+    except Exception:
+        has_tenant_id = False
     
-    # Processar dados
-    horas = list(range(24))
-    dados = {h: 0 for h in horas}
-    
-    for registro in registros:
-        hora = int(registro.hora)
-        if registro.tipo == 'entrada':
-            dados[hora] += registro.quantidade
+    try:
+        # Agrupar por hora
+        if has_tenant_id:
+            registros = db.session.query(
+                func.extract('hour', RegistroAcessoPiscina.timestamp).label('hora'),
+                RegistroAcessoPiscina.tipo,
+                func.count(RegistroAcessoPiscina.id).label('quantidade')
+            ).filter(
+                RegistroAcessoPiscina.tenant_id == tenant_id,
+                func.date(RegistroAcessoPiscina.timestamp) == data
+            ).group_by(
+                'hora', 'tipo'
+            ).all()
         else:
-            dados[hora] -= registro.quantidade
+            registros = db.session.query(
+                func.extract('hour', RegistroAcessoPiscina.timestamp).label('hora'),
+                RegistroAcessoPiscina.tipo,
+                func.count(RegistroAcessoPiscina.id).label('quantidade')
+            ).filter(
+                func.date(RegistroAcessoPiscina.timestamp) == data
+            ).group_by(
+                'hora', 'tipo'
+            ).all()
     
-    # Calcular acumulado
-    acumulado = 0
-    resultado = []
-    for h in horas:
-        acumulado += dados[h]
-        resultado.append({'hora': h, 'pessoas': max(0, acumulado)})
-    
-    return resultado
+        # Processar dados
+        horas = list(range(24))
+        dados = {h: 0 for h in horas}
+        
+        for registro in registros:
+            hora = int(registro.hora)
+            if registro.tipo == 'entrada':
+                dados[hora] += registro.quantidade
+            else:
+                dados[hora] -= registro.quantidade
+        
+        # Calcular acumulado
+        acumulado = 0
+        resultado = []
+        for h in horas:
+            acumulado += dados[h]
+            resultado.append({'hora': h, 'pessoas': max(0, acumulado)})
+        
+        return resultado
+    except Exception:
+        # Se houver erro, retornar dados vazios
+        return {'horas': [], 'entradas': [], 'saidas': []}
+    except Exception:
+        # Se houver erro, retornar dados vazios
+        return {'horas': [], 'entradas': [], 'saidas': []}
 
 
 @piscina_bp.route('/api/contador-pessoas')
