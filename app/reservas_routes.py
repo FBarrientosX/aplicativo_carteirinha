@@ -9,43 +9,60 @@ from sqlalchemy import and_, or_
 
 reservas_bp = Blueprint('reservas', __name__, url_prefix='/reservas')
 
+
+def _has_table(table_name):
+    """Verifica se uma tabela existe no banco de dados"""
+    try:
+        from sqlalchemy import inspect
+        if hasattr(db, 'session') and db.session.bind:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            return table_name in tables
+    except Exception:
+        pass
+    return False
+
 @reservas_bp.route('/')
 @login_required
 def listar_espacos():
     """Lista todos os espaços comuns disponíveis"""
     tenant_id = getattr(g, 'tenant_id', 1)
     
-    try:
-        espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
-    except Exception as e:
-        # Se a tabela não existe, mostrar mensagem amigável
-        if 'no such table: espacos_comuns' in str(e).lower():
-            flash('As tabelas de reservas ainda não foram criadas. Por favor, execute a migration do banco de dados.', 'warning')
-            current_app.logger.error(f'Tabela espacos_comuns não existe: {e}')
+    # Verificar se tabela existe antes de consultar
+    if not _has_table('espacos_comuns'):
+        flash('As tabelas de reservas ainda não foram criadas. Por favor, execute a migration do banco de dados.', 'warning')
+        current_app.logger.error('Tabela espacos_comuns não existe')
+        espacos = []
+    else:
+        try:
+            espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar espaços: {e}')
             espacos = []
-        else:
-            raise
     
     # Estatísticas
     total_espacos = len(espacos)
     
-    try:
-        reservas_hoje = ReservaEspaco.query.filter_by(
-            tenant_id=tenant_id,
-            data_reserva=date.today()
-        ).count()
-        reservas_pendentes = ReservaEspaco.query.filter_by(
-            tenant_id=tenant_id,
-            status='pendente'
-        ).count()
-    except Exception as e:
-        # Se a tabela não existe, usar valores padrão
-        if 'no such table: reservas_espacos' in str(e).lower():
-            current_app.logger.error(f'Tabela reservas_espacos não existe: {e}')
+    # Verificar se tabela existe antes de consultar
+    if not _has_table('reservas_espacos'):
+        current_app.logger.error('Tabela reservas_espacos não existe')
+        reservas_hoje = 0
+        reservas_pendentes = 0
+    else:
+        try:
+            reservas_hoje = ReservaEspaco.query.filter_by(
+                tenant_id=tenant_id,
+                data_reserva=date.today()
+            ).count()
+            reservas_pendentes = ReservaEspaco.query.filter_by(
+                tenant_id=tenant_id,
+                status='pendente'
+            ).count()
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar reservas: {e}')
             reservas_hoje = 0
             reservas_pendentes = 0
-        else:
-            raise
     
     stats = {
         'total_espacos': total_espacos,
@@ -99,6 +116,11 @@ def novo_espaco():
 def editar_espaco(id):
     """Editar espaço comum"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('espacos_comuns'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.listar_espacos'))
+    
     espaco = EspacoComum.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     form = EspacoComumForm(obj=espaco)
     
@@ -132,36 +154,43 @@ def editar_espaco(id):
 def ver_espaco(id):
     """Ver detalhes do espaço comum"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('espacos_comuns'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.listar_espacos'))
+    
     espaco = EspacoComum.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     # Próximas reservas
-    try:
-        proximas_reservas = ReservaEspaco.query.filter_by(
-            espaco_id=id,
-            tenant_id=tenant_id
-        ).filter(
-            or_(
-                ReservaEspaco.data_reserva > date.today(),
-                and_(
-                    ReservaEspaco.data_reserva == date.today(),
-                    ReservaEspaco.hora_inicio >= datetime.now().time()
+    if not _has_table('reservas_espacos'):
+        current_app.logger.error('Tabela reservas_espacos não existe')
+        proximas_reservas = []
+        reservas_hoje = []
+    else:
+        try:
+            proximas_reservas = ReservaEspaco.query.filter_by(
+                espaco_id=id,
+                tenant_id=tenant_id
+            ).filter(
+                or_(
+                    ReservaEspaco.data_reserva > date.today(),
+                    and_(
+                        ReservaEspaco.data_reserva == date.today(),
+                        ReservaEspaco.hora_inicio >= datetime.now().time()
+                    )
                 )
-            )
-        ).order_by(ReservaEspaco.data_reserva, ReservaEspaco.hora_inicio).limit(10).all()
-        
-        # Reservas hoje
-        reservas_hoje = ReservaEspaco.query.filter_by(
-            espaco_id=id,
-            tenant_id=tenant_id,
-            data_reserva=date.today()
-        ).order_by(ReservaEspaco.hora_inicio).all()
-    except Exception as e:
-        if 'no such table: reservas_espacos' in str(e).lower():
-            current_app.logger.error(f'Tabela reservas_espacos não existe: {e}')
+            ).order_by(ReservaEspaco.data_reserva, ReservaEspaco.hora_inicio).limit(10).all()
+            
+            # Reservas hoje
+            reservas_hoje = ReservaEspaco.query.filter_by(
+                espaco_id=id,
+                tenant_id=tenant_id,
+                data_reserva=date.today()
+            ).order_by(ReservaEspaco.hora_inicio).all()
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar reservas: {e}')
             proximas_reservas = []
             reservas_hoje = []
-        else:
-            raise
     
     return render_template('reservas/espaco_detalhes.html',
                          title=f'Espaço: {espaco.nome}',
@@ -177,9 +206,20 @@ def solicitar_reserva():
     tenant_id = getattr(g, 'tenant_id', 1)
     form = ReservaEspacoForm()
     
+    # Verificar se tabelas existem
+    if not _has_table('espacos_comuns'):
+        flash('As tabelas de reservas ainda não foram criadas. Por favor, execute a migration do banco de dados.', 'warning')
+        current_app.logger.error('Tabela espacos_comuns não existe')
+        return render_template('reservas/solicitar.html', title='Solicitar Reserva', form=form)
+    
     # Configurar choices
-    espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
-    form.espaco_id.choices = [(e.id, e.nome) for e in espacos]
+    try:
+        espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
+        form.espaco_id.choices = [(e.id, e.nome) for e in espacos]
+    except Exception as e:
+        current_app.logger.error(f'Erro ao buscar espaços: {e}')
+        espacos = []
+        form.espaco_id.choices = []
     
     moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
     form.morador_id.choices = [(m.id, f"{m.nome_completo} - {m.bloco}-{m.apartamento}") for m in moradores]
@@ -188,7 +228,12 @@ def solicitar_reserva():
         espaco = EspacoComum.query.filter_by(id=form.espaco_id.data, tenant_id=tenant_id).first_or_404()
         
         # Verificar conflitos de horário
-        conflito = ReservaEspaco.query.filter_by(
+        if not _has_table('reservas_espacos'):
+            current_app.logger.error('Tabela reservas_espacos não existe')
+            conflito = None
+        else:
+            try:
+                conflito = ReservaEspaco.query.filter_by(
             tenant_id=tenant_id,
             espaco_id=espaco.id,
             data_reserva=form.data_reserva.data
@@ -207,7 +252,10 @@ def solicitar_reserva():
                     ReservaEspaco.hora_fim <= form.hora_fim.data
                 )
             )
-        ).filter(ReservaEspaco.status.in_(['pendente', 'aprovado'])).first()
+                ).filter(ReservaEspaco.status.in_(['pendente', 'aprovado'])).first()
+            except Exception as e:
+                current_app.logger.error(f'Erro ao verificar conflitos: {e}')
+                conflito = None
         
         if conflito:
             flash(f'Conflito de horário! Já existe uma reserva das {conflito.hora_inicio.strftime("%H:%M")} às {conflito.hora_fim.strftime("%H:%M")}', 'danger')
@@ -252,8 +300,37 @@ def minhas_reservas():
     tenant_id = getattr(g, 'tenant_id', 1)
     form = FiltroReservaForm(request.args)
     
+    # Verificar se tabelas existem
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        from flask_paginate import Pagination
+        return render_template('reservas/listar.html',
+                             title='Minhas Reservas',
+                             reservas=Pagination(page=1, per_page=15, total=0, items=[]),
+                             form=form)
+    
+    if not _has_table('espacos_comuns'):
+        espacos = []
+        form.espaco_id.choices = [('', 'Todos')]
+    else:
+        try:
+            espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
+            form.espaco_id.choices = [('', 'Todos')] + [(e.id, e.nome) for e in espacos]
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar espaços: {e}')
+            espacos = []
+            form.espaco_id.choices = [('', 'Todos')]
+    
     # Query base
-    query = ReservaEspaco.query.filter_by(tenant_id=tenant_id)
+    try:
+        query = ReservaEspaco.query.filter_by(tenant_id=tenant_id)
+    except Exception as e:
+        current_app.logger.error(f'Erro ao criar query: {e}')
+        from flask_paginate import Pagination
+        return render_template('reservas/listar.html',
+                             title='Minhas Reservas',
+                             reservas=Pagination(page=1, per_page=15, total=0, items=[]),
+                             form=form)
     
     if not current_user.is_admin():
         pass
@@ -271,15 +348,16 @@ def minhas_reservas():
     if form.data_fim.data:
         query = query.filter(ReservaEspaco.data_reserva <= form.data_fim.data)
     
-    # Configurar choices do formulário
-    espacos = EspacoComum.query.filter_by(tenant_id=tenant_id, ativo=True).all()
-    form.espaco_id.choices = [('', 'Todos')] + [(e.id, e.nome) for e in espacos]
-    
     # Paginação
-    page = request.args.get('page', 1, type=int)
-    reservas = query.order_by(ReservaEspaco.data_reserva.desc(), ReservaEspaco.hora_inicio.desc()).paginate(
-        page=page, per_page=15, error_out=False
-    )
+    try:
+        page = request.args.get('page', 1, type=int)
+        reservas = query.order_by(ReservaEspaco.data_reserva.desc(), ReservaEspaco.hora_inicio.desc()).paginate(
+            page=page, per_page=15, error_out=False
+        )
+    except Exception as e:
+        current_app.logger.error(f'Erro ao paginar reservas: {e}')
+        from flask_paginate import Pagination
+        reservas = Pagination(page=1, per_page=15, total=0, items=[])
     
     return render_template('reservas/listar.html',
                          title='Minhas Reservas',
@@ -292,6 +370,11 @@ def minhas_reservas():
 def aprovar_reserva(id):
     """Aprovar reserva"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.minhas_reservas'))
+    
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     if reserva.status != 'pendente':
@@ -313,6 +396,11 @@ def aprovar_reserva(id):
 def recusar_reserva(id):
     """Recusar reserva"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.minhas_reservas'))
+    
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     motivo = request.form.get('motivo', '')
@@ -337,9 +425,22 @@ def recusar_reserva(id):
 def ver_reserva(id):
     """Ver detalhes da reserva"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.minhas_reservas'))
+    
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
-    convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+    # Verificar se tabela de convidados existe
+    if _has_table('lista_convidados'):
+        try:
+            convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar convidados: {e}')
+            convidados = []
+    else:
+        convidados = []
     
     return render_template('reservas/reserva_detalhes.html',
                          title=f'Reserva {reserva.numero}',
@@ -352,6 +453,11 @@ def ver_reserva(id):
 def convidados_reserva(id):
     """Gerenciar lista de convidados da reserva"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.minhas_reservas'))
+    
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     if request.method == 'POST':
@@ -372,7 +478,15 @@ def convidados_reserva(id):
         flash('Convidado adicionado!', 'success')
         return redirect(url_for('reservas.convidados_reserva', id=id))
     
-    convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+    # Verificar se tabela de convidados existe
+    if _has_table('lista_convidados'):
+        try:
+            convidados = ListaConvidado.query.filter_by(reserva_id=id, tenant_id=tenant_id).order_by(ListaConvidado.nome).all()
+        except Exception as e:
+            current_app.logger.error(f'Erro ao buscar convidados: {e}')
+            convidados = []
+    else:
+        convidados = []
     return render_template('reservas/convidados.html', reserva=reserva, convidados=convidados)
 
 
@@ -380,6 +494,11 @@ def convidados_reserva(id):
 @login_required
 def remover_convidado(id, convidado_id):
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('lista_convidados'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.convidados_reserva', id=id))
+    
     convidado = ListaConvidado.query.filter_by(id=convidado_id, reserva_id=id, tenant_id=tenant_id).first_or_404()
     db.session.delete(convidado)
     db.session.commit()
@@ -392,6 +511,11 @@ def remover_convidado(id, convidado_id):
 def cancelar_reserva(id):
     """Cancelar reserva"""
     tenant_id = getattr(g, 'tenant_id', 1)
+    
+    if not _has_table('reservas_espacos'):
+        flash('As tabelas de reservas ainda não foram criadas.', 'warning')
+        return redirect(url_for('reservas.minhas_reservas'))
+    
     reserva = ReservaEspaco.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
     
     if reserva.status in ['concluido', 'cancelado']:
