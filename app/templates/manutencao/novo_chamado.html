@@ -1,30 +1,43 @@
-{% extends "base.html" %}
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('manutencao', 'novo') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Manutenção', 'url': url_for('manutencao.dashboard')},
+    {'text': 'Novo Chamado', 'url': '#'}
+]) }}
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-plus-circle text-success"></i>
+                    Novo Chamado de Manutenção
+                </h2>
+                <p class="text-muted mb-0">Preencha os dados abaixo para abrir um novo chamado</p>
+            </div>
+            <div>
+                <a href="{{ url_for('manutencao.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <!-- Header -->
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-plus-circle"></i> Novo Chamado de Manutenção
-                        </h4>
-                        <a href="{{ url_for('manutencao.dashboard') }}" class="btn btn-light btn-sm">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-info-circle"></i>
-                        Preencha os dados abaixo para abrir um novo chamado de manutenção. 
-                        Nossa equipe será notificada automaticamente.
-                    </p>
-                </div>
-            </div>
-
             <!-- Formulário -->
             <div class="card">
                 <div class="card-body">

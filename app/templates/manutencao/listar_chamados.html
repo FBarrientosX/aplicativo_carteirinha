@@ -1,12 +1,19 @@
-{% extends "base.html" %}
-{% from 'navigation/module_nav.html' import render_module_nav, render_breadcrumb %}
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('manutencao', 'chamados') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Manutenção', 'url': url_for('manutencao.dashboard')},
+    {'text': 'Listar Chamados', 'url': '#'}
+]) }}
+{% endblock %}
 
 {% block content %}
-<!-- Navegação contextual do módulo -->
-{{ render_module_nav('manutencao', 'chamados') }}
-{{ render_breadcrumb('manutencao', 'chamados', 'Lista de Chamados') }}
-
-<div class="container-fluid mt-4">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">

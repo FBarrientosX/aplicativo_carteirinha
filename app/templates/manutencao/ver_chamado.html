@@ -1,31 +1,49 @@
-{% extends "base.html" %}
+{% extends "base_sidebar.html" %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
 
-{% block title %}{{ title }} - CondoTech Solutions{% endblock %}
+{% block sidebar_nav %}
+{{ render_sidebar_nav('manutencao', 'chamados') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Manutenção', 'url': url_for('manutencao.dashboard')},
+    {'text': 'Chamados', 'url': url_for('manutencao.listar_chamados')},
+    {'text': 'Chamado #' + chamado.numero|string, 'url': '#'}
+]) }}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Cabeçalho -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-1">Chamado #{{ chamado.numero }}</h1>
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-calendar me-2"></i>
-                        Aberto em {{ chamado.data_abertura.strftime('%d/%m/%Y às %H:%M') if chamado.data_abertura else 'N/A' }}
-                    </p>
-                </div>
-                <div>
-                    <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Voltar
-                    </a>
-                    {% if current_user.is_admin() %}
-                    <a href="{{ url_for('manutencao.editar_chamado', id=chamado.id) }}" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i>Editar
-                    </a>
-                    {% endif %}
-                </div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-clipboard-list text-success"></i>
+                    Chamado #{{ chamado.numero }}
+                </h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-calendar me-2"></i>
+                    Aberto em {{ chamado.data_abertura.strftime('%d/%m/%Y às %H:%M') if chamado.data_abertura else 'N/A' }}
+                </p>
             </div>
+            <div class="btn-group">
+                <a href="{{ url_for('manutencao.listar_chamados') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                {% if current_user.is_admin() %}
+                <a href="{{ url_for('manutencao.editar_chamado', id=chamado.id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
 
             <!-- Status e Informações Principais -->
             <div class="row mb-4">
