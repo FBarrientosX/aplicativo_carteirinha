@@ -1,8 +1,9 @@
 {% extends "base_sidebar.html" %}
 {% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
 
 {% block sidebar_nav %}
-{% include 'navigation/sidebar_nav.html' %}
+{{ render_sidebar_nav('piscina', 'dashboard') }}
 {% endblock %}
 
 {% block breadcrumbs %}
