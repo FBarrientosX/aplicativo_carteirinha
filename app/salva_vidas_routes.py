@@ -61,7 +61,7 @@ def processar_qr():
                     morador_id = dados_qr.get('id')
                     
                     if morador_id:
-                        morador = Morador.query.get(morador_id)
+                        morador = Morador.get_safe(morador_id)
                         if not morador:
                             erro = "Morador não encontrado no sistema"
                     else:
@@ -115,7 +115,7 @@ def registrar_acesso(morador_id, tipo):
     if tipo not in ['entrada', 'saida']:
         return jsonify({'error': 'Tipo de acesso inválido'}), 400
     
-    morador = Morador.query.get_or_404(morador_id)
+    morador = Morador.get_or_404_safe(morador_id)
     
     # Verificar se o morador está atualmente na piscina
     esta_dentro = RegistroAcesso.morador_esta_na_piscina(morador.id)
@@ -187,7 +187,7 @@ def buscar_morador():
         # Tentar buscar por ID primeiro
         try:
             morador_id = int(termo_busca)
-            morador = Morador.query.get(morador_id)
+            morador = Morador.get_safe(morador_id)
             if morador:
                 return jsonify({
                     'success': True,

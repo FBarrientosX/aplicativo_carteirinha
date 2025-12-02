@@ -118,7 +118,7 @@ def novo_morador():
 @bp.route('/morador/<int:id>/editar', methods=['GET', 'POST'])
 def editar_morador(id):
     """Editar morador existente"""
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     form = MoradorForm(obj=morador)
     
     if form.validate_on_submit():
@@ -170,7 +170,7 @@ def editar_morador(id):
 @bp.route('/morador/<int:id>')
 def ver_morador(id):
     """Ver detalhes do morador"""
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     return render_template('moradores/detalhes.html',
                          title=f'Morador: {morador.nome_completo}',
                          morador=morador)
@@ -178,7 +178,7 @@ def ver_morador(id):
 @bp.route('/morador/<int:id>/validar', methods=['GET', 'POST'])
 def validar_carteirinha(id):
     """Validar carteirinha do morador"""
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     form = ValidarCarteirinhaForm()
     
     if form.validate_on_submit():
@@ -206,7 +206,7 @@ def listar_anexos(id):
     """Listar anexos do morador"""
     try:
         tenant_id = getattr(g, 'tenant_id', 1)
-        morador = Morador.query.get_or_404(id)
+        morador = Morador.get_or_404_safe(id)
         
         # Verificar tenant_id (se aplicável)
         if hasattr(morador, 'tenant_id') and morador.tenant_id != tenant_id:
@@ -807,7 +807,7 @@ def foto_salva_vidas(filename):
 @bp.route('/morador/<int:id>/carteirinha')
 def visualizar_carteirinha(id):
     """Visualizar carteirinha do morador"""
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     condominio = Condominio.query.first()
     
     return render_template('moradores/carteirinha.html',
@@ -826,7 +826,7 @@ def gerar_carteirinha_png(id):
     try:
         print(f"Iniciando geração da carteirinha para morador ID: {id}")
         
-        morador = Morador.query.get_or_404(id)
+        morador = Morador.get_or_404_safe(id)
         print(f"Morador encontrado: {morador.nome_completo}")
         
         condominio = Condominio.query.first()
@@ -868,7 +868,7 @@ def gerar_carteirinha_png(id):
 @bp.route('/morador/<int:id>/carteirinha/download-pdf')
 def download_carteirinha_pdf(id):
     """Download da carteirinha em PDF"""
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     condominio = Condominio.query.first()
     
     try:
@@ -1059,7 +1059,7 @@ def notificacoes_resultado():
 def ajustar_vencimento(id):
     """Ajustar data de vencimento de um morador"""
     from app.forms import AjusteVencimentoForm
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     form = AjusteVencimentoForm()
     
     if form.validate_on_submit():
@@ -1122,7 +1122,7 @@ def notificar_morador(id, tipo):
     from app.email_service import mail
     mail.init_app(current_app)
     
-    morador = Morador.query.get_or_404(id)
+    morador = Morador.get_or_404_safe(id)
     
     try:
         if tipo == '30_dias':
@@ -1356,8 +1356,8 @@ def controle_acesso():
                 'duracao_permanencia': None
             })()
             
-            # Carregar morador relacionado
-            registro.morador = Morador.query.get(registro.morador_id)
+            # Carregar morador relacionado usando método seguro
+            registro.morador = Morador.get_safe(registro.morador_id)
             
             # Calcular duração de permanência se for saída
             if registro.tipo == 'saida' and registro.data_hora:
@@ -1516,7 +1516,7 @@ def acesso_qrcode():
                 morador_id = dados_qr.get('id')
                 
                 if morador_id:
-                    morador = Morador.query.get(morador_id)
+                    morador = Morador.get_safe(morador_id)
                     if not morador:
                         erro = "Morador não encontrado no sistema"
                 else:
@@ -1526,7 +1526,7 @@ def acesso_qrcode():
                 # Se não for JSON, tentar como ID direto
                 try:
                     morador_id = int(form.codigo_qr.data)
-                    morador = Morador.query.get(morador_id)
+                    morador = Morador.get_safe(morador_id)
                     if not morador:
                         erro = "Morador não encontrado"
                 except ValueError:
@@ -1719,7 +1719,7 @@ def historico_acesso():
                 'guardiao': row[5],
                 'observacoes': row[6],
                 'ip_origem': row[7],
-                'morador': Morador.query.get(row[1]),
+                'morador': Morador.get_safe(row[1]),
                 'duracao_permanencia': None
             })()
             items.append(registro)

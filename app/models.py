@@ -54,6 +54,87 @@ class Morador(db.Model):
     # Relacionamento com anexos
     anexos = db.relationship('AnexoMorador', backref='morador', lazy='dynamic', cascade='all, delete-orphan')
     
+    @staticmethod
+    def _get_existing_columns():
+        """Retorna lista de colunas que existem na tabela moradores"""
+        try:
+            from sqlalchemy import inspect
+            if hasattr(db, 'session') and db.session.bind:
+                conn = db.session.bind
+                inspector = inspect(conn)
+                columns = [col['name'] for col in inspector.get_columns('moradores')]
+                return set(columns)
+        except Exception:
+            pass
+        # Se não conseguir verificar, retorna colunas básicas
+        return {'id', 'nome_completo', 'bloco', 'apartamento', 'email', 'celular', 'eh_titular', 
+                'data_vencimento', 'carteirinha_ativa', 'data_cadastro', 'condominio_id'}
+    
+    @classmethod
+    def get_safe(cls, morador_id):
+        """Busca morador usando SQL direto para evitar problemas com colunas faltantes"""
+        try:
+            from sqlalchemy import text
+            existing_cols = cls._get_existing_columns()
+            
+            # Colunas obrigatórias que sempre devem existir
+            base_cols = ['id', 'nome_completo', 'bloco', 'apartamento', 'email', 'celular', 
+                        'eh_titular', 'carteirinha_ativa', 'data_cadastro', 'condominio_id']
+            
+            # Adicionar colunas opcionais se existirem
+            optional_cols = ['tenant_id', 'email_titular', 'data_ultima_validacao', 'data_vencimento',
+                           'observacoes', 'notificacao_30_dias_enviada', 'notificacao_vencimento_enviada',
+                           'data_atualizacao']
+            
+            cols_to_select = [col for col in base_cols if col in existing_cols]
+            cols_to_select.extend([col for col in optional_cols if col in existing_cols])
+            
+            # Construir query SQL
+            cols_str = ', '.join(cols_to_select)
+            sql = text(f"SELECT {cols_str} FROM moradores WHERE id = :morador_id")
+            result = db.session.execute(sql, {'morador_id': morador_id}).fetchone()
+            
+            if not result:
+                return None
+            
+            # Criar instância do modelo com os dados
+            morador = cls()
+            for i, col in enumerate(cols_to_select):
+                setattr(morador, col, result[i])
+            
+            return morador
+        except Exception:
+            # Último recurso: buscar apenas colunas básicas
+            try:
+                from sqlalchemy import text
+                sql = text("SELECT id, nome_completo, bloco, apartamento, email, celular, eh_titular, carteirinha_ativa, data_cadastro, condominio_id FROM moradores WHERE id = :morador_id")
+                result = db.session.execute(sql, {'morador_id': morador_id}).fetchone()
+                if result:
+                    morador = cls()
+                    morador.id = result[0]
+                    morador.nome_completo = result[1]
+                    morador.bloco = result[2]
+                    morador.apartamento = result[3]
+                    morador.email = result[4]
+                    morador.celular = result[5]
+                    morador.eh_titular = result[6] if result[6] is not None else True
+                    morador.carteirinha_ativa = result[7] if result[7] is not None else False
+                    morador.data_cadastro = result[8] if result[8] is not None else datetime.utcnow()
+                    morador.condominio_id = result[9] if result[9] is not None else 1
+                    return morador
+            except Exception:
+                pass
+            return None
+    
+    @classmethod
+    def get_or_404_safe(cls, morador_id):
+        """Busca morador usando método seguro, retorna 404 se não encontrar"""
+        from flask import abort
+        morador = cls.get_safe(morador_id)
+        if not morador:
+            abort(404)
+        return morador
+    
     def __repr__(self):
         return f'<Morador {self.nome_completo}>'
     
