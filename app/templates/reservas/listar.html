@@ -1,0 +1,235 @@
+{% extends "base_sidebar.html" %}
+{% from 'navigation/sidebar_nav.html' import render_sidebar_nav %}
+{% from 'components/breadcrumbs.html' import render_breadcrumbs %}
+
+{% block sidebar_nav %}
+{{ render_sidebar_nav('reservas', 'minhas') }}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ render_breadcrumbs([
+    {'text': 'Reservas', 'url': url_for('reservas.listar_espacos')},
+    {'text': 'Minhas Reservas', 'url': '#'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-calendar-check text-primary"></i>
+                        Minhas Reservas
+                    </h2>
+                    <p class="text-muted mb-0">Gerencie suas reservas de espaços comuns</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('reservas.solicitar_reserva') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nova Reserva
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.espaco_id.label(class="form-label") }}
+                            {{ form.espaco_id(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.data_inicio.label(class="form-label") }}
+                            {{ form.data_inicio(class="form-control", type="date") }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.data_fim.label(class="form-label") }}
+                            {{ form.data_fim(class="form-control", type="date") }}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('reservas.minhas_reservas') }}" class="btn btn-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Reservas -->
+    <div class="card">
+        <div class="card-body">
+            {% if reservas.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Espaço</th>
+                            <th>Data</th>
+                            <th>Horário</th>
+                            <th>Morador</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reserva in reservas.items %}
+                        <tr>
+                            <td><strong>{{ reserva.numero }}</strong></td>
+                            <td>
+                                {% if reserva.espaco %}
+                                    {{ reserva.espaco.nome }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ reserva.data_reserva.strftime('%d/%m/%Y') if reserva.data_reserva else '-' }}</td>
+                            <td>
+                                {% if reserva.hora_inicio and reserva.hora_fim %}
+                                    {{ reserva.hora_inicio.strftime('%H:%M') }} - {{ reserva.hora_fim.strftime('%H:%M') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reserva.morador %}
+                                    {{ reserva.morador.nome_completo }}<br>
+                                    <small class="text-muted">{{ reserva.morador.bloco }}-{{ reserva.morador.apartamento }}</small>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reserva.status == 'pendente' %}
+                                    <span class="badge bg-warning">Pendente</span>
+                                {% elif reserva.status == 'aprovado' %}
+                                    <span class="badge bg-success">Aprovado</span>
+                                {% elif reserva.status == 'recusado' %}
+                                    <span class="badge bg-danger">Recusado</span>
+                                {% elif reserva.status == 'cancelado' %}
+                                    <span class="badge bg-secondary">Cancelado</span>
+                                {% elif reserva.status == 'concluido' %}
+                                    <span class="badge bg-info">Concluído</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ reserva.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('reservas.ver_reserva', id=reserva.id) }}" class="btn btn-sm btn-info" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if reserva.status == 'pendente' and current_user.is_admin() %}
+                                    <form method="POST" action="{{ url_for('reservas.aprovar_reserva', id=reserva.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Aprovar" onclick="return confirm('Aprovar esta reserva?')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-danger" title="Recusar" onclick="recusarReserva({{ reserva.id }})">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                {% endif %}
+                                {% if reserva.status in ['pendente', 'aprovado'] %}
+                                    <form method="POST" action="{{ url_for('reservas.cancelar_reserva', id=reserva.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Cancelar" onclick="return confirm('Cancelar esta reserva?')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if reservas.pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if reservas.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reservas.prev_num }}{% if form.espaco_id.data %}&espaco_id={{ form.espaco_id.data }}{% endif %}{% if form.status.data %}&status={{ form.status.data }}{% endif %}{% if form.data_inicio.data %}&data_inicio={{ form.data_inicio.data }}{% endif %}{% if form.data_fim.data %}&data_fim={{ form.data_fim.data }}{% endif %}">Anterior</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in reservas.iter_pages() %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == reservas.page %}active{% endif %}">
+                                <a class="page-link" href="?page={{ page_num }}{% if form.espaco_id.data %}&espaco_id={{ form.espaco_id.data }}{% endif %}{% if form.status.data %}&status={{ form.status.data }}{% endif %}{% if form.data_inicio.data %}&data_inicio={{ form.data_inicio.data }}{% endif %}{% if form.data_fim.data %}&data_fim={{ form.data_fim.data }}{% endif %}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if reservas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reservas.next_num }}{% if form.espaco_id.data %}&espaco_id={{ form.espaco_id.data }}{% endif %}{% if form.status.data %}&status={{ form.status.data }}{% endif %}{% if form.data_inicio.data %}&data_inicio={{ form.data_inicio.data }}{% endif %}{% if form.data_fim.data %}&data_fim={{ form.data_fim.data }}{% endif %}">Próxima</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Nenhuma reserva encontrada.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para recusar reserva -->
+<div class="modal fade" id="recusarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Recusar Reserva</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="recusarForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo da Recusa</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Recusar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function recusarReserva(reservaId) {
+    const form = document.getElementById('recusarForm');
+    form.action = `/reservas/reserva/${reservaId}/recusar`;
+    const modal = new bootstrap.Modal(document.getElementById('recusarModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
+
