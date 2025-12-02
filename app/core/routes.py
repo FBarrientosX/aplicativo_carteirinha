@@ -21,8 +21,21 @@ def configurar_condominio():
     """Configuração do condomínio (apenas admin)"""
     tenant_id = get_tenant_id()
     
-    # Buscar condomínio do tenant
-    condominio = Condominio.query.filter_by(tenant_id=tenant_id).first()
+    # Buscar condomínio do tenant (resiliente - funciona com ou sem tenant_id)
+    from sqlalchemy import inspect, text
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        columns = [col['name'] for col in inspector.get_columns('condominio')]
+        has_tenant_id = 'tenant_id' in columns
+    except Exception:
+        has_tenant_id = False
+    
+    if has_tenant_id:
+        condominio = Condominio.query.filter_by(tenant_id=tenant_id).first()
+    else:
+        # Se não tiver tenant_id, buscar qualquer condomínio (compatibilidade)
+        condominio = Condominio.query.first()
     
     form = ConfiguracaoCondominioForm(obj=condominio)
     
@@ -46,21 +59,30 @@ def configurar_condominio():
             condominio.data_atualizacao = datetime.utcnow()
         else:
             # Criar novo
-            condominio = Condominio(
-                tenant_id=tenant_id,
-                nome=form.nome.data,
-                cnpj=form.cnpj.data,
-                endereco=form.endereco.data,
-                telefone=form.telefone.data,
-                email_administracao=form.email_administracao.data,
-                whatsapp=form.whatsapp.data,
-                horario_funcionamento=form.horario_funcionamento.data,
-                dias_aviso_vencimento=form.dias_aviso_vencimento.data,
-                meses_validade_padrao=form.meses_validade_padrao.data,
-                permitir_dependentes=form.permitir_dependentes.data,
-                cor_primaria=form.cor_primaria.data,
-                cor_secundaria=form.cor_secundaria.data
-            )
+            condominio_data = {
+                'nome': form.nome.data,
+                'cnpj': form.cnpj.data,
+                'endereco': form.endereco.data,
+                'telefone': form.telefone.data,
+                'email_administracao': form.email_administracao.data,
+                'whatsapp': form.whatsapp.data,
+                'horario_funcionamento': form.horario_funcionamento.data,
+                'dias_aviso_vencimento': form.dias_aviso_vencimento.data,
+                'meses_validade_padrao': form.meses_validade_padrao.data,
+                'permitir_dependentes': form.permitir_dependentes.data,
+                'cor_primaria': form.cor_primaria.data,
+                'cor_secundaria': form.cor_secundaria.data
+            }
+            # Só adicionar tenant_id se a coluna existir
+            if has_tenant_id:
+                condominio_data['tenant_id'] = tenant_id
+            # Adicionar campos opcionais se existirem no form
+            if hasattr(form, 'email_portaria') and form.email_portaria.data:
+                condominio_data['email_portaria'] = form.email_portaria.data
+            if hasattr(form, 'email_sindico') and form.email_sindico.data:
+                condominio_data['email_sindico'] = form.email_sindico.data
+            
+            condominio = Condominio(**condominio_data)
             db.session.add(condominio)
         
         db.session.commit()
@@ -80,10 +102,26 @@ def listar_funcionarios():
     """Listar funcionários do condomínio"""
     tenant_id = get_tenant_id()
     
-    funcionarios = Usuario.query.filter(
-        Usuario.tenant_id == tenant_id,
-        Usuario.tipo_usuario.in_(['portaria', 'funcionario', 'salva_vidas'])
-    ).order_by(Usuario.nome_completo).all()
+    # Verificar se tenant_id existe na tabela usuarios
+    from sqlalchemy import inspect, text
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        columns = [col['name'] for col in inspector.get_columns('usuarios')]
+        has_tenant_id = 'tenant_id' in columns
+    except Exception:
+        has_tenant_id = False
+    
+    if has_tenant_id:
+        funcionarios = Usuario.query.filter(
+            Usuario.tenant_id == tenant_id,
+            Usuario.tipo_usuario.in_(['portaria', 'funcionario', 'salva_vidas'])
+        ).order_by(Usuario.nome_completo).all()
+    else:
+        # Sem tenant_id, buscar todos os funcionários
+        funcionarios = Usuario.query.filter(
+            Usuario.tipo_usuario.in_(['portaria', 'funcionario', 'salva_vidas'])
+        ).order_by(Usuario.nome_completo).all()
     
     return render_template('admin/funcionarios.html',
                          title='Funcionários',
@@ -101,15 +139,29 @@ def novo_funcionario():
     tenant_id = get_tenant_id()
     
     if form.validate_on_submit():
-        funcionario = Usuario(
-            tenant_id=tenant_id,
-            tipo_usuario=form.tipo_usuario.data,
-            nome_completo=form.nome_completo.data,
-            email=form.email.data,
-            username=form.username.data,
-            cargo=form.cargo.data,
-            ativo=True
-        )
+        # Verificar se tenant_id existe na tabela usuarios
+        from sqlalchemy import inspect
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            columns = [col['name'] for col in inspector.get_columns('usuarios')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
+        
+        funcionario_data = {
+            'tipo_usuario': form.tipo_usuario.data,
+            'nome_completo': form.nome_completo.data,
+            'email': form.email.data,
+            'username': form.username.data,
+            'cargo': form.cargo.data,
+            'ativo': True
+        }
+        # Só adicionar tenant_id se a coluna existir
+        if has_tenant_id:
+            funcionario_data['tenant_id'] = tenant_id
+        
+        funcionario = Usuario(**funcionario_data)
         funcionario.set_password(form.password.data)
         
         db.session.add(funcionario)
@@ -131,7 +183,21 @@ def editar_funcionario(id):
     from app.forms import FuncionarioForm
     
     tenant_id = get_tenant_id()
-    funcionario = Usuario.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    
+    # Verificar se tenant_id existe na tabela usuarios
+    from sqlalchemy import inspect
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        columns = [col['name'] for col in inspector.get_columns('usuarios')]
+        has_tenant_id = 'tenant_id' in columns
+    except Exception:
+        has_tenant_id = False
+    
+    if has_tenant_id:
+        funcionario = Usuario.query.filter_by(id=id, tenant_id=tenant_id).first_or_404()
+    else:
+        funcionario = Usuario.query.filter_by(id=id).first_or_404()
     
     form = FuncionarioForm(obj=funcionario)
     

@@ -33,13 +33,34 @@ def dashboard():
     moradores_na_piscina = RegistroAcessoPiscina.obter_moradores_na_piscina(tenant_id)
     total_na_piscina = len(moradores_na_piscina)
     
+    # Verificar se tenant_id existe na tabela registros_acesso_piscina
+    from sqlalchemy import inspect
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        tables = inspector.get_table_names()
+        if 'registros_acesso_piscina' in tables:
+            columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+            has_tenant_id_registro = 'tenant_id' in columns
+        else:
+            has_tenant_id_registro = False
+    except Exception:
+        has_tenant_id_registro = False
+    
     # Tempo médio de permanência (últimas 24h)
-    registros_24h = RegistroAcessoPiscina.query.filter(
-        RegistroAcessoPiscina.tenant_id == tenant_id,
-        RegistroAcessoPiscina.tipo == 'saida',
-        RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
-        RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
-    ).all()
+    if has_tenant_id_registro:
+        registros_24h = RegistroAcessoPiscina.query.filter(
+            RegistroAcessoPiscina.tenant_id == tenant_id,
+            RegistroAcessoPiscina.tipo == 'saida',
+            RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
+            RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
+        ).all()
+    else:
+        registros_24h = RegistroAcessoPiscina.query.filter(
+            RegistroAcessoPiscina.tipo == 'saida',
+            RegistroAcessoPiscina.timestamp >= datetime.utcnow() - timedelta(hours=24),
+            RegistroAcessoPiscina.tempo_permanencia_minutos.isnot(None)
+        ).all()
     
     tempo_medio = 0
     if registros_24h:
@@ -125,11 +146,32 @@ def registrar_acesso():
         
         # Verificar carteirinha válida
         morador = Morador.query.get_or_404(morador_id)
-        carteirinha = CarteirinhaPiscina.query.filter_by(
-            morador_id=morador_id,
-            tenant_id=tenant_id,
-            ativa=True
-        ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
+        
+        # Verificar se tenant_id existe na tabela carteirinhas_piscina
+        from sqlalchemy import inspect
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'carteirinhas_piscina' in tables:
+                columns = [col['name'] for col in inspector.get_columns('carteirinhas_piscina')]
+                has_tenant_id = 'tenant_id' in columns
+            else:
+                has_tenant_id = False
+        except Exception:
+            has_tenant_id = False
+        
+        if has_tenant_id:
+            carteirinha = CarteirinhaPiscina.query.filter_by(
+                morador_id=morador_id,
+                tenant_id=tenant_id,
+                ativa=True
+            ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
+        else:
+            carteirinha = CarteirinhaPiscina.query.filter_by(
+                morador_id=morador_id,
+                ativa=True
+            ).order_by(CarteirinhaPiscina.data_criacao.desc()).first()
         
         if not carteirinha or not carteirinha.esta_valida:
             flash('Carteirinha inválida ou vencida!', 'danger')
@@ -146,17 +188,35 @@ def registrar_acesso():
             flash(f'{morador.nome_completo} não está na piscina!', 'warning')
             return render_template('piscina/registrar_acesso.html', form=form)
         
+        # Verificar se tenant_id existe na tabela registros_acesso_piscina
+        from sqlalchemy import inspect
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'registros_acesso_piscina' in tables:
+                columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+                has_tenant_id_registro = 'tenant_id' in columns
+            else:
+                has_tenant_id_registro = False
+        except Exception:
+            has_tenant_id_registro = False
+        
         # Criar registro
-        registro = RegistroAcessoPiscina(
-            tenant_id=tenant_id,
-            morador_id=morador_id,
-            carteirinha_id=carteirinha.id,
-            salva_vidas_id=current_user.id if current_user.is_salva_vidas() else None,
-            tipo=tipo,
-            metodo=form.metodo.data,
-            observacoes=form.observacoes.data,
-            ip_origem=request.remote_addr
-        )
+        registro_data = {
+            'morador_id': morador_id,
+            'carteirinha_id': carteirinha.id,
+            'salva_vidas_id': current_user.id if current_user.is_salva_vidas() else None,
+            'tipo': tipo,
+            'metodo': form.metodo.data,
+            'observacoes': form.observacoes.data,
+            'ip_origem': request.remote_addr
+        }
+        # Só adicionar tenant_id se a coluna existir
+        if has_tenant_id_registro:
+            registro_data['tenant_id'] = tenant_id
+        
+        registro = RegistroAcessoPiscina(**registro_data)
         
         # Se for saída, calcular tempo de permanência
         if tipo == 'saida':
@@ -242,7 +302,20 @@ def nova_ocorrencia():
     form = OcorrenciaPiscinaForm()
     
     # Carregar moradores para o select
-    moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+    # Verificar se tenant_id existe na tabela moradores
+    from sqlalchemy import inspect
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        columns = [col['name'] for col in inspector.get_columns('moradores')]
+        has_tenant_id = 'tenant_id' in columns
+    except Exception:
+        has_tenant_id = False
+    
+    if has_tenant_id:
+        moradores = Morador.query.filter_by(tenant_id=tenant_id).order_by(Morador.nome_completo).all()
+    else:
+        moradores = Morador.query.order_by(Morador.nome_completo).all()
     form.morador_id.choices = [('', 'Nenhum')] + [(str(m.id), m.nome_completo) for m in moradores]
     
     if form.validate_on_submit():
@@ -273,8 +346,25 @@ def listar_ocorrencias():
     """Listar ocorrências"""
     tenant_id = get_tenant_id_safe()
     
-    ocorrencias = OcorrenciaPiscina.query.filter_by(
-        tenant_id=tenant_id
-    ).order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
+    # Verificar se tenant_id existe na tabela ocorrencias_piscina
+    from sqlalchemy import inspect
+    try:
+        conn = db.session.bind
+        inspector = inspect(conn)
+        tables = inspector.get_table_names()
+        if 'ocorrencias_piscina' in tables:
+            columns = [col['name'] for col in inspector.get_columns('ocorrencias_piscina')]
+            has_tenant_id_ocorrencia = 'tenant_id' in columns
+        else:
+            has_tenant_id_ocorrencia = False
+    except Exception:
+        has_tenant_id_ocorrencia = False
+    
+    if has_tenant_id_ocorrencia:
+        ocorrencias = OcorrenciaPiscina.query.filter_by(
+            tenant_id=tenant_id
+        ).order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
+    else:
+        ocorrencias = OcorrenciaPiscina.query.order_by(OcorrenciaPiscina.data_ocorrencia.desc()).limit(50).all()
     
     return render_template('piscina/ocorrencias.html', ocorrencias=ocorrencias)

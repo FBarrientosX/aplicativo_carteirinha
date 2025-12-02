@@ -48,8 +48,8 @@ class Morador(db.Model):
     # Relacionamento com condomínio (mantido por compatibilidade)
     condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'), default=1)
     
-    # NOVO: Multi-tenancy
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    # NOVO: Multi-tenancy - nullable para compatibilidade
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # Relacionamento com anexos
     anexos = db.relationship('AnexoMorador', backref='morador', lazy='dynamic', cascade='all, delete-orphan')
@@ -131,8 +131,8 @@ class AnexoMorador(db.Model):
     # tipo_anexo = db.Column(db.String(20), nullable=False, default='documento')  # Temporariamente comentado
     data_upload = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # NOVO: Multi-tenancy
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    # NOVO: Multi-tenancy - nullable para compatibilidade
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     def __repr__(self):
         return f'<AnexoMorador {self.nome_original}>'
@@ -160,8 +160,8 @@ class LogNotificacao(db.Model):
     mensagem_erro = db.Column(db.Text, nullable=True)
     data_envio = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # NOVO: Multi-tenancy
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    # NOVO: Multi-tenancy - nullable para compatibilidade
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     def __repr__(self):
         return f'<LogNotificacao {self.tipo_notificacao} - {self.email_enviado}>'
@@ -218,8 +218,8 @@ class Condominio(db.Model):
     __tablename__ = 'condominio'
     
     id = db.Column(db.Integer, primary_key=True)
-    # Multi-tenancy
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True, default=1)
+    # Multi-tenancy - nullable para compatibilidade
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # Dados básicos
     nome = db.Column(db.String(200), nullable=False)
@@ -227,30 +227,30 @@ class Condominio(db.Model):
     endereco = db.Column(db.Text, nullable=False)
     telefone = db.Column(db.String(20), nullable=True)
     
-    # E-mails de configuração
+    # E-mails de configuração - nullable para compatibilidade
     email_administracao = db.Column(db.String(120), nullable=False)
     email_portaria = db.Column(db.String(120), nullable=True)
     email_sindico = db.Column(db.String(120), nullable=True)
     whatsapp = db.Column(db.String(20), nullable=True)
     
-    # Documentos (JSON com URLs ou paths)
-    documentos = db.Column(db.JSON, default=[])
+    # Documentos (JSON com URLs ou paths) - nullable para compatibilidade
+    documentos = db.Column(db.JSON, nullable=True)
     
     # Personalização visual
     logo_filename = db.Column(db.String(100), nullable=True)
-    cor_primaria = db.Column(db.String(7), default='#007bff')
-    cor_secundaria = db.Column(db.String(7), default='#6c757d')
+    cor_primaria = db.Column(db.String(7), nullable=True)
+    cor_secundaria = db.Column(db.String(7), nullable=True)
     
     # Configurações específicas
     horario_funcionamento = db.Column(db.String(100), nullable=True)
-    dias_aviso_vencimento = db.Column(db.Integer, default=30)
-    meses_validade_padrao = db.Column(db.Integer, default=12)
-    permitir_dependentes = db.Column(db.Boolean, default=True)
+    dias_aviso_vencimento = db.Column(db.Integer, nullable=True)
+    meses_validade_padrao = db.Column(db.Integer, nullable=True)
+    permitir_dependentes = db.Column(db.Boolean, nullable=True)
     
     # Timestamps
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    ativo = db.Column(db.Boolean, default=True)
+    data_atualizacao = db.Column(db.DateTime, nullable=True)  # nullable para compatibilidade
+    ativo = db.Column(db.Boolean, nullable=True)
     
     # Relacionamentos
     unidades = db.relationship('Unidade', backref='condominio', lazy=True, cascade='all, delete-orphan')
@@ -265,7 +265,7 @@ class Unidade(db.Model):
     __tablename__ = 'unidades'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True, default=1)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)  # nullable para compatibilidade
     condominio_id = db.Column(db.Integer, db.ForeignKey('condominio.id'), nullable=False)
     
     bloco = db.Column(db.String(10), nullable=False)
@@ -307,25 +307,26 @@ class Usuario(UserMixin, db.Model):
     # Valores: 'admin', 'sindico', 'morador', 'portaria', 'funcionario', 'salva_vidas'
     nome_completo = db.Column(db.String(200), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
-    email_verificado = db.Column(db.Boolean, default=False)
+    email_verificado = db.Column(db.Boolean, nullable=True)  # nullable=True para compatibilidade
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_ultimo_login = db.Column(db.DateTime, nullable=True)
-    data_ultimo_acesso = db.Column(db.DateTime, nullable=True)
+    data_ultimo_acesso = db.Column(db.DateTime, nullable=True)  # nullable=True para compatibilidade
     
     # Multi-tenancy
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, default=1)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # Sistema de permissões
-    permissoes = db.Column(db.JSON, default={})
+    permissoes = db.Column(db.JSON, nullable=True)  # nullable=True para compatibilidade
     cargo = db.Column(db.String(100), nullable=True)
     
-    # Relacionamento com Unidade (se for morador)
+    # Relacionamento com Unidade (se for morador) - nullable para compatibilidade
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidades.id'), nullable=True)
-    unidade = db.relationship('Unidade', backref='usuarios')
+    unidade = db.relationship('Unidade', backref='usuarios', foreign_keys=[unidade_id])
     
     # Relacionamento com salva-vidas (se aplicável)
     salva_vidas_id = db.Column(db.Integer, db.ForeignKey('salva_vidas.id'), nullable=True)
     salva_vidas = db.relationship('SalvaVidas', backref='usuario', uselist=False)
+    
     
     def set_password(self, password):
         """Define a senha do usuário"""
