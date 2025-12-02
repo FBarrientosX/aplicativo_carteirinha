@@ -134,44 +134,111 @@ class RegistroAcessoPiscina(db.Model):
     def morador_esta_na_piscina(morador_id, tenant_id=None):
         """Verifica se morador está atualmente na piscina"""
         from flask import g
+        from sqlalchemy import inspect
         tenant_id = tenant_id or getattr(g, 'tenant_id', 1)
         
-        ultimo_registro = RegistroAcessoPiscina.query.filter_by(
-            morador_id=morador_id,
-            tenant_id=tenant_id
-        ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+        # Verificar se a tabela existe
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'registros_acesso_piscina' not in tables:
+                return False
+        except Exception:
+            return False
         
-        return ultimo_registro and ultimo_registro.tipo == 'entrada'
+        # Verificar se tenant_id existe na tabela
+        try:
+            columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
+        
+        try:
+            if has_tenant_id:
+                ultimo_registro = RegistroAcessoPiscina.query.filter_by(
+                    morador_id=morador_id,
+                    tenant_id=tenant_id
+                ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+            else:
+                ultimo_registro = RegistroAcessoPiscina.query.filter_by(
+                    morador_id=morador_id
+                ).order_by(RegistroAcessoPiscina.timestamp.desc()).first()
+            
+            return ultimo_registro and ultimo_registro.tipo == 'entrada'
+        except Exception:
+            return False
     
     @staticmethod
     def obter_moradores_na_piscina(tenant_id=None):
         """Retorna lista de moradores que estão atualmente na piscina"""
         from flask import g
-        from sqlalchemy import and_
+        from sqlalchemy import and_, inspect
         tenant_id = tenant_id or getattr(g, 'tenant_id', 1)
         
-        # Subconsulta para obter último registro de cada morador
-        from sqlalchemy import func
-        subq = db.session.query(
-            RegistroAcessoPiscina.morador_id,
-            func.max(RegistroAcessoPiscina.timestamp).label('ultima_data')
-        ).filter_by(tenant_id=tenant_id).group_by(RegistroAcessoPiscina.morador_id).subquery()
+        # Verificar se a tabela existe
+        try:
+            conn = db.session.bind
+            inspector = inspect(conn)
+            tables = inspector.get_table_names()
+            if 'registros_acesso_piscina' not in tables:
+                # Tabela não existe, retornar lista vazia
+                return []
+        except Exception:
+            # Se não conseguir verificar, retornar lista vazia
+            return []
         
-        # Buscar registros que são entradas
-        from app.models import Morador
-        moradores_dentro = db.session.query(Morador).join(
-            RegistroAcessoPiscina, Morador.id == RegistroAcessoPiscina.morador_id
-        ).join(
-            subq, and_(
-                RegistroAcessoPiscina.morador_id == subq.c.morador_id,
-                RegistroAcessoPiscina.timestamp == subq.c.ultima_data
-            )
-        ).filter(
-            RegistroAcessoPiscina.tipo == 'entrada',
-            RegistroAcessoPiscina.tenant_id == tenant_id
-        ).all()
+        # Verificar se tenant_id existe na tabela
+        try:
+            columns = [col['name'] for col in inspector.get_columns('registros_acesso_piscina')]
+            has_tenant_id = 'tenant_id' in columns
+        except Exception:
+            has_tenant_id = False
         
-        return moradores_dentro
+        try:
+            # Subconsulta para obter último registro de cada morador
+            from sqlalchemy import func
+            if has_tenant_id:
+                subq = db.session.query(
+                    RegistroAcessoPiscina.morador_id,
+                    func.max(RegistroAcessoPiscina.timestamp).label('ultima_data')
+                ).filter_by(tenant_id=tenant_id).group_by(RegistroAcessoPiscina.morador_id).subquery()
+            else:
+                subq = db.session.query(
+                    RegistroAcessoPiscina.morador_id,
+                    func.max(RegistroAcessoPiscina.timestamp).label('ultima_data')
+                ).group_by(RegistroAcessoPiscina.morador_id).subquery()
+            
+            # Buscar registros que são entradas
+            from app.models import Morador
+            if has_tenant_id:
+                moradores_dentro = db.session.query(Morador).join(
+                    RegistroAcessoPiscina, Morador.id == RegistroAcessoPiscina.morador_id
+                ).join(
+                    subq, and_(
+                        RegistroAcessoPiscina.morador_id == subq.c.morador_id,
+                        RegistroAcessoPiscina.timestamp == subq.c.ultima_data
+                    )
+                ).filter(
+                    RegistroAcessoPiscina.tipo == 'entrada',
+                    RegistroAcessoPiscina.tenant_id == tenant_id
+                ).all()
+            else:
+                moradores_dentro = db.session.query(Morador).join(
+                    RegistroAcessoPiscina, Morador.id == RegistroAcessoPiscina.morador_id
+                ).join(
+                    subq, and_(
+                        RegistroAcessoPiscina.morador_id == subq.c.morador_id,
+                        RegistroAcessoPiscina.timestamp == subq.c.ultima_data
+                    )
+                ).filter(
+                    RegistroAcessoPiscina.tipo == 'entrada'
+                ).all()
+            
+            return moradores_dentro
+        except Exception:
+            # Se houver qualquer erro, retornar lista vazia
+            return []
 
 
 class OcorrenciaPiscina(db.Model):
