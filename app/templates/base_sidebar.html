@@ -73,9 +73,6 @@
                             </span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('main.perfil') if current_user.is_authenticated else '#' }}">
-                                <i class="fas fa-user me-2"></i>Perfil
-                            </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('main.configuracoes') if current_user.is_authenticated else '#' }}">
                                 <i class="fas fa-cog me-2"></i>Configurações
                             </a></li>
